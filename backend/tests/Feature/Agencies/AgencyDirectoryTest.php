@@ -24,6 +24,11 @@ class AgencyDirectoryTest extends TestCase
 
     private function publishedListingFor(User $agent): PropertyListing
     {
+        return $this->listingWithStatusFor($agent, PropertyListing::STATUS_PUBLISHED);
+    }
+
+    private function listingWithStatusFor(User $agent, string $status): PropertyListing
+    {
         $municipality = Municipality::where('code', 'M-KTM')->firstOrFail();
         $ward = Ward::where('municipality_id', $municipality->id)->where('ward_number', 1)->firstOrFail();
 
@@ -48,7 +53,7 @@ class AgencyDirectoryTest extends TestCase
             'price_period' => 'monthly',
             'title' => 'Agency test listing ' . uniqid(),
             'slug' => 'agency-test-listing-' . uniqid(),
-            'status' => PropertyListing::STATUS_PUBLISHED,
+            'status' => $status,
             'published_at' => now(),
             'created_by' => $agent->id,
         ]);
@@ -103,5 +108,28 @@ class AgencyDirectoryTest extends TestCase
         $response = $this->getJson('/api/v1/agencies/empty-agency');
 
         $response->assertOk()->assertJsonCount(0, 'data.active_listings');
+    }
+
+    public function test_agency_profile_shows_a_closed_deals_track_record(): void
+    {
+        $agency = Agency::create(['name' => 'Track Record Realty', 'slug' => 'track-record-realty', 'status' => 'active', 'verified_at' => now()]);
+        $agent = User::factory()->create();
+        $agency->members()->attach($agent->id, ['role_in_agency' => 'agent']);
+
+        $sold = $this->listingWithStatusFor($agent, PropertyListing::STATUS_SOLD);
+        $rented = $this->listingWithStatusFor($agent, PropertyListing::STATUS_RENTED);
+        $active = $this->publishedListingFor($agent);
+
+        $response = $this->getJson('/api/v1/agencies/track-record-realty');
+
+        $response->assertOk()->assertJsonPath('data.closed_listings_count', 2);
+        $closedIds = collect($response->json('data.closed_listings'))->pluck('id');
+        $this->assertTrue($closedIds->contains($sold->id));
+        $this->assertTrue($closedIds->contains($rented->id));
+        $this->assertFalse($closedIds->contains($active->id));
+
+        $activeIds = collect($response->json('data.active_listings'))->pluck('id');
+        $this->assertTrue($activeIds->contains($active->id));
+        $this->assertFalse($activeIds->contains($sold->id), 'a sold listing should not still appear as active stock');
     }
 }

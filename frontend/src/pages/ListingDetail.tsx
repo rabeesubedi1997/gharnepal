@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { BedDouble, Calendar, CalendarPlus, Car, Flag, Heart, Layers, MapPin, MessageCircle, Ruler, Share2, ShowerHead, Sparkles, Star, Trash2 } from 'lucide-react'
-import { useListingDetail } from '../lib/api/listings'
+import { BedDouble, Calendar, CalendarPlus, Car, Eye, Flag, Heart, Layers, MapPin, MessageCircle, Phone, Ruler, Share2, ShowerHead, Sparkles, Star, Trash2 } from 'lucide-react'
+import { useListingDetail, type ListingDetail as ListingDetailType } from '../lib/api/listings'
 import { useDeleteRating, useListingRatings, useSubmitRating } from '../lib/api/ratings'
 import { RatingStars } from '../components/property/RatingStars'
 import { useAddFavorite, useFavorites, useRemoveFavorite } from '../lib/api/favorites'
@@ -10,7 +10,7 @@ import { useRequestViewing } from '../lib/api/viewingRequests'
 import { useSubmitReport, type ReportReason } from '../lib/api/reports'
 import { useCurrentUser, type AuthUser } from '../lib/api/auth'
 import { getErrorMessage } from '../lib/api/errors'
-import { formatNpr } from '../design-system/tokens'
+import { formatCompactCount, formatNpr } from '../design-system/tokens'
 import { Card } from '../components/ui/Card'
 import { ButtonLink, Button } from '../components/ui/Button'
 import { Badge } from '../components/ui/Badge'
@@ -30,6 +30,11 @@ const PARKING_TYPE_LABEL: Record<string, string> = {
   car: 'Car',
   bike: 'Bike/scooter',
   both: 'Car & bike',
+}
+
+const CLOSED_STATUS_LABEL: Partial<Record<ListingDetailType['status'], string>> = {
+  sold: 'Sold',
+  rented: 'Rented',
 }
 
 export function ListingDetail() {
@@ -131,15 +136,25 @@ export function ListingDetail() {
             <div className="flex items-start justify-between gap-3">
               <div>
                 <h1 className="font-display text-2xl font-semibold text-ink-900">{listing.title}</h1>
-                {locationLabel && (
-                  <p className="mt-1 flex items-center gap-1 text-sm text-ink-700/70">
-                    <MapPin className="h-4 w-4" aria-hidden="true" /> {locationLabel}
-                  </p>
-                )}
+                <p className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-ink-700/70">
+                  {locationLabel && (
+                    <span className="flex items-center gap-1">
+                      <MapPin className="h-4 w-4" aria-hidden="true" /> {locationLabel}
+                    </span>
+                  )}
+                  {listing.views_count > 0 && (
+                    <span className="flex items-center gap-1 text-ink-700/50">
+                      <Eye className="h-4 w-4" aria-hidden="true" /> {formatCompactCount(listing.views_count)} views
+                    </span>
+                  )}
+                </p>
                 <div className="mt-1">
                   <RatingStars average={listing.rating.average} count={listing.rating.count} size="md" />
                 </div>
                 <div className="mt-2 flex flex-wrap items-center gap-2">
+                  {CLOSED_STATUS_LABEL[listing.status] && (
+                    <Badge tone="neutral">{CLOSED_STATUS_LABEL[listing.status]}</Badge>
+                  )}
                   {listing.is_featured && (
                     <Badge tone="accent">
                       <Sparkles className="h-3 w-3" /> Featured{listing.featured_until && ` until ${new Date(listing.featured_until).toLocaleDateString()}`}
@@ -297,6 +312,16 @@ export function ListingDetail() {
             <Button variant="outline" className="w-full" onClick={() => requireAuth(() => setViewingOpen(true))}>
               <CalendarPlus className="h-4 w-4" /> Request a viewing
             </Button>
+            {listing.poster?.whatsapp_url && (
+              <a
+                href={listing.poster.whatsapp_url}
+                target="_blank"
+                rel="noreferrer"
+                className="flex h-10 w-full items-center justify-center gap-2 rounded-lg border border-success-600/40 text-sm font-medium text-success-600 hover:bg-success-100/40"
+              >
+                <Phone className="h-4 w-4" /> Message on WhatsApp
+              </a>
+            )}
           </Card>
         </div>
       </div>

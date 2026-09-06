@@ -50,5 +50,9 @@ class DatabaseSeeder extends Seeder
 
         // A handful of ratings on DemoDataSeeder's listings, so the ratings UI isn't empty.
         $this->call(RatingDemoDataSeeder::class);
+
+        // Marks a couple of each verified agency's own listings sold/rented so
+        // their "Track record" section isn't permanently empty on a fresh seed.
+        $this->call(AgencyTrackRecordDemoDataSeeder::class);
     }
 }

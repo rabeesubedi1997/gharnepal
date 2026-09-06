@@ -28,6 +28,10 @@ class AgencyProfileResource extends JsonResource
             'active_listings' => PropertyListingSummaryResource::collection(
                 $this->when($this->resource->relationLoaded('activeListingsResults'), fn () => $this->resource->getRelation('activeListingsResults')),
             ),
+            'closed_listings_count' => $this->when(isset($this->resource->closed_listings_count), fn () => $this->resource->closed_listings_count),
+            'closed_listings' => PropertyListingSummaryResource::collection(
+                $this->when($this->resource->relationLoaded('closedListingsResults'), fn () => $this->resource->getRelation('closedListingsResults')),
+            ),
         ];
     }
 }

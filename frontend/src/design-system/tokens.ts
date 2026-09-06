@@ -48,3 +48,10 @@ export function formatNprCompact(amount: number): string {
 function trim(value: number): string {
   return value.toFixed(value % 1 === 0 ? 0 : 1)
 }
+
+/** Compact view/count display, e.g. 950 -> "950", 12400 -> "12.4K", 2000000 -> "2M". */
+export function formatCompactCount(count: number): string {
+  if (count >= 1_000_000) return `${trim(count / 1_000_000)}M`
+  if (count >= 1_000) return `${trim(count / 1_000)}K`
+  return String(count)
+}

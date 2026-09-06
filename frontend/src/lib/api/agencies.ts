@@ -19,6 +19,8 @@ export interface AgencyProfile extends AgencySummary {
   verified_at: string | null
   members: { name: string; role_in_agency: 'owner_admin' | 'agent' }[]
   active_listings: ListingSummary[]
+  closed_listings_count: number
+  closed_listings: ListingSummary[]
 }
 
 export function useAgencies() {

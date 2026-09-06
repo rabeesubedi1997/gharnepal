@@ -46,6 +46,11 @@ class PropertyListingDetailResource extends JsonResource
                     ? $owner->agencies->whereNotNull('verified_at')->first(fn ($a) => $a->status === 'active')
                         ?->only(['name', 'slug'])
                     : null,
+                // Only phone-verified owners' numbers are exposed — a real incentive to verify,
+                // and it means every WhatsApp link on the site actually reaches someone real.
+                'whatsapp_url' => ($owner->phone && $owner->phone_verified_at)
+                    ? 'https://wa.me/'.preg_replace('/\D/', '', $owner->phone)
+                    : null,
             ] : null,
             'trust' => $this->whenLoaded('trustScore', fn () => $this->trustScore ? new TrustScoreResource($this->trustScore) : null),
             'price_history' => $this->whenLoaded('priceHistory', fn () => $this->priceHistory->map(fn ($h) => [

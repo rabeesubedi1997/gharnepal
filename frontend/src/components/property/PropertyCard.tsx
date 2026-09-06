@@ -1,12 +1,18 @@
 import { Link } from 'react-router-dom'
-import { BedDouble, Home, MapPin, Ruler, ShowerHead, Sparkles } from 'lucide-react'
+import { BedDouble, Eye, Home, MapPin, Ruler, ShowerHead, Sparkles } from 'lucide-react'
 import { Card } from '../ui/Card'
 import { TrustScoreChip } from '../trust/TrustBadge'
 import { RatingStars } from './RatingStars'
-import { formatNprCompact } from '../../design-system/tokens'
+import { formatCompactCount, formatNprCompact } from '../../design-system/tokens'
 import type { ListingSummary } from '../../lib/api/listings'
 
+const CLOSED_STATUS_LABEL: Partial<Record<ListingSummary['status'], string>> = {
+  sold: 'Sold',
+  rented: 'Rented',
+}
+
 export function PropertyCard({ listing }: { listing: ListingSummary }) {
+  const closedLabel = CLOSED_STATUS_LABEL[listing.status]
   const locationLabel = [
     listing.location?.neighborhood,
     listing.location?.municipality,
@@ -19,13 +25,23 @@ export function PropertyCard({ listing }: { listing: ListingSummary }) {
     <Link to={`/listings/${listing.slug}`} className="block">
       <Card className="flex h-full flex-col overflow-hidden transition-shadow hover:shadow-md">
         <div className="relative aspect-[4/3] w-full overflow-hidden bg-stone-100">
-          {listing.is_featured && (
-            <span className="absolute left-2 top-2 z-10 inline-flex items-center gap-1 rounded-full bg-accent-600 px-2 py-0.5 text-xs font-semibold text-white shadow">
-              <Sparkles className="h-3 w-3" aria-hidden="true" /> Featured
+          {closedLabel ? (
+            <span className="absolute left-2 top-2 z-10 inline-flex items-center rounded-full bg-ink-900/80 px-2 py-0.5 text-xs font-semibold text-white shadow">
+              {closedLabel}
             </span>
+          ) : (
+            listing.is_featured && (
+              <span className="absolute left-2 top-2 z-10 inline-flex items-center gap-1 rounded-full bg-accent-600 px-2 py-0.5 text-xs font-semibold text-white shadow">
+                <Sparkles className="h-3 w-3" aria-hidden="true" /> Featured
+              </span>
+            )
           )}
           {listing.cover_image_url ? (
-            <img src={listing.cover_image_url} alt={listing.title} className="h-full w-full object-cover" />
+            <img
+              src={listing.cover_image_url}
+              alt={listing.title}
+              className={`h-full w-full object-cover ${closedLabel ? 'grayscale-[40%]' : ''}`}
+            />
           ) : (
             <div className="flex h-full w-full items-center justify-center text-ink-700/30">
               <Home className="h-10 w-10" aria-hidden="true" />
@@ -64,6 +80,11 @@ export function PropertyCard({ listing }: { listing: ListingSummary }) {
             {listing.area_sqm != null && (
               <span className="flex items-center gap-1">
                 <Ruler className="h-3.5 w-3.5" aria-hidden="true" /> {Math.round(listing.area_sqm)} m²
+              </span>
+            )}
+            {listing.views_count > 0 && (
+              <span className="ml-auto flex items-center gap-1 text-ink-700/50">
+                <Eye className="h-3.5 w-3.5" aria-hidden="true" /> {formatCompactCount(listing.views_count)}
               </span>
             )}
           </div>

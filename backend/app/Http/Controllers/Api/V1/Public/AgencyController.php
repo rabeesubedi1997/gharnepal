@@ -43,18 +43,23 @@ class AgencyController extends Controller
             ->with('members')
             ->firstOrFail();
 
-        $listings = $this->activeListingsQuery($agency->members)
-            ->with([
-                'property.address.municipality',
-                'property.address.ward',
-                'property.address.neighborhood',
-                'property.media',
-                'trustScore',
-            ])
-            ->latest('published_at')
-            ->get();
+        $eagerLoad = [
+            'property.address.municipality',
+            'property.address.ward',
+            'property.address.neighborhood',
+            'property.media',
+            'trustScore',
+        ];
 
+        $listings = $this->activeListingsQuery($agency->members)->with($eagerLoad)->latest('published_at')->get();
         $agency->setRelation('activeListingsResults', $listings);
+
+        // Closed deals shown as a track-record signal, not hidden the way they
+        // are from general search — a buyer vetting an agency benefits from
+        // seeing "this agency actually closes deals", not just their current stock.
+        $closedListings = $this->closedListingsQuery($agency->members)->with($eagerLoad)->latest('published_at')->take(6)->get();
+        $agency->setRelation('closedListingsResults', $closedListings);
+        $agency->closed_listings_count = $this->closedListingsQuery($agency->members)->count();
 
         return new AgencyProfileResource($agency);
     }
@@ -66,6 +71,16 @@ class AgencyController extends Controller
 
         return PropertyListing::query()
             ->where('status', PropertyListing::STATUS_PUBLISHED)
+            ->whereHas('property', fn ($q) => $q->whereHas('managers', fn ($q2) => $q2->whereIn('users.id', $memberIds)));
+    }
+
+    /** @param Collection<int, \App\Models\User> $members */
+    private function closedListingsQuery(Collection $members): Builder
+    {
+        $memberIds = $members->pluck('id');
+
+        return PropertyListing::query()
+            ->whereIn('status', [PropertyListing::STATUS_SOLD, PropertyListing::STATUS_RENTED])
             ->whereHas('property', fn ($q) => $q->whereHas('managers', fn ($q2) => $q2->whereIn('users.id', $memberIds)));
     }
 }

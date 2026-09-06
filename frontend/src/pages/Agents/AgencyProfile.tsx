@@ -1,5 +1,5 @@
 import { Link, useParams } from 'react-router-dom'
-import { Building2, ShieldCheck, Users } from 'lucide-react'
+import { Building2, CheckCircle2, ShieldCheck, Users } from 'lucide-react'
 import { useAgency } from '../../lib/api/agencies'
 import { Card } from '../../components/ui/Card'
 import { Badge } from '../../components/ui/Badge'
@@ -51,8 +51,15 @@ export function AgencyProfile() {
             )}
           </div>
           {agency.description && <p className="mt-2 text-sm text-ink-700/80">{agency.description}</p>}
-          <p className="mt-3 flex items-center gap-1 text-xs text-ink-700/60">
-            <Users className="h-3.5 w-3.5" aria-hidden="true" /> {agency.member_count} agent{agency.member_count === 1 ? '' : 's'}
+          <p className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-ink-700/60">
+            <span className="flex items-center gap-1">
+              <Users className="h-3.5 w-3.5" aria-hidden="true" /> {agency.member_count} agent{agency.member_count === 1 ? '' : 's'}
+            </span>
+            {agency.closed_listings_count > 0 && (
+              <span className="flex items-center gap-1">
+                <CheckCircle2 className="h-3.5 w-3.5" aria-hidden="true" /> {agency.closed_listings_count} deal{agency.closed_listings_count === 1 ? '' : 's'} closed
+              </span>
+            )}
           </p>
           {agency.members.length > 0 && (
             <ul className="mt-2 flex flex-wrap gap-2">
@@ -79,6 +86,18 @@ export function AgencyProfile() {
           </div>
         )}
       </div>
+
+      {agency.closed_listings.length > 0 && (
+        <div>
+          <h2 className="mb-1 font-display text-lg font-semibold text-ink-900">Track record</h2>
+          <p className="mb-3 text-sm text-ink-700/70">Recently sold or rented — proof this agency actually closes deals.</p>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {agency.closed_listings.map((listing) => (
+              <PropertyCard key={listing.id} listing={listing} />
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   )
 }

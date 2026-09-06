@@ -71,7 +71,7 @@ export interface ListingDetail {
   featured_until: string | null
   property: Property
   amenities: Amenity[]
-  poster: { name: string; member_since: string; agency: { name: string; slug: string } | null } | null
+  poster: { name: string; member_since: string; agency: { name: string; slug: string } | null; whatsapp_url: string | null } | null
   trust: TrustScore | null
   price_history: { price: number; changed_at: string }[]
   similar_listings: ListingSummary[]
