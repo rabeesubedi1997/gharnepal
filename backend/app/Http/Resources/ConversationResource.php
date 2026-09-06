@@ -14,12 +14,17 @@ class ConversationResource extends JsonResource
 
         return [
             'id' => $this->id,
-            'listing' => [
+            'listing' => $this->property_listing_id ? [
                 'id' => $this->listing?->id,
                 'slug' => $this->listing?->slug,
                 'title' => $this->listing?->title,
                 'cover_image_url' => $this->listing?->property?->media->first()?->url(),
-            ],
+            ] : null,
+            'property_request' => $this->property_request_id ? [
+                'id' => $this->propertyRequest?->id,
+                'purpose' => $this->propertyRequest?->purpose,
+                'property_type' => $this->propertyRequest?->property_type,
+            ] : null,
             'other_participant' => $other ? ['id' => $other->id, 'name' => $other->name] : null,
             'status' => $this->status,
             'last_message_at' => $this->last_message_at,

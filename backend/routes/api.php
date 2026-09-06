@@ -29,6 +29,7 @@ use App\Http\Controllers\Api\V1\ListingReportController;
 use App\Http\Controllers\Api\V1\Messaging\ConversationController;
 use App\Http\Controllers\Api\V1\Messaging\MessageController;
 use App\Http\Controllers\Api\V1\NotificationController;
+use App\Http\Controllers\Api\V1\PropertyRequestController;
 use App\Http\Controllers\Api\V1\RatingController;
 use App\Http\Controllers\Api\V1\Admin\RatingController as AdminRatingController;
 use App\Http\Controllers\Api\V1\Admin\SeoController as AdminSeoController;
@@ -109,6 +110,15 @@ Route::prefix('v1')->group(function () {
     // Public agent/agency directory
     Route::get('agencies', [AgencyController::class, 'index']);
     Route::get('agencies/{slug}', [AgencyController::class, 'show']);
+
+    // Property requests — a demand-side board (buyers post what they want).
+    // Listing open requests is public; posting/closing one's own is not.
+    Route::get('property-requests', [PropertyRequestController::class, 'index']);
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::post('property-requests', [PropertyRequestController::class, 'store']);
+        Route::patch('property-requests/{propertyRequest}/close', [PropertyRequestController::class, 'close']);
+        Route::get('account/property-requests', [PropertyRequestController::class, 'mine']);
+    });
 
     // Homepage banners
     Route::get('banners', [BannerController::class, 'index']);

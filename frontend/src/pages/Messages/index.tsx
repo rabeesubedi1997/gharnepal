@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { MessageCircle, Send } from 'lucide-react'
-import { useConversation, useConversations, useSendMessage } from '../../lib/api/messaging'
+import { useConversation, useConversations, useSendMessage, type Conversation } from '../../lib/api/messaging'
 import { useCurrentUser } from '../../lib/api/auth'
 import { Card } from '../../components/ui/Card'
 import { Button } from '../../components/ui/Button'
@@ -9,6 +9,13 @@ import { EmptyState } from '../../components/ui/EmptyState'
 import { ErrorState } from '../../components/ui/ErrorState'
 import { Skeleton } from '../../components/ui/Skeleton'
 import { clsx } from 'clsx'
+
+/** A conversation is always about exactly one of a listing or a property request. */
+function conversationSubtitle(c: Conversation): string {
+  if (c.listing) return c.listing.title
+  if (c.property_request) return `${c.property_request.purpose === 'rent' ? 'Rental' : 'Purchase'} request`
+  return ''
+}
 
 export function Messages() {
   const { id } = useParams<{ id: string }>()
@@ -53,7 +60,7 @@ export function Messages() {
                 conversationId === c.id && 'bg-trust-100',
               )}
             >
-              {c.listing.cover_image_url ? (
+              {c.listing?.cover_image_url ? (
                 <img src={c.listing.cover_image_url} alt="" className="h-12 w-12 shrink-0 rounded-lg object-cover" />
               ) : (
                 <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-stone-100 text-ink-700/40">
@@ -62,7 +69,7 @@ export function Messages() {
               )}
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-medium text-ink-900">{c.other_participant?.name ?? 'User'}</p>
-                <p className="truncate text-xs text-ink-700/60">{c.listing.title}</p>
+                <p className="truncate text-xs text-ink-700/60">{conversationSubtitle(c)}</p>
               </div>
               {c.unread_count > 0 && (
                 <span className="flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-accent-600 px-1 text-xs font-medium text-white">
@@ -115,7 +122,7 @@ function Thread({ conversationId }: { conversationId: number }) {
     <div className="flex h-full flex-col">
       <div className="border-b border-stone-200 p-4">
         <p className="font-medium text-ink-900">{conversation.other_participant?.name}</p>
-        <p className="text-xs text-ink-700/60">{conversation.listing.title}</p>
+        <p className="text-xs text-ink-700/60">{conversationSubtitle(conversation)}</p>
       </div>
       <div className="flex-1 space-y-3 overflow-y-auto p-4">
         {conversation.messages.map((m) => (

@@ -38,6 +38,7 @@ import { PaymentHistory } from './pages/Payments/PaymentHistory'
 import { Payments as AdminPayments } from './pages/admin/Payments'
 import { AgentDirectory } from './pages/Agents'
 import { AgencyProfile } from './pages/Agents/AgencyProfile'
+import { PropertyRequests } from './pages/PropertyRequests'
 import { RequireAuth } from './components/auth/RequireAuth'
 
 export default function App() {
@@ -56,6 +57,7 @@ export default function App() {
         <Route path="neighborhoods/:id" element={<NeighborhoodProfile />} />
         <Route path="agents" element={<AgentDirectory />} />
         <Route path="agents/:slug" element={<AgencyProfile />} />
+        <Route path="property-requests" element={<PropertyRequests />} />
         <Route path="calculators/rental" element={<RentalCalculator />} />
         <Route path="calculators/purchase" element={<PurchaseCalculator />} />
 

@@ -6,6 +6,7 @@ use App\Domain\Trust\Services\TrustScoreCalculator;
 use App\Models\Conversation;
 use App\Models\Message;
 use App\Models\PropertyListing;
+use App\Models\PropertyRequest;
 use App\Models\User;
 use App\Notifications\NewMessageNotification;
 use Illuminate\Validation\ValidationException;
@@ -31,6 +32,23 @@ class MessagingService
         $this->send($conversation, $buyer, $firstMessage);
 
         return $conversation->fresh(['listing.property.media', 'messages']);
+    }
+
+    /** Starts a conversation with a property request's own poster, or returns the existing one. */
+    public function startFromPropertyRequest(PropertyRequest $propertyRequest, User $responder, string $firstMessage): Conversation
+    {
+        if ($propertyRequest->user_id === $responder->id) {
+            throw ValidationException::withMessages(['request' => "You can't respond to your own request."]);
+        }
+
+        $conversation = Conversation::firstOrCreate(
+            ['property_request_id' => $propertyRequest->id, 'owner_user_id' => $responder->id],
+            ['buyer_user_id' => $propertyRequest->user_id, 'status' => 'open'],
+        );
+
+        $this->send($conversation, $responder, $firstMessage);
+
+        return $conversation->fresh(['propertyRequest', 'messages']);
     }
 
     public function send(Conversation $conversation, User $sender, string $body): Message

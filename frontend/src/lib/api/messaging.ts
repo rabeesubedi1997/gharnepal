@@ -13,7 +13,8 @@ export interface Message {
 
 export interface Conversation {
   id: number
-  listing: { id: number; slug: string; title: string; cover_image_url: string | null }
+  listing: { id: number; slug: string; title: string; cover_image_url: string | null } | null
+  property_request: { id: number; purpose: 'sale' | 'rent'; property_type: string | null } | null
   other_participant: { id: number; name: string } | null
   status: 'open' | 'archived'
   last_message_at: string | null
@@ -53,10 +54,11 @@ export function useConversation(id: number | undefined) {
 export function useStartConversation() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: async (input: { listingId: number; message: string }) => {
+    mutationFn: async (input: { listingId?: number; propertyRequestId?: number; message: string }) => {
       await ensureCsrfCookie()
       const { data } = await apiClient.post<{ data: Conversation }>('/conversations', {
         listing_id: input.listingId,
+        property_request_id: input.propertyRequestId,
         message: input.message,
       })
       return data.data

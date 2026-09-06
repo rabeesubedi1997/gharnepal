@@ -76,6 +76,12 @@ class SeoService
             'title' => 'True Monthly Rental Cost Calculator for Nepal | Ghar Nepal',
             'description' => 'Calculate the real monthly cost of renting in Nepal — rent, deposit, utilities, internet, parking, and moving costs combined.',
         ],
+        'property-requests' => [
+            'label' => 'Property Requests',
+            'path' => '/property-requests',
+            'title' => 'Property Requests — Tell Owners What You\'re Looking For | Ghar Nepal',
+            'description' => 'Post what property you\'re looking to buy or rent in Nepal, or browse requests from other buyers and renters.',
+        ],
         'calculators-purchase' => [
             'label' => 'Purchase Cost Calculator',
             'path' => '/calculators/purchase',

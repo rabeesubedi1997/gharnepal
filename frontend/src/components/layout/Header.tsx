@@ -12,8 +12,9 @@ const primaryNav = [
   { to: '/rooms', label: 'Rooms' },
   { to: '/land', label: 'Land' },
   { to: '/commercial', label: 'Commercial' },
-  { to: '/neighborhoods', label: 'Explore neighborhoods' },
+  { to: '/neighborhoods', label: 'Neighborhoods' },
   { to: '/agents', label: 'Agents' },
+  { to: '/property-requests', label: 'Requests' },
 ]
 
 export function Header() {
@@ -34,14 +35,14 @@ export function Header() {
           Ghar Nepal
         </Link>
 
-        <nav className="hidden items-center gap-1 lg:flex" aria-label="Primary">
+        <nav className="hidden items-center gap-0.5 lg:flex" aria-label="Primary">
           {primaryNav.map((item) => (
             <NavLink
               key={item.to}
               to={item.to}
               className={({ isActive }) =>
                 clsx(
-                  'rounded-md px-3 py-2 text-sm font-medium transition-colors',
+                  'shrink-0 whitespace-nowrap rounded-md px-2.5 py-2 text-sm font-medium transition-colors',
                   isActive ? 'text-trust-700' : 'text-ink-700 hover:text-ink-900',
                 )
               }
@@ -51,10 +52,10 @@ export function Header() {
           ))}
         </nav>
 
-        <div className="hidden items-center gap-2 lg:flex">
+        <div className="hidden shrink-0 items-center gap-2 lg:flex">
           <IconLink to="/saved" label="Saved" icon={<Heart className="h-5 w-5" />} />
           <IconLink to="/messages" label="Messages" icon={<MessageCircle className="h-5 w-5" />} />
-          <ButtonLink to="/post-property" size="sm" variant="secondary">
+          <ButtonLink to="/post-property" size="sm" variant="secondary" className="shrink-0 whitespace-nowrap">
             <Plus className="h-4 w-4" /> Post property
           </ButtonLink>
           {user ? (

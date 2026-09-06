@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Conversation extends Model
 {
-    protected $fillable = ['property_listing_id', 'buyer_user_id', 'owner_user_id', 'status', 'last_message_at'];
+    protected $fillable = ['property_listing_id', 'property_request_id', 'buyer_user_id', 'owner_user_id', 'status', 'last_message_at'];
 
     protected function casts(): array
     {
@@ -18,6 +18,11 @@ class Conversation extends Model
     public function listing(): BelongsTo
     {
         return $this->belongsTo(PropertyListing::class, 'property_listing_id');
+    }
+
+    public function propertyRequest(): BelongsTo
+    {
+        return $this->belongsTo(PropertyRequest::class);
     }
 
     public function buyer(): BelongsTo
