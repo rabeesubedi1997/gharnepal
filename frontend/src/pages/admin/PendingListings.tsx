@@ -1,6 +1,8 @@
 import { useState } from 'react'
+import { ClipboardList } from 'lucide-react'
 import { useApproveListing, usePendingListings, useRejectListing } from '../../lib/api/admin'
 import { formatNpr } from '../../design-system/tokens'
+import { AdminPageHeader } from '../../components/admin/AdminPageHeader'
 import { Card } from '../../components/ui/Card'
 import { Button } from '../../components/ui/Button'
 import { Modal } from '../../components/ui/Modal'
@@ -19,7 +21,12 @@ export function PendingListings() {
 
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="font-display text-2xl font-semibold text-ink-900">Listing approval queue</h1>
+      <AdminPageHeader
+        icon={ClipboardList}
+        tone="link"
+        title="Listing approval queue"
+        description="Nothing goes live to buyers until an admin approves it here."
+      />
 
       {isPending && <PropertyGridSkeleton count={4} />}
       {isError && <ErrorState onRetry={refetch} />}

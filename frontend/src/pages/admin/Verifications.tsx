@@ -1,6 +1,7 @@
 import { useState } from 'react'
-import { FileText } from 'lucide-react'
+import { FileText, ShieldCheck } from 'lucide-react'
 import { useAdminVerifications, useApproveVerification, useRejectVerification, type UserVerification } from '../../lib/api/verifications'
+import { AdminPageHeader } from '../../components/admin/AdminPageHeader'
 import { Card } from '../../components/ui/Card'
 import { Badge } from '../../components/ui/Badge'
 import { Button } from '../../components/ui/Button'
@@ -24,6 +25,13 @@ export function Verifications() {
 
   return (
     <div className="flex flex-col gap-4">
+      <AdminPageHeader
+        icon={ShieldCheck}
+        tone="warning"
+        title="Verifications"
+        description="Identity and agent documents submitted for review — approving one recomputes the owner's listing trust scores."
+      />
+
       {isPending && <PropertyGridSkeleton count={3} />}
       {isError && <ErrorState onRetry={refetch} />}
 

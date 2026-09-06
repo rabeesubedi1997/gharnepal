@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Trash2 } from 'lucide-react'
+import { ListChecks, Trash2 } from 'lucide-react'
 import {
   useAdminAmenities,
   useCreateAmenity,
@@ -8,6 +8,7 @@ import {
   type AdminAmenity,
 } from '../../lib/api/admin'
 import { getErrorMessage } from '../../lib/api/errors'
+import { AdminPageHeader } from '../../components/admin/AdminPageHeader'
 import { Card } from '../../components/ui/Card'
 import { Badge } from '../../components/ui/Badge'
 import { Button } from '../../components/ui/Button'
@@ -45,10 +46,12 @@ export function Amenities() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="font-display text-2xl font-semibold text-ink-900">Amenities</h1>
-        <p className="mt-1 text-sm text-ink-700/70">The catalog owners pick from when posting a listing.</p>
-      </div>
+      <AdminPageHeader
+        icon={ListChecks}
+        tone="link"
+        title="Amenities"
+        description="The catalog owners pick from when posting a listing."
+      />
 
       <Card className="flex flex-col gap-3 p-4">
         <h2 className="font-display text-base font-semibold text-ink-900">Add an amenity</h2>

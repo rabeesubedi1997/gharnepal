@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
+import { MessageSquareText } from 'lucide-react'
 import {
   COMMUNITY_NOTE_CATEGORY_LABEL,
   useAdminCommunityNotes,
@@ -7,6 +8,7 @@ import {
   useRejectCommunityNote,
   type CommunityNote,
 } from '../../lib/api/neighborhoods'
+import { AdminPageHeader } from '../../components/admin/AdminPageHeader'
 import { Card } from '../../components/ui/Card'
 import { Badge } from '../../components/ui/Badge'
 import { Button } from '../../components/ui/Button'
@@ -32,6 +34,12 @@ export function CommunityNotesModeration() {
 
   return (
     <div className="flex flex-col gap-4">
+      <AdminPageHeader
+        icon={MessageSquareText}
+        tone="warning"
+        title="Community notes"
+        description="Local knowledge submitted by users about a neighborhood — approve or reject before it's shown publicly."
+      />
       <Tabs tabs={STATUS_TABS} active={status} onChange={(key) => setStatus(key as typeof status)} />
 
       {isPending && <PropertyGridSkeleton count={3} />}

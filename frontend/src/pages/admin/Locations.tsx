@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Trash2 } from 'lucide-react'
+import { MapPin, Trash2 } from 'lucide-react'
 import {
   useDistricts,
   useMunicipalities,
@@ -19,6 +19,7 @@ import {
   useDeleteProvince,
   useDeleteWard,
 } from '../../lib/api/adminLocations'
+import { AdminPageHeader } from '../../components/admin/AdminPageHeader'
 import { Card } from '../../components/ui/Card'
 import { Input, Select } from '../../components/ui/Input'
 import { Button } from '../../components/ui/Button'
@@ -30,6 +31,12 @@ export function Locations() {
 
   return (
     <div className="flex flex-col gap-4">
+      <AdminPageHeader
+        icon={MapPin}
+        tone="link"
+        title="Locations"
+        description="Nepal's admin hierarchy — province, district, municipality, ward, neighborhood."
+      />
       <Tabs
         tabs={[
           { key: 'provinces', label: 'Provinces' },

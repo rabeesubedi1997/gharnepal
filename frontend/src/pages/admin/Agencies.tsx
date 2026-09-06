@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Building2, ShieldCheck } from 'lucide-react'
 import { useAdminAgencies, useSuspendAgency, useVerifyAgency, type AdminAgency } from '../../lib/api/admin'
+import { AdminPageHeader } from '../../components/admin/AdminPageHeader'
 import { Card } from '../../components/ui/Card'
 import { Badge } from '../../components/ui/Badge'
 import { Button } from '../../components/ui/Button'
@@ -23,18 +24,20 @@ export function Agencies() {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="font-display text-2xl font-semibold text-ink-900">Agencies</h1>
-          <p className="mt-1 text-sm text-ink-700/70">Verify new agency registrations, or suspend one that breaks trust.</p>
-        </div>
-        <Select value={status} onChange={(e) => setStatus(e.target.value as AdminAgency['status'] | '')} className="w-44">
-          <option value="">All statuses</option>
-          <option value="pending">Pending review</option>
-          <option value="active">Active</option>
-          <option value="suspended">Suspended</option>
-        </Select>
-      </div>
+      <AdminPageHeader
+        icon={Building2}
+        tone="accent"
+        title="Agencies"
+        description="Verify new agency registrations, or suspend one that breaks trust."
+        action={
+          <Select value={status} onChange={(e) => setStatus(e.target.value as AdminAgency['status'] | '')} className="w-44">
+            <option value="">All statuses</option>
+            <option value="pending">Pending review</option>
+            <option value="active">Active</option>
+            <option value="suspended">Suspended</option>
+          </Select>
+        }
+      />
 
       {isPending && <PropertyGridSkeleton count={4} />}
       {isError && <ErrorState onRetry={refetch} />}

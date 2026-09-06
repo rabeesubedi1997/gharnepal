@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { ShieldAlert, ShieldCheck } from 'lucide-react'
+import { ShieldAlert, ShieldCheck, Users as UsersIcon } from 'lucide-react'
 import {
   useAdminUsers,
   useUpdateUserRoles,
@@ -10,6 +10,7 @@ import {
 } from '../../lib/api/admin'
 import { useCurrentUser } from '../../lib/api/auth'
 import { getErrorMessage } from '../../lib/api/errors'
+import { AdminPageHeader } from '../../components/admin/AdminPageHeader'
 import { Card } from '../../components/ui/Card'
 import { Badge } from '../../components/ui/Badge'
 import { Button } from '../../components/ui/Button'
@@ -50,10 +51,12 @@ export function Users() {
 
   return (
     <div className="flex flex-col gap-4">
-      <div>
-        <h1 className="font-display text-2xl font-semibold text-ink-900">Users</h1>
-        <p className="mt-1 text-sm text-ink-700/70">Search, review roles, and suspend accounts when needed.</p>
-      </div>
+      <AdminPageHeader
+        icon={UsersIcon}
+        tone="accent"
+        title="Users"
+        description="Search, review roles, and suspend accounts when needed."
+      />
 
       <div className="flex flex-wrap gap-3">
         <Input

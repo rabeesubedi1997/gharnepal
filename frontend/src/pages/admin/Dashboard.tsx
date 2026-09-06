@@ -1,10 +1,13 @@
 import { Link } from 'react-router-dom'
-import { Building2, ClipboardList, CreditCard, ShieldCheck, Users } from 'lucide-react'
+import { Building2, ClipboardList, CreditCard, LayoutDashboard, ShieldCheck, Users } from 'lucide-react'
 import { useDashboardStats } from '../../lib/api/admin'
 import { formatNpr } from '../../design-system/tokens'
 import { Card } from '../../components/ui/Card'
 import { ErrorState } from '../../components/ui/ErrorState'
 import { Skeleton } from '../../components/ui/Skeleton'
+import { AdminPageHeader } from '../../components/admin/AdminPageHeader'
+import { ADMIN_TONE_BADGE, type AdminTone } from '../../components/admin/tones'
+import { clsx } from 'clsx'
 
 function StatCard({
   icon: Icon,
@@ -12,18 +15,22 @@ function StatCard({
   value,
   sub,
   to,
+  tone = 'trust',
 }: {
   icon: typeof Users
   label: string
   value: number | string
   sub?: string
   to?: string
+  tone?: AdminTone
 }) {
   const content = (
-    <Card className="flex flex-col gap-2 p-4 transition-shadow hover:shadow-md">
-      <div className="flex items-center gap-2 text-ink-700/60">
-        <Icon className="h-4 w-4" aria-hidden="true" />
-        <span className="text-xs font-medium uppercase tracking-wide">{label}</span>
+    <Card className="flex flex-col gap-3 p-4 transition-shadow hover:shadow-md">
+      <div className="flex items-center gap-2">
+        <span className={clsx('flex h-8 w-8 items-center justify-center rounded-lg', ADMIN_TONE_BADGE[tone])}>
+          <Icon className="h-4 w-4" aria-hidden="true" />
+        </span>
+        <span className="text-xs font-medium uppercase tracking-wide text-ink-700/60">{label}</span>
       </div>
       <p className="font-display text-2xl font-semibold text-ink-900">{value}</p>
       {sub && <p className="text-xs text-ink-700/60">{sub}</p>}
@@ -58,10 +65,11 @@ export function Dashboard() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="font-display text-2xl font-semibold text-ink-900">Dashboard</h1>
-        <p className="mt-1 text-sm text-ink-700/70">Live counts, computed directly from the database.</p>
-      </div>
+      <AdminPageHeader
+        icon={LayoutDashboard}
+        title="Dashboard"
+        description="Live counts, computed directly from the database."
+      />
 
       {moderationTotal > 0 && (
         <Card className="flex flex-wrap items-center justify-between gap-3 border-warning-100 bg-warning-100/40 p-4">
@@ -96,26 +104,28 @@ export function Dashboard() {
       <div>
         <h2 className="mb-3 font-display text-base font-semibold text-ink-900">Listings</h2>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <StatCard icon={ClipboardList} label="Total listings" value={stats.listings.total} />
-          <StatCard icon={ClipboardList} label="Published" value={stats.listings.published} />
+          <StatCard tone="link" icon={ClipboardList} label="Total listings" value={stats.listings.total} />
+          <StatCard tone="link" icon={ClipboardList} label="Published" value={stats.listings.published} />
           <StatCard
+            tone="link"
             icon={ClipboardList}
             label="Pending review"
             value={stats.listings.pending_review}
             to="/admin/listings/pending"
             sub={stats.listings.pending_review > 0 ? 'Needs attention' : 'All caught up'}
           />
-          <StatCard icon={ClipboardList} label="Featured now" value={stats.listings.featured_active} />
+          <StatCard tone="link" icon={ClipboardList} label="Featured now" value={stats.listings.featured_active} />
         </div>
       </div>
 
       <div>
         <h2 className="mb-3 font-display text-base font-semibold text-ink-900">People</h2>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <StatCard icon={Users} label="Total users" value={stats.users.total} to="/admin/users" />
-          <StatCard icon={Users} label="Owners" value={stats.users.owners} />
-          <StatCard icon={Users} label="Agents" value={stats.users.agents} />
+          <StatCard tone="accent" icon={Users} label="Total users" value={stats.users.total} to="/admin/users" />
+          <StatCard tone="accent" icon={Users} label="Owners" value={stats.users.owners} />
+          <StatCard tone="accent" icon={Users} label="Agents" value={stats.users.agents} />
           <StatCard
+            tone="accent"
             icon={Users}
             label="Suspended"
             value={stats.users.suspended}
@@ -128,9 +138,10 @@ export function Dashboard() {
       <div>
         <h2 className="mb-3 font-display text-base font-semibold text-ink-900">Agencies & payments</h2>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <StatCard icon={Building2} label="Total agencies" value={stats.agencies.total} to="/admin/agencies" />
-          <StatCard icon={ShieldCheck} label="Verified" value={stats.agencies.verified} to="/admin/agencies" />
+          <StatCard tone="success" icon={Building2} label="Total agencies" value={stats.agencies.total} to="/admin/agencies" />
+          <StatCard tone="success" icon={ShieldCheck} label="Verified" value={stats.agencies.verified} to="/admin/agencies" />
           <StatCard
+            tone="success"
             icon={Building2}
             label="Pending verification"
             value={stats.agencies.pending}
@@ -138,6 +149,7 @@ export function Dashboard() {
             sub={stats.agencies.pending > 0 ? 'Needs review' : 'All caught up'}
           />
           <StatCard
+            tone="success"
             icon={CreditCard}
             label="Completed payments"
             value={formatNpr(stats.payments.completed_amount)}

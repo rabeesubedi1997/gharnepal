@@ -1,6 +1,8 @@
 import { Link } from 'react-router-dom'
+import { Copy } from 'lucide-react'
 import { useConfirmDuplicateFlag, useDismissDuplicateFlag, useDuplicateFlags } from '../../lib/api/duplicateFlags'
 import { formatNpr } from '../../design-system/tokens'
+import { AdminPageHeader } from '../../components/admin/AdminPageHeader'
 import { Card } from '../../components/ui/Card'
 import { Badge } from '../../components/ui/Badge'
 import { Button } from '../../components/ui/Button'
@@ -23,10 +25,12 @@ export function DuplicateFlags() {
 
   return (
     <div className="flex flex-col gap-4">
-      <p className="text-sm text-ink-700/70">
-        Flagged automatically when a listing looks like it might duplicate an existing one. Never
-        auto-removed — confirm to act on it, or dismiss if it's a false positive.
-      </p>
+      <AdminPageHeader
+        icon={Copy}
+        tone="link"
+        title="Duplicate flags"
+        description="Flagged automatically when a listing looks like it might duplicate an existing one. Never auto-removed — confirm to act on it, or dismiss if it's a false positive."
+      />
 
       {isPending && <PropertyGridSkeleton count={3} />}
       {isError && <ErrorState onRetry={refetch} />}

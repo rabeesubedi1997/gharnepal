@@ -22,10 +22,12 @@ import {
   X,
 } from 'lucide-react'
 import { useCurrentUser, useLogout } from '../../lib/api/auth'
+import { ADMIN_TONE_ACTIVE_NAV, ADMIN_TONE_DOT, type AdminTone } from '../../components/admin/tones'
 
-const NAV_GROUPS = [
+const NAV_GROUPS: { title: string; tone: AdminTone; items: { to: string; label: string; icon: typeof Users }[] }[] = [
   {
     title: 'Overview',
+    tone: 'trust',
     items: [
       { to: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
       { to: '/admin/banners', label: 'Homepage banners', icon: GalleryHorizontal },
@@ -33,6 +35,7 @@ const NAV_GROUPS = [
   },
   {
     title: 'People',
+    tone: 'accent',
     items: [
       { to: '/admin/users', label: 'Users', icon: Users },
       { to: '/admin/agencies', label: 'Agencies', icon: Building2 },
@@ -40,6 +43,7 @@ const NAV_GROUPS = [
   },
   {
     title: 'Listings & locations',
+    tone: 'link',
     items: [
       { to: '/admin/listings/pending', label: 'Pending listings', icon: ClipboardList },
       { to: '/admin/duplicate-flags', label: 'Duplicate flags', icon: Copy },
@@ -50,6 +54,7 @@ const NAV_GROUPS = [
   },
   {
     title: 'Trust & safety',
+    tone: 'warning',
     items: [
       { to: '/admin/reports', label: 'Reports', icon: Flag },
       { to: '/admin/verifications', label: 'Verifications', icon: ShieldCheck },
@@ -59,22 +64,27 @@ const NAV_GROUPS = [
   },
   {
     title: 'Finance',
+    tone: 'success',
     items: [{ to: '/admin/payments', label: 'Payments', icon: Receipt }],
   },
   {
     title: 'SEO & marketing',
+    tone: 'trust',
     items: [{ to: '/admin/seo', label: 'SEO pages', icon: Search }],
   },
 ]
 
-const FLAT_NAV = NAV_GROUPS.flatMap((g) => g.items)
+const FLAT_NAV = NAV_GROUPS.flatMap((g) => g.items.map((item) => ({ ...item, tone: g.tone })))
 
 function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
   return (
     <nav className="flex-1 overflow-y-auto px-3 py-4">
       {NAV_GROUPS.map((group) => (
         <div key={group.title} className="mb-5">
-          <p className="mb-1.5 px-2.5 text-xs font-semibold uppercase tracking-wide text-ink-700/40">{group.title}</p>
+          <p className="mb-1.5 flex items-center gap-1.5 px-2.5 text-xs font-semibold uppercase tracking-wide text-ink-700/40">
+            <span className={clsx('h-1.5 w-1.5 rounded-full', ADMIN_TONE_DOT[group.tone])} aria-hidden="true" />
+            {group.title}
+          </p>
           <div className="flex flex-col gap-0.5">
             {group.items.map(({ to, label, icon: Icon }) => (
               <NavLink
@@ -83,8 +93,8 @@ function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
                 onClick={onNavigate}
                 className={({ isActive }) =>
                   clsx(
-                    'flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm font-medium transition-colors',
-                    isActive ? 'bg-trust-100 text-trust-700' : 'text-ink-700 hover:bg-stone-100',
+                    'flex items-center gap-2.5 rounded-lg border-l-[3px] px-2.5 py-2 text-sm font-medium transition-colors',
+                    isActive ? ADMIN_TONE_ACTIVE_NAV[group.tone] : 'border-transparent text-ink-700 hover:bg-stone-100',
                   )
                 }
               >
@@ -98,6 +108,20 @@ function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
   )
 }
 
+function SidebarMasthead() {
+  return (
+    <div className="flex items-center gap-2.5 bg-trust-700 px-5 py-4">
+      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/15 text-white">
+        <ShieldCheck className="h-5 w-5" aria-hidden="true" />
+      </span>
+      <div>
+        <p className="font-display text-base font-semibold leading-tight text-white">Ghar Nepal</p>
+        <p className="text-[11px] font-semibold uppercase tracking-widest text-trust-100/80">Admin console</p>
+      </div>
+    </div>
+  )
+}
+
 export function AdminLayout() {
   const { data: user } = useCurrentUser()
   const logout = useLogout()
@@ -108,14 +132,13 @@ export function AdminLayout() {
     logout.mutate(undefined, { onSuccess: () => navigate('/') })
   }
 
+  const initial = user?.name?.trim()?.[0]?.toUpperCase() ?? '?'
+
   return (
     <div className="flex min-h-screen bg-stone-50">
       {/* Desktop sidebar */}
       <aside className="hidden w-64 shrink-0 flex-col border-r border-stone-200 bg-white lg:flex">
-        <div className="flex h-16 items-center gap-2 border-b border-stone-200 px-5">
-          <ShieldCheck className="h-5 w-5 text-trust-700" aria-hidden="true" />
-          <span className="font-display text-base font-semibold text-ink-900">Ghar Nepal Admin</span>
-        </div>
+        <SidebarMasthead />
         <NavLinks />
         <div className="border-t border-stone-200 p-3">
           <Link to="/" className="flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm font-medium text-ink-700 hover:bg-stone-100">
@@ -129,9 +152,9 @@ export function AdminLayout() {
         <div className="fixed inset-0 z-50 lg:hidden">
           <div className="absolute inset-0 bg-ink-900/40" onClick={() => setMobileOpen(false)} aria-hidden="true" />
           <aside className="relative flex h-full w-72 flex-col bg-white shadow-lg">
-            <div className="flex h-16 items-center justify-between border-b border-stone-200 px-4">
-              <span className="font-display text-base font-semibold text-ink-900">Ghar Nepal Admin</span>
-              <button type="button" onClick={() => setMobileOpen(false)} aria-label="Close menu" className="rounded-md p-1.5 text-ink-700 hover:bg-stone-100">
+            <div className="flex items-center justify-between bg-trust-700 pr-3">
+              <SidebarMasthead />
+              <button type="button" onClick={() => setMobileOpen(false)} aria-label="Close menu" className="rounded-md p-1.5 text-white/80 hover:bg-white/10 hover:text-white">
                 <X className="h-5 w-5" />
               </button>
             </div>
@@ -157,7 +180,12 @@ export function AdminLayout() {
           </button>
           <span className="font-display text-sm font-semibold text-ink-900 lg:hidden">Admin</span>
           <div className="flex items-center gap-3">
-            <span className="hidden text-sm text-ink-700/70 sm:inline">{user?.name}</span>
+            <div className="hidden items-center gap-2 sm:flex">
+              <span className="flex h-7 w-7 items-center justify-center rounded-full bg-accent-100 text-xs font-semibold text-accent-600">
+                {initial}
+              </span>
+              <span className="text-sm text-ink-700/70">{user?.name}</span>
+            </div>
             <button
               type="button"
               onClick={handleLogout}
@@ -170,14 +198,14 @@ export function AdminLayout() {
 
         {/* Compact tab strip on mobile for quick jumps without opening the drawer */}
         <nav className="flex gap-1 overflow-x-auto border-b border-stone-200 bg-white px-3 py-2 lg:hidden" aria-label="Admin sections">
-          {FLAT_NAV.map(({ to, label }) => (
+          {FLAT_NAV.map(({ to, label, tone }) => (
             <NavLink
               key={to}
               to={to}
               className={({ isActive }) =>
                 clsx(
                   'shrink-0 rounded-full px-3 py-1 text-xs font-medium',
-                  isActive ? 'bg-trust-100 text-trust-700' : 'text-ink-700/70 hover:bg-stone-100',
+                  isActive ? ADMIN_TONE_ACTIVE_NAV[tone] : 'border-transparent text-ink-700/70 hover:bg-stone-100',
                 )
               }
             >

@@ -1,8 +1,10 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
+import { Receipt } from 'lucide-react'
 import { useAdminPayments, type PaymentStatus } from '../../lib/api/payments'
 import { useRefundPayment } from '../../lib/api/admin'
 import { formatNpr } from '../../design-system/tokens'
+import { AdminPageHeader } from '../../components/admin/AdminPageHeader'
 import { Card } from '../../components/ui/Card'
 import { Badge } from '../../components/ui/Badge'
 import { Button } from '../../components/ui/Button'
@@ -25,19 +27,21 @@ export function Payments() {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <p className="text-sm text-ink-700/70">
-          Every featured-listing purchase. The only action available is a refund on a completed payment —
-          nothing here is ever hand-edited.
-        </p>
-        <Select value={status} onChange={(e) => setStatus(e.target.value as PaymentStatus | '')} className="w-44">
-          <option value="">All statuses</option>
-          <option value="pending">Pending</option>
-          <option value="completed">Completed</option>
-          <option value="failed">Failed</option>
-          <option value="refunded">Refunded</option>
-        </Select>
-      </div>
+      <AdminPageHeader
+        icon={Receipt}
+        tone="success"
+        title="Payments"
+        description="Every featured-listing purchase. The only action available is a refund on a completed payment — nothing here is ever hand-edited."
+        action={
+          <Select value={status} onChange={(e) => setStatus(e.target.value as PaymentStatus | '')} className="w-44">
+            <option value="">All statuses</option>
+            <option value="pending">Pending</option>
+            <option value="completed">Completed</option>
+            <option value="failed">Failed</option>
+            <option value="refunded">Refunded</option>
+          </Select>
+        }
+      />
 
       {isPending && <PropertyGridSkeleton count={4} />}
       {isError && <ErrorState onRetry={refetch} />}

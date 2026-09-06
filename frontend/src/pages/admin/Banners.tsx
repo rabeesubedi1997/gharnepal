@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react'
-import { ArrowDown, ArrowUp, Trash2 } from 'lucide-react'
+import { ArrowDown, ArrowUp, GalleryHorizontal, Trash2 } from 'lucide-react'
 import {
   useAdminBanners,
   useCreateBanner,
@@ -8,6 +8,7 @@ import {
 } from '../../lib/api/admin'
 import type { Banner } from '../../lib/api/banners'
 import { getErrorMessage } from '../../lib/api/errors'
+import { AdminPageHeader } from '../../components/admin/AdminPageHeader'
 import { Card } from '../../components/ui/Card'
 import { Badge } from '../../components/ui/Badge'
 import { Button } from '../../components/ui/Button'
@@ -68,12 +69,11 @@ export function Banners() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="font-display text-2xl font-semibold text-ink-900">Homepage banners</h1>
-        <p className="mt-1 text-sm text-ink-700/70">
-          Shown as a slider on the homepage, in the order below. Inactive banners are hidden from visitors.
-        </p>
-      </div>
+      <AdminPageHeader
+        icon={GalleryHorizontal}
+        title="Homepage banners"
+        description="Shown as a slider on the homepage, in the order below. Inactive banners are hidden from visitors."
+      />
 
       <Card className="flex flex-col gap-3 p-4">
         <h2 className="font-display text-base font-semibold text-ink-900">Add a banner</h2>

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Star } from 'lucide-react'
 import { useAdminRatings, useHideRating, useUnhideRating, type AdminRating } from '../../lib/api/admin'
+import { AdminPageHeader } from '../../components/admin/AdminPageHeader'
 import { Card } from '../../components/ui/Card'
 import { Badge } from '../../components/ui/Badge'
 import { Button } from '../../components/ui/Button'
@@ -19,19 +20,19 @@ export function Ratings() {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="font-display text-2xl font-semibold text-ink-900">Ratings & reviews</h1>
-          <p className="mt-1 text-sm text-ink-700/70">
-            Reviews publish immediately — hide one here if it's abusive, spam, or off-topic.
-          </p>
-        </div>
-        <Select value={status} onChange={(e) => setStatus(e.target.value as AdminRating['status'] | '')} className="w-40">
-          <option value="">All</option>
-          <option value="visible">Visible</option>
-          <option value="hidden">Hidden</option>
-        </Select>
-      </div>
+      <AdminPageHeader
+        icon={Star}
+        tone="warning"
+        title="Ratings & reviews"
+        description="Reviews publish immediately — hide one here if it's abusive, spam, or off-topic."
+        action={
+          <Select value={status} onChange={(e) => setStatus(e.target.value as AdminRating['status'] | '')} className="w-40">
+            <option value="">All</option>
+            <option value="visible">Visible</option>
+            <option value="hidden">Hidden</option>
+          </Select>
+        }
+      />
 
       {isPending && <PropertyGridSkeleton count={4} />}
       {isError && <ErrorState onRetry={refetch} />}

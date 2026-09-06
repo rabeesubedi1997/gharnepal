@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ExternalLink, Search as SearchIcon } from 'lucide-react'
 import { useAdminSeoPages } from '../../lib/api/seo'
+import { AdminPageHeader } from '../../components/admin/AdminPageHeader'
 import { Card } from '../../components/ui/Card'
 import { Badge } from '../../components/ui/Badge'
 import { Input, Select } from '../../components/ui/Input'
@@ -23,13 +24,11 @@ export function Seo() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="font-display text-2xl font-semibold text-ink-900">SEO</h1>
-        <p className="mt-1 text-sm text-ink-700/70">
-          Every page on the site, one at a time. Edit a page's title, description, and social preview — nothing
-          changes on the live site until you publish it here.
-        </p>
-      </div>
+      <AdminPageHeader
+        icon={SearchIcon}
+        title="SEO"
+        description="Every page on the site, one at a time. Edit a page's title, description, and social preview — nothing changes on the live site until you publish it here."
+      />
 
       <div className="flex flex-wrap items-center gap-3">
         <div className="relative w-full max-w-xs">

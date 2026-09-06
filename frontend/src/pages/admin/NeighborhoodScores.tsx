@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Trash2 } from 'lucide-react'
+import { MapPin, Trash2 } from 'lucide-react'
 import {
   NEIGHBORHOOD_SCORE_FACTORS,
   NEIGHBORHOOD_SCORE_FACTOR_LABEL,
@@ -14,6 +14,7 @@ import {
   type PoiType,
 } from '../../lib/api/neighborhoods'
 import { getErrorMessage } from '../../lib/api/errors'
+import { AdminPageHeader } from '../../components/admin/AdminPageHeader'
 import { Card } from '../../components/ui/Card'
 import { Badge } from '../../components/ui/Badge'
 import { Button } from '../../components/ui/Button'
@@ -91,6 +92,12 @@ export function NeighborhoodScores() {
 
   return (
     <div className="flex flex-col gap-6">
+      <AdminPageHeader
+        icon={MapPin}
+        tone="link"
+        title="Neighborhoods"
+        description="Curate a livability score and points of interest per neighborhood."
+      />
       <div className="max-w-sm">
         <Select
           label="Neighborhood"
