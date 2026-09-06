@@ -118,4 +118,46 @@ class CompetitorScanTest extends TestCase
             'url' => 'https://competitor.test/x',
         ])->assertForbidden();
     }
+
+    /**
+     * Regression test: adjacent block elements' text used to be read as one
+     * blob (DOM textContent has no inherent word boundary between elements),
+     * so "<div>Properties</div><div>View</div>" produced the single token
+     * "propertiesview"; and a div-based menu (not a semantic <nav> tag) used
+     * to survive into the keyword list since only literal nav/header/footer
+     * tags were stripped. Both are fixed by only reading prose-bearing tags
+     * (h1-h4/p/li) with a minimum length, joined with an explicit space.
+     */
+    public function test_scan_does_not_merge_adjacent_blocks_or_count_short_menu_text(): void
+    {
+        $html = <<<'HTML'
+            <html>
+            <head><title>Sample</title></head>
+            <body>
+                <div class="menu"><div>Contact</div><div>Follow</div><div>Mail</div></div>
+                <div>Properties</div><div>View</div>
+                <p>Genuine verified properties across every district in Kathmandu valley today.</p>
+            </body>
+            </html>
+            HTML;
+
+        Http::fake([
+            '*competitor.test/robots.txt' => Http::response('', 404),
+            '*competitor.test/*' => Http::response($html, 200),
+        ]);
+
+        $admin = $this->admin();
+
+        $response = $this->actingAs($admin, 'sanctum')->postJson('/api/v1/admin/seo/pages/home/scan', [
+            'url' => 'https://competitor.test/page',
+        ]);
+
+        $response->assertCreated();
+        $words = collect($response->json('data.scanned_keywords'))->pluck('word');
+
+        $this->assertFalse($words->contains('propertiesview'), 'adjacent block text should not merge into one word');
+        $this->assertFalse($words->contains('contact'), 'short menu-like text should not be counted as a keyword');
+        $this->assertFalse($words->contains('follow'));
+        $this->assertTrue($words->contains('verified'), 'real paragraph content should still be counted');
+    }
 }

@@ -10,6 +10,7 @@ export interface UserVerification {
   type: VerificationType
   status: VerificationStatus
   document_url: string | null
+  document_mime_type: string | null
   rejection_reason: string | null
   reviewed_at: string | null
   created_at: string
@@ -27,6 +28,10 @@ export function useMyVerifications() {
       const { data } = await apiClient.get<{ data: UserVerification[] }>('/account/verifications')
       return data.data
     },
+    // An admin approving/rejecting elsewhere doesn't invalidate this query (no
+    // websockets) — poll so a pending status updates without a manual refresh,
+    // matching notifications' cadence.
+    refetchInterval: 20000,
   })
 }
 

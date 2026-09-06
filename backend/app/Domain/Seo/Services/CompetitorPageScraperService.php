@@ -143,20 +143,45 @@ class CompetitorPageScraperService
             ->all();
     }
 
+    /**
+     * Minimum characters a text block needs to count as "content" rather than
+     * chrome — a nav link, button label, or stat-counter label ("Contact",
+     * "Follow", "12 deals") is almost always shorter than this; a real
+     * sentence or heading isn't. Headings get a lower bar since they're
+     * legitimately short but still valuable.
+     */
+    private const MIN_HEADING_CHARS = 8;
+
+    private const MIN_PARAGRAPH_CHARS = 25;
+
     /** @return array<int,array{word:string,count:int}> */
     private function keywords(Crawler $crawler): array
     {
-        // Strip non-content tags so nav/footer boilerplate doesn't dominate the count.
-        $crawler->filter('script, style, nav, footer, header, noscript')->each(
+        // Strip non-content tags so nav/footer/script boilerplate can't leak in —
+        // this only catches semantic <nav>/<header>/<footer>; a div-based menu
+        // without one of those tags still gets filtered out below by length.
+        $crawler->filter('script, style, nav, footer, header, noscript, form')->each(
             fn (Crawler $node) => $node->getNode(0)?->parentNode?->removeChild($node->getNode(0)),
         );
 
-        $bodyNode = $crawler->filter('body');
-        $text = $bodyNode->count() ? $bodyNode->first()->text() : '';
-        $text = strtolower(preg_replace('/[^a-zA-Z\s]/', ' ', $text) ?? '');
+        // Only pull from tags that actually carry prose (headings/paragraphs/list
+        // items), each trimmed and kept separate — joining with an explicit space
+        // avoids two adjacent block elements' text silently fusing into one word
+        // (e.g. "<div>Properties</div><div>View</div>" reading as "propertiesview"
+        // when a whole container's raw textContent is read in one shot instead).
+        $blocks = $crawler->filter('h1, h2, h3, h4, p, li')->each(function (Crawler $node) {
+            $text = trim(preg_replace('/\s+/', ' ', $node->text()) ?? '');
+            $isHeading = in_array(strtolower($node->nodeName()), ['h1', 'h2', 'h3', 'h4'], true);
+            $minLength = $isHeading ? self::MIN_HEADING_CHARS : self::MIN_PARAGRAPH_CHARS;
+
+            return mb_strlen($text) >= $minLength ? $text : null;
+        });
+
+        $content = implode(' ', array_filter($blocks));
+        $normalized = strtolower(preg_replace('/[^a-zA-Z\s]/', ' ', $content) ?? '');
 
         $counts = [];
-        foreach (preg_split('/\s+/', $text) ?: [] as $word) {
+        foreach (preg_split('/\s+/', $normalized) ?: [] as $word) {
             if (strlen($word) < 4 || in_array($word, self::STOPWORDS, true)) {
                 continue;
             }

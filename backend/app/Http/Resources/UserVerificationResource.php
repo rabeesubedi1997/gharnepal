@@ -15,6 +15,7 @@ class UserVerificationResource extends JsonResource
             'type' => $this->type,
             'status' => $this->status,
             'document_url' => $this->document?->url(),
+            'document_mime_type' => $this->document?->mime_type,
             'rejection_reason' => $this->rejection_reason,
             'reviewed_at' => $this->reviewed_at,
             'created_at' => $this->created_at,

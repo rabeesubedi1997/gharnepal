@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { FileText } from 'lucide-react'
 import { useAdminVerifications, useApproveVerification, useRejectVerification, type UserVerification } from '../../lib/api/verifications'
 import { Card } from '../../components/ui/Card'
 import { Badge } from '../../components/ui/Badge'
@@ -34,8 +35,15 @@ export function Verifications() {
         <Card key={v.id} className="flex flex-wrap items-center justify-between gap-3 p-4">
           <div className="flex items-center gap-3">
             {v.document_url && (
-              <a href={v.document_url} target="_blank" rel="noreferrer">
-                <img src={v.document_url} alt="Submitted document" className="h-16 w-16 rounded-lg border border-stone-200 object-cover" />
+              <a href={v.document_url} target="_blank" rel="noreferrer" className="shrink-0">
+                {v.document_mime_type?.startsWith('image/') ? (
+                  <img src={v.document_url} alt="Submitted document" className="h-16 w-16 rounded-lg border border-stone-200 object-cover" />
+                ) : (
+                  <span className="flex h-16 w-16 flex-col items-center justify-center gap-1 rounded-lg border border-stone-200 bg-stone-50 text-ink-700/60 hover:border-trust-700 hover:text-trust-700">
+                    <FileText className="h-6 w-6" aria-hidden="true" />
+                    <span className="text-[10px] font-medium uppercase">PDF</span>
+                  </span>
+                )}
               </a>
             )}
             <div>
