@@ -12,6 +12,7 @@ import {
 } from '../../lib/api/neighborhoods'
 import { useCurrentUser } from '../../lib/api/auth'
 import { getErrorMessage } from '../../lib/api/errors'
+import { SeoHead } from '../../components/seo/SeoHead'
 import { Card } from '../../components/ui/Card'
 import { Badge } from '../../components/ui/Badge'
 import { Button } from '../../components/ui/Button'
@@ -80,6 +81,7 @@ export function NeighborhoodProfile() {
 
   return (
     <div className="flex flex-col gap-6">
+      <SeoHead seo={neighborhood.seo} />
       <div>
         <Link to="/neighborhoods" className="text-sm text-link-600 hover:text-link-700">
           &larr; All neighborhoods

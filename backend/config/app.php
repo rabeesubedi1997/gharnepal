@@ -56,6 +56,20 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Frontend URL
+    |--------------------------------------------------------------------------
+    |
+    | The public-facing SPA origin (not this API). Used to build absolute
+    | canonical URLs, sitemap <loc> entries, and OG/structured-data URLs that
+    | must point at the site a search engine or social crawler actually
+    | indexes, not the API host.
+    |
+    */
+
+    'frontend_url' => rtrim(env('FRONTEND_URL', 'http://localhost:5173'), '/'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Timezone
     |--------------------------------------------------------------------------
     |

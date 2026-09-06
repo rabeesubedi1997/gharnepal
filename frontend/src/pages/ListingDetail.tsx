@@ -24,6 +24,7 @@ import { LandDueDiligenceChecklist } from '../components/property/LandDueDiligen
 import { useVerifyLandProfile, type LandProfile } from '../lib/api/landProfile'
 import { TrustBadge } from '../components/trust/TrustBadge'
 import { useClearTrustOverride, useSetTrustOverride, type TrustScore } from '../lib/api/trust'
+import { SeoHead } from '../components/seo/SeoHead'
 
 const PARKING_TYPE_LABEL: Record<string, string> = {
   car: 'Car',
@@ -96,6 +97,7 @@ export function ListingDetail() {
 
   return (
     <div className="flex flex-col gap-6">
+      <SeoHead seo={listing.seo} />
       <div>
         {images.length > 0 ? (
           <div className="flex flex-col gap-2">

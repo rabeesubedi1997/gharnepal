@@ -1,6 +1,8 @@
 import { Link } from 'react-router-dom'
 import { Building2, ShieldCheck, Users } from 'lucide-react'
 import { useAgencies } from '../../lib/api/agencies'
+import { useStaticPageSeo } from '../../lib/api/seo'
+import { SeoHead } from '../../components/seo/SeoHead'
 import { Card } from '../../components/ui/Card'
 import { Badge } from '../../components/ui/Badge'
 import { EmptyState } from '../../components/ui/EmptyState'
@@ -9,9 +11,11 @@ import { PropertyGridSkeleton } from '../../components/ui/Skeleton'
 
 export function AgentDirectory() {
   const { data: agencies, isPending, isError, refetch } = useAgencies()
+  const { data: seo } = useStaticPageSeo('agents')
 
   return (
     <div className="flex flex-col gap-6">
+      <SeoHead seo={seo} />
       <div>
         <h1 className="font-display text-2xl font-semibold text-ink-900">Find a verified agent</h1>
         <p className="mt-1 text-sm text-ink-700/70">

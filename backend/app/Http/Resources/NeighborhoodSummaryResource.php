@@ -2,18 +2,21 @@
 
 namespace App\Http\Resources;
 
-use App\Domain\Seo\Services\SeoService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
-class NeighborhoodProfileResource extends JsonResource
+/**
+ * Directory-listing shape — no `seo` (computing effective SEO per row would
+ * mean one extra query per neighborhood on a page that never renders it);
+ * that only matters on the single-profile page, see NeighborhoodProfileResource.
+ */
+class NeighborhoodSummaryResource extends JsonResource
 {
     public function toArray(Request $request): array
     {
         $score = $this->whenLoaded('score');
 
         return [
-            'seo' => app(SeoService::class)->effectiveForNeighborhood($this->resource),
             'id' => $this->id,
             'name' => $this->name,
             'name_ne' => $this->name_ne,
@@ -33,8 +36,6 @@ class NeighborhoodProfileResource extends JsonResource
                     'notes' => $f->notes,
                 ]) : [],
             ] : null,
-            'pois' => NeighborhoodPoiResource::collection($this->whenLoaded('pois')),
-            'community_notes' => CommunityNoteResource::collection($this->whenLoaded('communityNotes')),
         ];
     }
 }

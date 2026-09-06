@@ -3,6 +3,8 @@ import { Calculator } from 'lucide-react'
 import { useCalculateRental, type RentalCalculatorResult } from '../../lib/api/calculators'
 import { useCurrentUser } from '../../lib/api/auth'
 import { getErrorMessage } from '../../lib/api/errors'
+import { useStaticPageSeo } from '../../lib/api/seo'
+import { SeoHead } from '../../components/seo/SeoHead'
 import { formatNpr } from '../../design-system/tokens'
 import { Card } from '../../components/ui/Card'
 import { Input } from '../../components/ui/Input'
@@ -38,6 +40,7 @@ export function RentalCalculator() {
   const [saveName, setSaveName] = useState('')
   const [saved, setSaved] = useState(false)
   const calculate = useCalculateRental()
+  const { data: seo } = useStaticPageSeo('calculators-rental')
   const { data: user } = useCurrentUser()
 
   const set = (key: keyof FormState) => (e: React.ChangeEvent<HTMLInputElement>) => setForm({ ...form, [key]: e.target.value })
@@ -80,6 +83,7 @@ export function RentalCalculator() {
 
   return (
     <div className="mx-auto max-w-4xl">
+      <SeoHead seo={seo} />
       <div className="mb-6 flex items-center gap-2">
         <Calculator className="h-6 w-6 text-trust-700" />
         <h1 className="font-display text-2xl font-semibold text-ink-900">True monthly rental cost</h1>

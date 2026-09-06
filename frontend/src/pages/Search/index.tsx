@@ -4,6 +4,8 @@ import { Bookmark, List, Map as MapIcon, SlidersHorizontal } from 'lucide-react'
 import { useListingSearch, type SearchFilters } from '../../lib/api/listings'
 import { useCreateSavedSearch } from '../../lib/api/savedSearches'
 import { useCurrentUser } from '../../lib/api/auth'
+import { useStaticPageSeo } from '../../lib/api/seo'
+import { SeoHead } from '../../components/seo/SeoHead'
 import { filtersFromSearchParams, filtersToSearchParams } from '../../lib/searchParams'
 import { PropertyCard } from '../../components/property/PropertyCard'
 import { MapView } from '../../components/property/MapView'
@@ -33,6 +35,15 @@ const TITLES: Record<string, string> = {
   '/search': 'Search results',
 }
 
+/** Only routes with a dedicated static SEO page — a plain /search?q=... isn't one. */
+const SEO_KEYS: Record<string, string> = {
+  '/buy': 'buy',
+  '/rent': 'rent',
+  '/rooms': 'rooms',
+  '/land': 'land',
+  '/commercial': 'commercial',
+}
+
 export function Search() {
   const location = useLocation()
   const [searchParams, setSearchParams] = useSearchParams()
@@ -45,6 +56,7 @@ export function Search() {
 
   const { data: user } = useCurrentUser()
   const { data, isPending, isError, refetch, isFetching } = useListingSearch(filters)
+  const { data: seo } = useStaticPageSeo(SEO_KEYS[location.pathname] ?? null)
 
   // Keep the URL in sync so searches are shareable/bookmarkable.
   useEffect(() => {
@@ -54,6 +66,7 @@ export function Search() {
 
   return (
     <div className="flex flex-col gap-4">
+      <SeoHead seo={seo} />
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="font-display text-2xl font-semibold text-ink-900">
           {TITLES[location.pathname] ?? 'Search results'}

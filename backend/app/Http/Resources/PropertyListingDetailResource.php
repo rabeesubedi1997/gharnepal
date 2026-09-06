@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Domain\Seo\Services\SeoService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -13,6 +14,7 @@ class PropertyListingDetailResource extends JsonResource
         $owner = $property?->owner ?? $property?->createdBy;
 
         return [
+            'seo' => app(SeoService::class)->effectiveForListing($this->resource),
             'id' => $this->id,
             'slug' => $this->slug,
             'title' => $this->title,

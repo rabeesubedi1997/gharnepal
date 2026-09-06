@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { apiClient, ensureCsrfCookie } from './client'
+import type { EffectiveSeo } from './seo'
 
 export const NEIGHBORHOOD_SCORE_FACTORS = [
   'transport_access',
@@ -111,6 +112,7 @@ export interface NeighborhoodSummary {
 }
 
 export interface NeighborhoodProfile extends NeighborhoodSummary {
+  seo: EffectiveSeo
   pois: NeighborhoodPoi[]
   community_notes: CommunityNote[]
 }

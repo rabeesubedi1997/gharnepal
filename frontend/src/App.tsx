@@ -15,6 +15,8 @@ import { Agencies as AdminAgencies } from './pages/admin/Agencies'
 import { Amenities as AdminAmenities } from './pages/admin/Amenities'
 import { Ratings as AdminRatings } from './pages/admin/Ratings'
 import { Banners as AdminBanners } from './pages/admin/Banners'
+import { Seo as AdminSeo } from './pages/admin/Seo'
+import { SeoPageEditor as AdminSeoPageEditor } from './pages/admin/SeoPageEditor'
 import { PendingListings } from './pages/admin/PendingListings'
 import { Reports } from './pages/admin/Reports'
 import { DuplicateFlags } from './pages/admin/DuplicateFlags'
@@ -168,6 +170,8 @@ export default function App() {
         <Route path="community-notes" element={<CommunityNotesModeration />} />
         <Route path="ratings" element={<AdminRatings />} />
         <Route path="payments" element={<AdminPayments />} />
+        <Route path="seo" element={<AdminSeo />} />
+        <Route path="seo/:key" element={<AdminSeoPageEditor />} />
       </Route>
     </Routes>
   )

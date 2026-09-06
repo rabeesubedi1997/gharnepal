@@ -31,6 +31,7 @@ use App\Http\Controllers\Api\V1\Messaging\MessageController;
 use App\Http\Controllers\Api\V1\NotificationController;
 use App\Http\Controllers\Api\V1\RatingController;
 use App\Http\Controllers\Api\V1\Admin\RatingController as AdminRatingController;
+use App\Http\Controllers\Api\V1\Admin\SeoController as AdminSeoController;
 use App\Http\Controllers\Api\V1\Owner\FeaturedListingController;
 use App\Http\Controllers\Api\V1\Owner\LandProfileController;
 use App\Http\Controllers\Api\V1\Owner\ListingAnalyticsController;
@@ -44,6 +45,7 @@ use App\Http\Controllers\Api\V1\Public\BannerController;
 use App\Http\Controllers\Api\V1\Public\ListingController;
 use App\Http\Controllers\Api\V1\Public\LocationController;
 use App\Http\Controllers\Api\V1\Public\NeighborhoodController;
+use App\Http\Controllers\Api\V1\Public\SeoController;
 use App\Http\Controllers\Api\V1\ViewingRequestController;
 use App\Http\Controllers\Api\V1\VisitVerificationController;
 use Illuminate\Support\Facades\Route;
@@ -110,6 +112,10 @@ Route::prefix('v1')->group(function () {
 
     // Homepage banners
     Route::get('banners', [BannerController::class, 'index']);
+
+    // Effective (override-merged) SEO metadata for static/category pages —
+    // listing/neighborhood/agency SEO rides along inside their own detail resource.
+    Route::get('seo/pages/{key}', [SeoController::class, 'page']);
 
     // Cost calculators — stateless; optionally persisted if the caller is authenticated
     Route::post('calculators/rental', [CostCalculatorController::class, 'rental']);
@@ -220,6 +226,16 @@ Route::prefix('v1')->group(function () {
 
         Route::get('payments', [AdminPaymentController::class, 'index']);
         Route::patch('payments/{transaction}/refund', [AdminPaymentController::class, 'refund']);
+
+        // SEO — "page approach": one page_key per page, override + competitor-scan history.
+        // page_key contains a colon (e.g. "listing:some-slug") — Laravel's default route
+        // parameter pattern ([^/]+) already allows that without a custom regex.
+        Route::get('seo/pages', [AdminSeoController::class, 'index']);
+        Route::get('seo/pages/{key}', [AdminSeoController::class, 'show']);
+        Route::put('seo/pages/{key}', [AdminSeoController::class, 'update']);
+        Route::delete('seo/pages/{key}', [AdminSeoController::class, 'destroy']);
+        Route::post('seo/pages/{key}/scan', [AdminSeoController::class, 'scan']);
+        Route::delete('seo/scans/{scan}', [AdminSeoController::class, 'discardScan']);
 
         Route::get('ratings', [AdminRatingController::class, 'index']);
         Route::patch('ratings/{rating}/hide', [AdminRatingController::class, 'hide']);

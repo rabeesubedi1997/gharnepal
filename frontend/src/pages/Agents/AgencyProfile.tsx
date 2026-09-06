@@ -7,6 +7,7 @@ import { EmptyState } from '../../components/ui/EmptyState'
 import { ErrorState } from '../../components/ui/ErrorState'
 import { Skeleton } from '../../components/ui/Skeleton'
 import { PropertyCard } from '../../components/property/PropertyCard'
+import { SeoHead } from '../../components/seo/SeoHead'
 
 export function AgencyProfile() {
   const { slug } = useParams<{ slug: string }>()
@@ -27,6 +28,7 @@ export function AgencyProfile() {
 
   return (
     <div className="flex flex-col gap-6">
+      <SeoHead seo={agency.seo} />
       <Link to="/agents" className="text-sm text-link-600 hover:text-link-700">
         &larr; All agents
       </Link>

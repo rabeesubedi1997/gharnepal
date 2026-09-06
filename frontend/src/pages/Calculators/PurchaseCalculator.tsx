@@ -3,6 +3,8 @@ import { Calculator } from 'lucide-react'
 import { useCalculatePurchase, type PurchaseCalculatorResult } from '../../lib/api/calculators'
 import { useCurrentUser } from '../../lib/api/auth'
 import { getErrorMessage } from '../../lib/api/errors'
+import { useStaticPageSeo } from '../../lib/api/seo'
+import { SeoHead } from '../../components/seo/SeoHead'
 import { formatNpr } from '../../design-system/tokens'
 import { Card } from '../../components/ui/Card'
 import { Input } from '../../components/ui/Input'
@@ -38,6 +40,7 @@ export function PurchaseCalculator() {
   const [saveName, setSaveName] = useState('')
   const [saved, setSaved] = useState(false)
   const calculate = useCalculatePurchase()
+  const { data: seo } = useStaticPageSeo('calculators-purchase')
   const { data: user } = useCurrentUser()
 
   const set = (key: keyof FormState) => (e: React.ChangeEvent<HTMLInputElement>) => setForm({ ...form, [key]: e.target.value })
@@ -68,6 +71,7 @@ export function PurchaseCalculator() {
 
   return (
     <div className="mx-auto max-w-4xl">
+      <SeoHead seo={seo} />
       <div className="mb-6 flex items-center gap-2">
         <Calculator className="h-6 w-6 text-trust-700" />
         <h1 className="font-display text-2xl font-semibold text-ink-900">True purchase cost</h1>

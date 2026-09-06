@@ -2,6 +2,8 @@ import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { MapPin, ShieldCheck } from 'lucide-react'
 import { useNeighborhoodList } from '../../lib/api/neighborhoods'
+import { useStaticPageSeo } from '../../lib/api/seo'
+import { SeoHead } from '../../components/seo/SeoHead'
 import { Card } from '../../components/ui/Card'
 import { Badge } from '../../components/ui/Badge'
 import { Input } from '../../components/ui/Input'
@@ -11,6 +13,7 @@ import { PropertyGridSkeleton } from '../../components/ui/Skeleton'
 
 export function NeighborhoodDirectory() {
   const { data, isPending, isError, refetch } = useNeighborhoodList()
+  const { data: seo } = useStaticPageSeo('neighborhoods')
   const [query, setQuery] = useState('')
 
   const filtered = useMemo(() => {
@@ -22,6 +25,7 @@ export function NeighborhoodDirectory() {
 
   return (
     <div className="flex flex-col gap-6">
+      <SeoHead seo={seo} />
       <div>
         <h1 className="font-display text-2xl font-semibold text-ink-900">Explore neighborhoods</h1>
         <p className="mt-1 text-sm text-ink-700/70">

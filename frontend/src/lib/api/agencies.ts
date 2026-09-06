@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { apiClient } from './client'
 import type { ListingSummary } from './listings'
+import type { EffectiveSeo } from './seo'
 
 export interface AgencySummary {
   id: number
@@ -14,6 +15,7 @@ export interface AgencySummary {
 }
 
 export interface AgencyProfile extends AgencySummary {
+  seo: EffectiveSeo
   verified_at: string | null
   members: { name: string; role_in_agency: 'owner_admin' | 'agent' }[]
   active_listings: ListingSummary[]

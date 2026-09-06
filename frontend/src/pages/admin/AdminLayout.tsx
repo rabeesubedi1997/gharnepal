@@ -15,6 +15,7 @@ import {
   Menu,
   MessageSquareText,
   Receipt,
+  Search,
   ShieldCheck,
   Star,
   Users,
@@ -59,6 +60,10 @@ const NAV_GROUPS = [
   {
     title: 'Finance',
     items: [{ to: '/admin/payments', label: 'Payments', icon: Receipt }],
+  },
+  {
+    title: 'SEO & marketing',
+    items: [{ to: '/admin/seo', label: 'SEO pages', icon: Search }],
   },
 ]
 

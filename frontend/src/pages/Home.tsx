@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { MapPin, Search } from 'lucide-react'
 import { useMunicipalities } from '../lib/api/locations'
+import { useStaticPageSeo } from '../lib/api/seo'
+import { SeoHead } from '../components/seo/SeoHead'
 import { BannerCarousel } from '../components/home/BannerCarousel'
 import { Card } from '../components/ui/Card'
 import { Button } from '../components/ui/Button'
@@ -11,6 +13,7 @@ import { ErrorState } from '../components/ui/ErrorState'
 
 export function Home() {
   const { data: municipalities, isPending, isError, refetch } = useMunicipalities()
+  const { data: seo } = useStaticPageSeo('home')
   const [query, setQuery] = useState('')
   const navigate = useNavigate()
 
@@ -21,6 +24,7 @@ export function Home() {
 
   return (
     <div className="flex flex-col gap-12">
+      <SeoHead seo={seo} />
       <section className="flex flex-col items-center gap-6 rounded-card bg-trust-700 px-6 py-16 text-center text-white">
         <h1 className="max-w-2xl font-display text-3xl font-semibold sm:text-4xl">
           Find, verify, and confidently act on your next property in Nepal

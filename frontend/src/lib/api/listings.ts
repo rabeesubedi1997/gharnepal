@@ -3,6 +3,7 @@ import { apiClient, ensureCsrfCookie } from './client'
 import type { Property, PropertyType } from './properties'
 import type { Amenity } from './amenities'
 import type { TrustScore } from './trust'
+import type { EffectiveSeo } from './seo'
 
 export interface MediaItem {
   id: number
@@ -52,6 +53,7 @@ export interface ListingSummary {
 }
 
 export interface ListingDetail {
+  seo: EffectiveSeo
   id: number
   slug: string
   title: string

@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Domain\Seo\Services\SeoService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\Storage;
@@ -11,6 +12,7 @@ class AgencyProfileResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
+            'seo' => app(SeoService::class)->effectiveForAgency($this->resource),
             'id' => $this->id,
             'name' => $this->name,
             'slug' => $this->slug,
