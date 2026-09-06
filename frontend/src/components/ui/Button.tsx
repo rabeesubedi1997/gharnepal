@@ -11,12 +11,18 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   isLoading?: boolean
 }
 
+// Disabled state is a flat, neutral gray on every variant — not the variant's
+// own color faded with opacity. A translucent pastel version of a colored
+// button reads as a lazy default, not a designed state; a real product
+// (Zillow included) shows "this isn't clickable yet" as plain gray, full stop.
+const DISABLED = 'disabled:!bg-stone-200 disabled:!text-ink-900/35 disabled:!border-stone-200 disabled:shadow-none'
+
 export const variantClasses: Record<Variant, string> = {
-  primary: 'bg-trust-700 text-white hover:bg-trust-600 focus-visible:outline-trust-700',
-  secondary: 'bg-accent-600 text-white hover:bg-accent-500 focus-visible:outline-accent-600',
-  outline: 'border border-stone-200 bg-white text-ink-900 hover:bg-stone-100 focus-visible:outline-ink-700',
-  ghost: 'text-ink-700 hover:bg-stone-100 focus-visible:outline-ink-700',
-  danger: 'bg-danger-600 text-white hover:bg-red-700 focus-visible:outline-danger-600',
+  primary: `bg-trust-700 text-white hover:bg-trust-600 focus-visible:outline-trust-700 ${DISABLED}`,
+  secondary: `bg-accent-600 text-white hover:bg-accent-500 focus-visible:outline-accent-600 ${DISABLED}`,
+  outline: `border border-stone-200 bg-white text-ink-900 hover:bg-stone-100 focus-visible:outline-ink-700 ${DISABLED}`,
+  ghost: `text-ink-700 hover:bg-stone-100 focus-visible:outline-ink-700 ${DISABLED}`,
+  danger: `bg-danger-600 text-white hover:bg-red-700 focus-visible:outline-danger-600 ${DISABLED}`,
 }
 
 export const sizeClasses: Record<Size, string> = {
@@ -28,7 +34,7 @@ export const sizeClasses: Record<Size, string> = {
 export const buttonBaseClasses =
   'inline-flex items-center justify-center rounded-lg font-medium transition-colors ' +
   'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 ' +
-  'disabled:cursor-not-allowed disabled:opacity-50'
+  'disabled:cursor-not-allowed'
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button(
   { variant = 'primary', size = 'md', isLoading, disabled, className, children, ...props },
