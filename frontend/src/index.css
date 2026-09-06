@@ -1,0 +1,59 @@
+@import "tailwindcss";
+
+/*
+ * Design tokens — Nepal-inspired, premium-but-friendly palette.
+ * Keep in sync with `src/design-system/tokens.ts` (used anywhere JS needs a raw
+ * color value, e.g. map markers or chart series, outside of Tailwind classes).
+ */
+@theme {
+  --font-display: "Fraunces", "Noto Serif Devanagari", Georgia, serif;
+  --font-sans: "Inter", "Noto Sans Devanagari", ui-sans-serif, system-ui, sans-serif;
+
+  /* Background / surface */
+  --color-stone-50: #faf8f5;
+  --color-stone-100: #f3efe8;
+  --color-stone-200: #e7e0d4;
+
+  /* Ink / trust (deep green + charcoal) */
+  --color-ink-900: #1c2321;
+  --color-ink-700: #33403b;
+  --color-trust-700: #1f5d45;
+  --color-trust-600: #256b50;
+  --color-trust-100: #e2efe9;
+
+  /* Accent (saffron / terracotta) */
+  --color-accent-600: #c2542d;
+  --color-accent-500: #d97b3f;
+  --color-accent-100: #fbe8d8;
+
+  /* Links / actions */
+  --color-link-600: #2563eb;
+  --color-link-700: #1d4ed8;
+
+  /* Status */
+  --color-danger-600: #dc2626;
+  --color-danger-100: #fee2e2;
+  --color-warning-600: #d97706;
+  --color-warning-100: #fef3c7;
+  --color-success-600: #15803d;
+  --color-success-100: #dcfce7;
+
+  --radius-card: 0.75rem;
+}
+
+html, body {
+  /* Defensive: a single overflowing child (a wide table, an unwrapped flex
+     row, etc.) should never force the whole page to scroll sideways. */
+  overflow-x: hidden;
+  max-width: 100%;
+}
+
+body {
+  background-color: var(--color-stone-50);
+  color: var(--color-ink-900);
+  font-family: var(--font-sans);
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--font-display);
+}
