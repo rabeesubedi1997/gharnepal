@@ -18,6 +18,8 @@ const columns = [
       { to: '/calculators/purchase', label: 'Purchase cost calculator' },
       { to: '/neighborhoods', label: 'Neighborhood explorer' },
       { to: '/agents', label: 'Find an agent' },
+      { to: '/property-requests', label: 'Property requests' },
+      { to: '/blog', label: 'Blog' },
     ],
   },
   {

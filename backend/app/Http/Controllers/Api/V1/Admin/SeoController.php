@@ -7,6 +7,7 @@ use App\Domain\Seo\Services\SeoService;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Admin\SeoCompetitorScanResource;
 use App\Models\Agency;
+use App\Models\BlogPost;
 use App\Models\Neighborhood;
 use App\Models\PropertyListing;
 use App\Models\SeoCompetitorScan;
@@ -68,6 +69,14 @@ class SeoController extends Controller
             Agency::query()->orderBy('name')->get(['slug', 'name'])->each(function ($a) use ($rows, $overrides) {
                 $key = "agency:{$a->slug}";
                 $rows->push($this->row($key, 'agency', "Agency: {$a->name}", "/agents/{$a->slug}", $overrides->get($key)));
+            });
+        }
+
+        if (! $type || $type === 'blog') {
+            $overrides = SeoPage::query()->where('page_type', 'blog')->get()->keyBy('page_key');
+            BlogPost::query()->orderByDesc('published_at')->get(['slug', 'title'])->each(function ($post) use ($rows, $overrides) {
+                $key = "blog:{$post->slug}";
+                $rows->push($this->row($key, 'blog', "Blog: {$post->title}", "/blog/{$post->slug}", $overrides->get($key)));
             });
         }
 
@@ -227,6 +236,12 @@ class SeoController extends Controller
             return $agency ? $this->seo->effectiveForAgency($agency) : null;
         }
 
+        if (str_starts_with($key, 'blog:')) {
+            $post = BlogPost::query()->where('slug', substr($key, 5))->with('author')->first();
+
+            return $post ? $this->seo->effectiveForBlogPost($post) : null;
+        }
+
         return null;
     }
 
@@ -244,6 +259,9 @@ class SeoController extends Controller
         if (str_starts_with($key, 'agency:') && Agency::query()->where('slug', substr($key, 7))->exists()) {
             return 'agency';
         }
+        if (str_starts_with($key, 'blog:') && BlogPost::query()->where('slug', substr($key, 5))->exists()) {
+            return 'blog';
+        }
 
         return null;
     }
@@ -255,6 +273,7 @@ class SeoController extends Controller
             'listing' => 'Listing: '.PropertyListing::where('slug', substr($key, 8))->value('title'),
             'neighborhood' => 'Neighborhood: '.Neighborhood::find(substr($key, 13))?->name,
             'agency' => 'Agency: '.Agency::where('slug', substr($key, 7))->value('name'),
+            'blog' => 'Blog: '.BlogPost::where('slug', substr($key, 5))->value('title'),
             default => $key,
         };
     }

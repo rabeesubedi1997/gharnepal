@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Domain\Seo\Services\SeoService;
 use App\Models\Agency;
+use App\Models\BlogPost;
 use App\Models\Neighborhood;
 use App\Models\PropertyListing;
 use Illuminate\Http\Response;
@@ -52,6 +53,10 @@ class SitemapController extends Controller
 
             Agency::query()->whereNotNull('verified_at')->where('status', 'active')->select(['slug', 'updated_at'])->get()->each(function ($a) use (&$urls, $base) {
                 $urls[] = ['loc' => "{$base}/agents/{$a->slug}", 'lastmod' => $a->updated_at->toAtomString(), 'changefreq' => 'weekly', 'priority' => '0.5'];
+            });
+
+            BlogPost::query()->where('status', 'published')->select(['slug', 'updated_at'])->get()->each(function ($p) use (&$urls, $base) {
+                $urls[] = ['loc' => "{$base}/blog/{$p->slug}", 'lastmod' => $p->updated_at->toAtomString(), 'changefreq' => 'monthly', 'priority' => '0.6'];
             });
 
             $body = collect($urls)->map(function ($u) {

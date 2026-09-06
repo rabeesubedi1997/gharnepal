@@ -15,6 +15,8 @@ import { Agencies as AdminAgencies } from './pages/admin/Agencies'
 import { Amenities as AdminAmenities } from './pages/admin/Amenities'
 import { Ratings as AdminRatings } from './pages/admin/Ratings'
 import { Banners as AdminBanners } from './pages/admin/Banners'
+import { Blog as AdminBlog } from './pages/admin/Blog'
+import { BlogEditor as AdminBlogEditor } from './pages/admin/BlogEditor'
 import { Seo as AdminSeo } from './pages/admin/Seo'
 import { SeoPageEditor as AdminSeoPageEditor } from './pages/admin/SeoPageEditor'
 import { PendingListings } from './pages/admin/PendingListings'
@@ -39,6 +41,8 @@ import { Payments as AdminPayments } from './pages/admin/Payments'
 import { AgentDirectory } from './pages/Agents'
 import { AgencyProfile } from './pages/Agents/AgencyProfile'
 import { PropertyRequests } from './pages/PropertyRequests'
+import { BlogList } from './pages/Blog'
+import { BlogPostDetail } from './pages/Blog/BlogPostDetail'
 import { RequireAuth } from './components/auth/RequireAuth'
 
 export default function App() {
@@ -58,6 +62,8 @@ export default function App() {
         <Route path="agents" element={<AgentDirectory />} />
         <Route path="agents/:slug" element={<AgencyProfile />} />
         <Route path="property-requests" element={<PropertyRequests />} />
+        <Route path="blog" element={<BlogList />} />
+        <Route path="blog/:slug" element={<BlogPostDetail />} />
         <Route path="calculators/rental" element={<RentalCalculator />} />
         <Route path="calculators/purchase" element={<PurchaseCalculator />} />
 
@@ -160,6 +166,8 @@ export default function App() {
         <Route index element={<Navigate to="dashboard" replace />} />
         <Route path="dashboard" element={<AdminDashboard />} />
         <Route path="banners" element={<AdminBanners />} />
+        <Route path="blog" element={<AdminBlog />} />
+        <Route path="blog/:id" element={<AdminBlogEditor />} />
         <Route path="users" element={<AdminUsers />} />
         <Route path="agencies" element={<AdminAgencies />} />
         <Route path="listings/pending" element={<PendingListings />} />

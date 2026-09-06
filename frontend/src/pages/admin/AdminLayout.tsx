@@ -14,6 +14,7 @@ import {
   MapPin,
   Menu,
   MessageSquareText,
+  Newspaper,
   Receipt,
   Search,
   ShieldCheck,
@@ -31,6 +32,7 @@ const NAV_GROUPS: { title: string; tone: AdminTone; items: { to: string; label: 
     items: [
       { to: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
       { to: '/admin/banners', label: 'Homepage banners', icon: GalleryHorizontal },
+      { to: '/admin/blog', label: 'Blog', icon: Newspaper },
     ],
   },
   {

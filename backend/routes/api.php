@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\V1\Account\VerificationController;
 use App\Http\Controllers\Api\V1\Admin\AgencyController as AdminAgencyController;
 use App\Http\Controllers\Api\V1\Admin\AmenityController as AdminAmenityController;
 use App\Http\Controllers\Api\V1\Admin\BannerController as AdminBannerController;
+use App\Http\Controllers\Api\V1\Admin\BlogPostController as AdminBlogPostController;
 use App\Http\Controllers\Api\V1\Admin\CommunityNoteModerationController;
 use App\Http\Controllers\Api\V1\Admin\DashboardController;
 use App\Http\Controllers\Api\V1\Admin\DuplicateFlagController;
@@ -43,6 +44,7 @@ use App\Http\Controllers\Api\V1\Owner\PropertyListingController;
 use App\Http\Controllers\Api\V1\Public\AgencyController;
 use App\Http\Controllers\Api\V1\Public\AmenityController;
 use App\Http\Controllers\Api\V1\Public\BannerController;
+use App\Http\Controllers\Api\V1\Public\BlogController;
 use App\Http\Controllers\Api\V1\Public\ListingController;
 use App\Http\Controllers\Api\V1\Public\LocationController;
 use App\Http\Controllers\Api\V1\Public\NeighborhoodController;
@@ -122,6 +124,10 @@ Route::prefix('v1')->group(function () {
 
     // Homepage banners
     Route::get('banners', [BannerController::class, 'index']);
+
+    // Blog — real content pages for SEO
+    Route::get('blog', [BlogController::class, 'index']);
+    Route::get('blog/{slug}', [BlogController::class, 'show']);
 
     // Effective (override-merged) SEO metadata for static/category pages —
     // listing/neighborhood/agency SEO rides along inside their own detail resource.
@@ -255,6 +261,12 @@ Route::prefix('v1')->group(function () {
         Route::post('banners', [AdminBannerController::class, 'store']);
         Route::put('banners/{banner}', [AdminBannerController::class, 'update']);
         Route::delete('banners/{banner}', [AdminBannerController::class, 'destroy']);
+
+        Route::get('blog', [AdminBlogPostController::class, 'index']);
+        Route::get('blog/{blogPost}', [AdminBlogPostController::class, 'show']);
+        Route::post('blog', [AdminBlogPostController::class, 'store']);
+        Route::put('blog/{blogPost}', [AdminBlogPostController::class, 'update']);
+        Route::delete('blog/{blogPost}', [AdminBlogPostController::class, 'destroy']);
 
         Route::prefix('locations')->group(function () {
             Route::post('provinces', [LocationManagementController::class, 'storeProvince']);

@@ -3,6 +3,7 @@
 namespace App\Domain\Seo\Services;
 
 use App\Models\Agency;
+use App\Models\BlogPost;
 use App\Models\Neighborhood;
 use App\Models\PropertyListing;
 use App\Models\SeoPage;
@@ -81,6 +82,12 @@ class SeoService
             'path' => '/property-requests',
             'title' => 'Property Requests — Tell Owners What You\'re Looking For | Ghar Nepal',
             'description' => 'Post what property you\'re looking to buy or rent in Nepal, or browse requests from other buyers and renters.',
+        ],
+        'blog' => [
+            'label' => 'Blog',
+            'path' => '/blog',
+            'title' => 'Nepal Real Estate Guides & News | Ghar Nepal',
+            'description' => 'Guides, market updates, and practical advice for buying, selling, and renting property in Nepal.',
         ],
         'calculators-purchase' => [
             'label' => 'Purchase Cost Calculator',
@@ -218,6 +225,37 @@ class SeoService
             'og_image' => null,
             'structured_data' => $structuredData,
         ], label: "Neighborhood: {$neighborhood->name}", pageType: 'neighborhood');
+    }
+
+    public function effectiveForBlogPost(BlogPost $post): array
+    {
+        $key = "blog:{$post->slug}";
+
+        $title = "{$post->title} | Ghar Nepal";
+        $description = $post->excerpt
+            ?: Str::limit(trim(preg_replace('/\s+/', ' ', strip_tags($post->body))), 155);
+
+        $structuredData = [
+            '@context' => 'https://schema.org',
+            '@type' => 'Article',
+            'headline' => $post->title,
+            'description' => $description,
+            'url' => config('app.frontend_url')."/blog/{$post->slug}",
+            'datePublished' => $post->published_at?->toIso8601String(),
+            'author' => $post->relationLoaded('author') && $post->author ? ['@type' => 'Person', 'name' => $post->author->name] : null,
+        ];
+        if ($post->coverImageUrl()) {
+            $structuredData['image'] = $post->coverImageUrl();
+        }
+
+        return $this->merge($key, [
+            'title' => $title,
+            'description' => $description,
+            'keywords' => null,
+            'path' => "/blog/{$post->slug}",
+            'og_image' => $post->coverImageUrl(),
+            'structured_data' => $structuredData,
+        ], label: "Blog: {$post->title}", pageType: 'blog');
     }
 
     public function effectiveForAgency(Agency $agency): array
