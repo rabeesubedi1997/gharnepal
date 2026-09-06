@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { ExternalLink, RotateCcw, Search as SearchIcon, Trash2 } from 'lucide-react'
 import {
@@ -243,6 +243,8 @@ export function SeoPageEditor() {
                     scan={s}
                     onUseTitle={() => s.scanned_title && setMetaTitle(s.scanned_title)}
                     onUseDescription={() => s.scanned_meta_description && setMetaDescription(s.scanned_meta_description)}
+                    onUseImage={() => s.scanned_og_image && setOgImageUrl(s.scanned_og_image)}
+                    onUseKeywords={() => setMetaKeywords(s.scanned_keywords.slice(0, 8).map((k) => k.word).join(', '))}
                     onDiscard={() => discardScan.mutate(s.id)}
                     isDiscarding={discardScan.isPending}
                   />
@@ -283,23 +285,38 @@ export function SeoPageEditor() {
   )
 }
 
+/** A row that pairs a piece of scanned data with the one action that does something with it — text always
+ * shrinks/truncates, the action button never wraps, no matter how long the scanned text is. */
+function ScanField({ children, action }: { children: ReactNode; action: ReactNode }) {
+  return (
+    <div className="flex items-center justify-between gap-2">
+      <div className="min-w-0 flex-1">{children}</div>
+      <div className="shrink-0 whitespace-nowrap">{action}</div>
+    </div>
+  )
+}
+
 function ScanCard({
   scan,
   onUseTitle,
   onUseDescription,
+  onUseImage,
+  onUseKeywords,
   onDiscard,
   isDiscarding,
 }: {
   scan: CompetitorScan
   onUseTitle: () => void
   onUseDescription: () => void
+  onUseImage: () => void
+  onUseKeywords: () => void
   onDiscard: () => void
   isDiscarding: boolean
 }) {
   return (
     <div className="rounded-lg border border-stone-100 p-3">
       <div className="flex items-start justify-between gap-2">
-        <p className="truncate text-xs text-ink-700/60">{scan.competitor_url}</p>
+        <p className="min-w-0 flex-1 truncate text-xs text-ink-700/60">{scan.competitor_url}</p>
         <button
           type="button"
           aria-label="Discard scan"
@@ -312,33 +329,57 @@ function ScanCard({
       </div>
 
       {scan.scanned_title && (
-        <div className="mt-2 flex items-center justify-between gap-2">
-          <p className="truncate text-sm font-medium text-ink-900">{scan.scanned_title}</p>
-          <Button size="sm" variant="outline" onClick={onUseTitle}>
-            Use title
-          </Button>
+        <div className="mt-2">
+          <ScanField action={<Button size="sm" variant="outline" onClick={onUseTitle}>Use title</Button>}>
+            <p className="truncate text-sm font-medium text-ink-900">{scan.scanned_title}</p>
+          </ScanField>
         </div>
       )}
+
       {scan.scanned_meta_description && (
-        <div className="mt-1 flex items-center justify-between gap-2">
-          <p className="line-clamp-2 text-sm text-ink-700/70">{scan.scanned_meta_description}</p>
-          <Button size="sm" variant="outline" onClick={onUseDescription}>
-            Use description
-          </Button>
+        <div className="mt-1">
+          <ScanField action={<Button size="sm" variant="outline" onClick={onUseDescription}>Use description</Button>}>
+            <p className="line-clamp-2 text-sm text-ink-700/70">{scan.scanned_meta_description}</p>
+          </ScanField>
         </div>
       )}
-      {scan.scanned_headings.length > 0 && (
-        <p className="mt-2 text-xs text-ink-700/60">
-          <span className="font-medium">Headings:</span> {scan.scanned_headings.join(' · ')}
-        </p>
+
+      {scan.scanned_og_image && (
+        <div className="mt-2">
+          <ScanField action={<Button size="sm" variant="outline" onClick={onUseImage}>Use image</Button>}>
+            <div className="flex items-center gap-2">
+              <img src={scan.scanned_og_image} alt="" className="h-10 w-14 shrink-0 rounded object-cover" />
+              <p className="truncate text-xs text-ink-700/60">{scan.scanned_og_image}</p>
+            </div>
+          </ScanField>
+        </div>
       )}
+
+      <p className="mt-2 flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-ink-700/60">
+        {scan.word_count != null && <span>{scan.word_count} words of content scanned</span>}
+        {scan.scanned_headings.length > 0 && (
+          <span>
+            <span className="font-medium">Headings:</span> {scan.scanned_headings.join(' · ')}
+          </span>
+        )}
+        {scan.scanned_meta_keywords && (
+          <span>
+            <span className="font-medium">Their meta keywords:</span> {scan.scanned_meta_keywords}
+          </span>
+        )}
+      </p>
+
       {scan.scanned_keywords.length > 0 && (
-        <div className="mt-1 flex flex-wrap gap-1">
-          {scan.scanned_keywords.slice(0, 8).map((k) => (
-            <Badge key={k.word} tone="neutral">
-              {k.word} ({k.count})
-            </Badge>
-          ))}
+        <div className="mt-2">
+          <ScanField action={<Button size="sm" variant="outline" onClick={onUseKeywords}>Use as keywords</Button>}>
+            <div className="flex flex-wrap gap-1">
+              {scan.scanned_keywords.slice(0, 8).map((k) => (
+                <Badge key={k.word} tone="neutral">
+                  {k.word} ({k.count})
+                </Badge>
+              ))}
+            </div>
+          </ScanField>
         </div>
       )}
     </div>

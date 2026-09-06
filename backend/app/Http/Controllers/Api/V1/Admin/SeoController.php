@@ -171,9 +171,11 @@ class SeoController extends Controller
             'competitor_url' => $data['url'],
             'scanned_title' => $result['title'],
             'scanned_meta_description' => $result['meta_description'],
+            'scanned_meta_keywords' => $result['meta_keywords'],
             'scanned_headings' => $result['headings'],
             'scanned_keywords' => $result['keywords'],
             'scanned_og_image' => $result['og_image'],
+            'word_count' => $result['word_count'],
             'status' => 'pending',
             'scanned_by' => $request->user()->id,
         ]);

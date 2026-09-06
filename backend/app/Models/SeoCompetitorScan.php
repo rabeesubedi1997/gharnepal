@@ -12,9 +12,11 @@ class SeoCompetitorScan extends Model
         'competitor_url',
         'scanned_title',
         'scanned_meta_description',
+        'scanned_meta_keywords',
         'scanned_headings',
         'scanned_keywords',
         'scanned_og_image',
+        'word_count',
         'status',
         'scanned_by',
     ];

@@ -67,9 +67,11 @@ export interface CompetitorScan {
   competitor_url: string
   scanned_title: string | null
   scanned_meta_description: string | null
+  scanned_meta_keywords: string | null
   scanned_headings: string[]
   scanned_keywords: { word: string; count: number }[]
   scanned_og_image: string | null
+  word_count: number | null
   scanned_by: string | null
   created_at: string
 }

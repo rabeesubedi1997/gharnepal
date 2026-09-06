@@ -26,6 +26,7 @@ class CompetitorScanTest extends TestCase
         <head>
             <title>Best Properties in Kathmandu | Competitor</title>
             <meta name="description" content="Find the best verified properties in Kathmandu today.">
+            <meta name="keywords" content="kathmandu properties, verified listings, real estate nepal">
             <meta property="og:image" content="https://competitor.test/hero.jpg">
         </head>
         <body>
@@ -54,6 +55,7 @@ class CompetitorScanTest extends TestCase
         $response->assertCreated()
             ->assertJsonPath('data.scanned_title', 'Best Properties in Kathmandu | Competitor')
             ->assertJsonPath('data.scanned_meta_description', 'Find the best verified properties in Kathmandu today.')
+            ->assertJsonPath('data.scanned_meta_keywords', 'kathmandu properties, verified listings, real estate nepal')
             ->assertJsonPath('data.scanned_og_image', 'https://competitor.test/hero.jpg');
 
         $this->assertContains('Best Properties in Kathmandu', $response->json('data.scanned_headings'));
@@ -61,6 +63,8 @@ class CompetitorScanTest extends TestCase
 
         $keywords = collect($response->json('data.scanned_keywords'))->pluck('word');
         $this->assertTrue($keywords->contains('verified'));
+
+        $this->assertGreaterThan(0, $response->json('data.word_count'));
 
         $this->assertDatabaseCount('seo_competitor_scans', 1);
     }

@@ -31,7 +31,7 @@ class CompetitorPageScraperService
     ];
 
     /**
-     * @return array{title:?string,meta_description:?string,headings:string[],keywords:array<int,array{word:string,count:int}>,og_image:?string}
+     * @return array{title:?string,meta_description:?string,meta_keywords:?string,headings:string[],keywords:array<int,array{word:string,count:int}>,og_image:?string,word_count:int}
      *
      * @throws RuntimeException when the URL is invalid, disallowed by robots.txt, or unreachable.
      */
@@ -53,13 +53,16 @@ class CompetitorPageScraperService
         }
 
         $crawler = new Crawler($response->body());
+        [$keywords, $wordCount] = $this->keywordsAndWordCount($crawler);
 
         return [
             'title' => $this->text($crawler, 'title'),
             'meta_description' => $this->metaContent($crawler, 'description'),
+            'meta_keywords' => $this->metaContent($crawler, 'keywords'),
             'headings' => $this->headings($crawler),
-            'keywords' => $this->keywords($crawler),
+            'keywords' => $keywords,
             'og_image' => $this->metaContent($crawler, 'og:image', property: true),
+            'word_count' => $wordCount,
         ];
     }
 
@@ -154,8 +157,10 @@ class CompetitorPageScraperService
 
     private const MIN_PARAGRAPH_CHARS = 25;
 
-    /** @return array<int,array{word:string,count:int}> */
-    private function keywords(Crawler $crawler): array
+    /**
+     * @return array{0: array<int,array{word:string,count:int}>, 1: int} [keywords, word_count]
+     */
+    private function keywordsAndWordCount(Crawler $crawler): array
     {
         // Strip non-content tags so nav/footer/script boilerplate can't leak in —
         // this only catches semantic <nav>/<header>/<footer>; a div-based menu
@@ -178,6 +183,9 @@ class CompetitorPageScraperService
         });
 
         $content = implode(' ', array_filter($blocks));
+        $allWords = preg_split('/\s+/', trim($content)) ?: [];
+        $wordCount = $content === '' ? 0 : count($allWords);
+
         $normalized = strtolower(preg_replace('/[^a-zA-Z\s]/', ' ', $content) ?? '');
 
         $counts = [];
@@ -190,9 +198,11 @@ class CompetitorPageScraperService
 
         arsort($counts);
 
-        return collect(array_slice($counts, 0, 15, true))
+        $keywords = collect(array_slice($counts, 0, 15, true))
             ->map(fn ($count, $word) => ['word' => $word, 'count' => $count])
             ->values()
             ->all();
+
+        return [$keywords, $wordCount];
     }
 }
