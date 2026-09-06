@@ -35,7 +35,7 @@ const NAV_GROUPS: { title: string; tone: AdminTone; items: { to: string; label: 
   },
   {
     title: 'People',
-    tone: 'accent',
+    tone: 'trust',
     items: [
       { to: '/admin/users', label: 'Users', icon: Users },
       { to: '/admin/agencies', label: 'Agencies', icon: Building2 },
@@ -43,7 +43,7 @@ const NAV_GROUPS: { title: string; tone: AdminTone; items: { to: string; label: 
   },
   {
     title: 'Listings & locations',
-    tone: 'link',
+    tone: 'trust',
     items: [
       { to: '/admin/listings/pending', label: 'Pending listings', icon: ClipboardList },
       { to: '/admin/duplicate-flags', label: 'Duplicate flags', icon: Copy },

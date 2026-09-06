@@ -27,7 +27,7 @@ export function DuplicateFlags() {
     <div className="flex flex-col gap-4">
       <AdminPageHeader
         icon={Copy}
-        tone="link"
+        tone="trust"
         title="Duplicate flags"
         description="Flagged automatically when a listing looks like it might duplicate an existing one. Never auto-removed — confirm to act on it, or dismiss if it's a false positive."
       />

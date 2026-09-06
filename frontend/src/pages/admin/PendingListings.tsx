@@ -23,7 +23,7 @@ export function PendingListings() {
     <div className="flex flex-col gap-6">
       <AdminPageHeader
         icon={ClipboardList}
-        tone="link"
+        tone="trust"
         title="Listing approval queue"
         description="Nothing goes live to buyers until an admin approves it here."
       />

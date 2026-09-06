@@ -94,7 +94,7 @@ export function NeighborhoodScores() {
     <div className="flex flex-col gap-6">
       <AdminPageHeader
         icon={MapPin}
-        tone="link"
+        tone="trust"
         title="Neighborhoods"
         description="Curate a livability score and points of interest per neighborhood."
       />

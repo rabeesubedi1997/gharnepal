@@ -5,22 +5,22 @@
  * (e.g. `bg-trust-700`, `text-accent-600`) so there is a single source of truth.
  */
 export const colors = {
-  stone50: '#faf8f5',
-  stone100: '#f3efe8',
-  stone200: '#e7e0d4',
+  stone50: '#ffffff',
+  stone100: '#f4f5f7',
+  stone200: '#e2e5ea',
 
-  ink900: '#1c2321',
-  ink700: '#33403b',
-  trust700: '#1f5d45',
-  trust600: '#256b50',
-  trust100: '#e2efe9',
+  ink900: '#1a1d21',
+  ink700: '#4b5563',
+  trust700: '#0074e4',
+  trust600: '#1a86ee',
+  trust100: '#e3f1fd',
 
   accent600: '#c2542d',
   accent500: '#d97b3f',
   accent100: '#fbe8d8',
 
-  link600: '#2563eb',
-  link700: '#1d4ed8',
+  link600: '#0074e4',
+  link700: '#005bb8',
 
   danger600: '#dc2626',
   danger100: '#fee2e2',

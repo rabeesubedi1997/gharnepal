@@ -26,7 +26,7 @@ export function Agencies() {
     <div className="flex flex-col gap-4">
       <AdminPageHeader
         icon={Building2}
-        tone="accent"
+        tone="trust"
         title="Agencies"
         description="Verify new agency registrations, or suspend one that breaks trust."
         action={

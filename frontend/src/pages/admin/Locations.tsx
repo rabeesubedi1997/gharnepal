@@ -33,7 +33,7 @@ export function Locations() {
     <div className="flex flex-col gap-4">
       <AdminPageHeader
         icon={MapPin}
-        tone="link"
+        tone="trust"
         title="Locations"
         description="Nepal's admin hierarchy — province, district, municipality, ward, neighborhood."
       />

@@ -1,35 +1,45 @@
 @import "tailwindcss";
 
 /*
- * Design tokens — Nepal-inspired, premium-but-friendly palette.
+ * Design tokens — modeled directly on Zillow's real visual language (picked
+ * by the user over Airbnb/Redfin/Booking.com when shown side by side): crisp
+ * white background, one confident blue as the single primary/brand color,
+ * neutral cool grays for structure, color reserved for genuine status
+ * meaning (success/warning/danger) rather than decorative per-section hues.
+ * Deliberately NOT a warm cream background + serif headings + earthy accent
+ * — that combination read as generic "AI product" template, which is what
+ * prompted this rework.
+ *
  * Keep in sync with `src/design-system/tokens.ts` (used anywhere JS needs a raw
  * color value, e.g. map markers or chart series, outside of Tailwind classes).
  */
 @theme {
-  --font-display: "Fraunces", "Noto Serif Devanagari", Georgia, serif;
+  --font-display: "Inter", "Noto Sans Devanagari", ui-sans-serif, system-ui, sans-serif;
   --font-sans: "Inter", "Noto Sans Devanagari", ui-sans-serif, system-ui, sans-serif;
 
-  /* Background / surface */
-  --color-stone-50: #faf8f5;
-  --color-stone-100: #f3efe8;
-  --color-stone-200: #e7e0d4;
+  /* Background / surface — white + neutral cool gray, not warm cream */
+  --color-stone-50: #ffffff;
+  --color-stone-100: #f4f5f7;
+  --color-stone-200: #e2e5ea;
 
-  /* Ink / trust (deep green + charcoal) */
-  --color-ink-900: #1c2321;
-  --color-ink-700: #33403b;
-  --color-trust-700: #1f5d45;
-  --color-trust-600: #256b50;
-  --color-trust-100: #e2efe9;
+  /* Ink — neutral charcoal/slate, no green tint */
+  --color-ink-900: #1a1d21;
+  --color-ink-700: #4b5563;
 
-  /* Accent (saffron / terracotta) */
+  /* Trust / primary brand — Zillow blue */
+  --color-trust-700: #0074e4;
+  --color-trust-600: #1a86ee;
+  --color-trust-100: #e3f1fd;
+
+  /* Accent — secondary warm color, used sparingly (Featured badges, Post property CTA) */
   --color-accent-600: #c2542d;
   --color-accent-500: #d97b3f;
   --color-accent-100: #fbe8d8;
 
-  /* Links / actions */
-  --color-link-600: #2563eb;
-  --color-link-700: #1d4ed8;
-  --color-link-100: #dbeafe;
+  /* Links — same blue system as trust, not a separate hue */
+  --color-link-600: #0074e4;
+  --color-link-700: #005bb8;
+  --color-link-100: #e3f1fd;
 
   /* Status */
   --color-danger-600: #dc2626;
@@ -39,7 +49,7 @@
   --color-success-600: #15803d;
   --color-success-100: #dcfce7;
 
-  --radius-card: 0.75rem;
+  --radius-card: 0.5rem;
 }
 
 html, body {

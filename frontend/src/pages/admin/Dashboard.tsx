@@ -104,28 +104,28 @@ export function Dashboard() {
       <div>
         <h2 className="mb-3 font-display text-base font-semibold text-ink-900">Listings</h2>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <StatCard tone="link" icon={ClipboardList} label="Total listings" value={stats.listings.total} />
-          <StatCard tone="link" icon={ClipboardList} label="Published" value={stats.listings.published} />
+          <StatCard tone="trust" icon={ClipboardList} label="Total listings" value={stats.listings.total} />
+          <StatCard tone="trust" icon={ClipboardList} label="Published" value={stats.listings.published} />
           <StatCard
-            tone="link"
+            tone="warning"
             icon={ClipboardList}
             label="Pending review"
             value={stats.listings.pending_review}
             to="/admin/listings/pending"
             sub={stats.listings.pending_review > 0 ? 'Needs attention' : 'All caught up'}
           />
-          <StatCard tone="link" icon={ClipboardList} label="Featured now" value={stats.listings.featured_active} />
+          <StatCard tone="trust" icon={ClipboardList} label="Featured now" value={stats.listings.featured_active} />
         </div>
       </div>
 
       <div>
         <h2 className="mb-3 font-display text-base font-semibold text-ink-900">People</h2>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <StatCard tone="accent" icon={Users} label="Total users" value={stats.users.total} to="/admin/users" />
-          <StatCard tone="accent" icon={Users} label="Owners" value={stats.users.owners} />
-          <StatCard tone="accent" icon={Users} label="Agents" value={stats.users.agents} />
+          <StatCard tone="trust" icon={Users} label="Total users" value={stats.users.total} to="/admin/users" />
+          <StatCard tone="trust" icon={Users} label="Owners" value={stats.users.owners} />
+          <StatCard tone="trust" icon={Users} label="Agents" value={stats.users.agents} />
           <StatCard
-            tone="accent"
+            tone="danger"
             icon={Users}
             label="Suspended"
             value={stats.users.suspended}
@@ -138,10 +138,10 @@ export function Dashboard() {
       <div>
         <h2 className="mb-3 font-display text-base font-semibold text-ink-900">Agencies & payments</h2>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <StatCard tone="success" icon={Building2} label="Total agencies" value={stats.agencies.total} to="/admin/agencies" />
+          <StatCard tone="trust" icon={Building2} label="Total agencies" value={stats.agencies.total} to="/admin/agencies" />
           <StatCard tone="success" icon={ShieldCheck} label="Verified" value={stats.agencies.verified} to="/admin/agencies" />
           <StatCard
-            tone="success"
+            tone="warning"
             icon={Building2}
             label="Pending verification"
             value={stats.agencies.pending}

@@ -53,7 +53,7 @@ export function Users() {
     <div className="flex flex-col gap-4">
       <AdminPageHeader
         icon={UsersIcon}
-        tone="accent"
+        tone="trust"
         title="Users"
         description="Search, review roles, and suspend accounts when needed."
       />

@@ -48,7 +48,7 @@ export function Amenities() {
     <div className="flex flex-col gap-6">
       <AdminPageHeader
         icon={ListChecks}
-        tone="link"
+        tone="trust"
         title="Amenities"
         description="The catalog owners pick from when posting a listing."
       />
