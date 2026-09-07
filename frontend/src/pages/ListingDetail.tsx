@@ -19,6 +19,7 @@ import { ErrorState } from '../components/ui/ErrorState'
 import { Skeleton } from '../components/ui/Skeleton'
 import { clsx } from 'clsx'
 import { MapView } from '../components/property/MapView'
+import { PropertyGallery } from '../components/property/PropertyGallery'
 import { PropertyCard } from '../components/property/PropertyCard'
 import { LandDueDiligenceChecklist } from '../components/property/LandDueDiligenceChecklist'
 import { useVerifyLandProfile, type LandProfile } from '../lib/api/landProfile'
@@ -42,7 +43,6 @@ export function ListingDetail() {
   const { data: listing, isPending, isError, refetch } = useListingDetail(slug)
   const { data: user } = useCurrentUser()
   const navigate = useNavigate()
-  const [activeImage, setActiveImage] = useState(0)
   const [copied, setCopied] = useState(false)
   const [messageOpen, setMessageOpen] = useState(false)
   const [viewingOpen, setViewingOpen] = useState(false)
@@ -103,32 +103,7 @@ export function ListingDetail() {
   return (
     <div className="flex flex-col gap-6">
       <SeoHead seo={listing.seo} />
-      <div>
-        {images.length > 0 ? (
-          <div className="flex flex-col gap-2">
-            <div className="aspect-video w-full overflow-hidden rounded-card bg-stone-100">
-              <img src={images[activeImage].url} alt={listing.title} className="h-full w-full object-cover" />
-            </div>
-            {images.length > 1 && (
-              <div className="flex gap-2 overflow-x-auto">
-                {images.map((img, i) => (
-                  <button
-                    key={img.id}
-                    onClick={() => setActiveImage(i)}
-                    className={`h-16 w-24 shrink-0 overflow-hidden rounded-lg border-2 ${i === activeImage ? 'border-trust-700' : 'border-transparent'}`}
-                  >
-                    <img src={img.url} alt="" className="h-full w-full object-cover" />
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-        ) : (
-          <div className="flex aspect-video w-full items-center justify-center rounded-card bg-stone-100 text-ink-700/40">
-            No photos yet
-          </div>
-        )}
-      </div>
+      <PropertyGallery images={images} title={listing.title} />
 
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1fr_320px]">
         <div className="flex flex-col gap-6">
