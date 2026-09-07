@@ -1,8 +1,10 @@
 // Foundation smoke test: with no stored token, the app should skip past the
-// splash screen straight to the login screen — proving the router, theme,
-// and auth session wiring all boot correctly without touching the network
-// (flutter_secure_storage's platform channel isn't available under
-// `flutter test`, so a fake with no token stands in for a fresh install).
+// splash screen straight to the (public) home screen — Search and Listing
+// Detail are public too, but Home is the router's default landing route.
+// Proves the router, theme, and auth session wiring all boot correctly
+// without touching the network (flutter_secure_storage's platform channel
+// isn't available under `flutter test`, so a fake with no token stands in
+// for a fresh install).
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -23,7 +25,7 @@ class _FakeTokenStorage implements TokenStorage {
 }
 
 void main() {
-  testWidgets('a guest is routed to the login screen', (tester) async {
+  testWidgets('a guest is routed to the public home screen', (tester) async {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [tokenStorageProvider.overrideWithValue(_FakeTokenStorage())],
@@ -31,9 +33,17 @@ void main() {
       ),
     );
 
-    // Session resolution is async; let it settle before asserting on the route.
-    await tester.pumpAndSettle();
+    // Session resolution is async, and Home's banner/municipality providers
+    // are network-backed (so they fail fast under `flutter test`, which
+    // fakes every HttpClient response as a 400). Pump a bounded number of
+    // frames rather than pumpAndSettle: the Skeleton shimmer and the
+    // municipalities loading spinner both animate forever and would make
+    // pumpAndSettle hang waiting for them to stop.
+    for (var i = 0; i < 10; i++) {
+      await tester.pump(const Duration(milliseconds: 100));
+    }
 
-    expect(find.text('Welcome back'), findsOneWidget);
+    expect(find.text('Ghar Nepal'), findsOneWidget);
+    expect(find.text('Search houses, land, rooms...'), findsOneWidget);
   });
 }

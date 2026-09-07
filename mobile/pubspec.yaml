@@ -64,6 +64,9 @@ dependencies:
   # Nepali/Indian digit-grouping (lakh/crore) currency formatting.
   intl: ^0.20.2
 
+  # Opens the poster's wa.me WhatsApp link from Listing Detail.
+  url_launcher: ^6.3.1
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
