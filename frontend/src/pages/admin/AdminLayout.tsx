@@ -65,6 +65,7 @@ const NAV_GROUPS: { title: string; tone: AdminTone; items: { to: string; label: 
       { to: '/admin/community-notes', label: 'Community notes', icon: MessageSquareText },
       { to: '/admin/ratings', label: 'Ratings & reviews', icon: Star },
       { to: '/admin/messages', label: 'Messages', icon: MessagesSquare },
+      { to: '/admin/trust-factors', label: 'Trust score factors', icon: ShieldCheck },
     ],
   },
   {

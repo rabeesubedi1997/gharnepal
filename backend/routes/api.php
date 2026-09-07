@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\V1\Account\FavoriteController;
 use App\Http\Controllers\Api\V1\Account\MatchPreferenceController;
 use App\Http\Controllers\Api\V1\Account\MatchResultController;
 use App\Http\Controllers\Api\V1\Account\PhoneVerificationController;
+use App\Http\Controllers\Api\V1\Account\ProfileController;
 use App\Http\Controllers\Api\V1\Account\SavedSearchController;
 use App\Http\Controllers\Api\V1\Account\VerificationController;
 use App\Http\Controllers\Api\V1\Admin\AdvertisementController as AdminAdvertisementController;
@@ -23,6 +24,7 @@ use App\Http\Controllers\Api\V1\Admin\NeighborhoodScoreController;
 use App\Http\Controllers\Api\V1\Admin\PaymentController as AdminPaymentController;
 use App\Http\Controllers\Api\V1\Admin\ReportModerationController;
 use App\Http\Controllers\Api\V1\Admin\TrustOverrideController;
+use App\Http\Controllers\Api\V1\Admin\TrustScoreFactorController;
 use App\Http\Controllers\Api\V1\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Api\V1\Admin\VerificationModerationController;
 use App\Http\Controllers\Api\V1\Auth\AuthController;
@@ -76,6 +78,9 @@ Route::prefix('v1')->group(function () {
     });
 
     Route::middleware('auth:sanctum')->prefix('account')->group(function () {
+        Route::put('profile', [ProfileController::class, 'update']);
+        Route::put('password', [ProfileController::class, 'updatePassword']);
+
         Route::post('phone/request-otp', [PhoneVerificationController::class, 'requestOtp']);
         Route::post('phone/verify-otp', [PhoneVerificationController::class, 'verifyOtp']);
 
@@ -235,6 +240,9 @@ Route::prefix('v1')->group(function () {
 
         Route::post('listings/{listing}/trust-override', [TrustOverrideController::class, 'store']);
         Route::delete('listings/{listing}/trust-override', [TrustOverrideController::class, 'destroy']);
+
+        Route::get('trust-score-factors', [TrustScoreFactorController::class, 'index']);
+        Route::put('trust-score-factors/{trustScoreFactor}', [TrustScoreFactorController::class, 'update']);
 
         Route::patch('properties/{property}/land-profile/verify', [LandProfileController::class, 'verify']);
 

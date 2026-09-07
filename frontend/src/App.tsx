@@ -5,6 +5,8 @@ import { ComingSoon } from './pages/ComingSoon'
 import { Search } from './pages/Search'
 import { ListingDetail } from './pages/ListingDetail'
 import { Dashboard } from './pages/Dashboard'
+import { EditListing } from './pages/EditListing'
+import { Settings } from './pages/Settings'
 import { Login } from './pages/auth/Login'
 import { Register } from './pages/auth/Register'
 import { PostPropertyWizard } from './pages/PostPropertyWizard'
@@ -14,6 +16,7 @@ import { Users as AdminUsers } from './pages/admin/Users'
 import { Agencies as AdminAgencies } from './pages/admin/Agencies'
 import { Amenities as AdminAmenities } from './pages/admin/Amenities'
 import { Ratings as AdminRatings } from './pages/admin/Ratings'
+import { TrustFactors as AdminTrustFactors } from './pages/admin/TrustFactors'
 import { Messages as AdminMessages } from './pages/admin/Messages'
 import { Banners as AdminBanners } from './pages/admin/Banners'
 import { Advertisements as AdminAdvertisements } from './pages/admin/Advertisements'
@@ -97,6 +100,14 @@ export default function App() {
           }
         />
         <Route
+          path="account/settings"
+          element={
+            <RequireAuth>
+              <Settings />
+            </RequireAuth>
+          }
+        />
+        <Route
           path="account/viewing-requests"
           element={
             <RequireAuth>
@@ -145,6 +156,14 @@ export default function App() {
           }
         />
         <Route
+          path="dashboard/listings/:id/edit"
+          element={
+            <RequireAuth>
+              <EditListing />
+            </RequireAuth>
+          }
+        />
+        <Route
           path="post-property"
           element={
             <RequireAuth>
@@ -182,6 +201,7 @@ export default function App() {
         <Route path="amenities" element={<AdminAmenities />} />
         <Route path="community-notes" element={<CommunityNotesModeration />} />
         <Route path="ratings" element={<AdminRatings />} />
+        <Route path="trust-factors" element={<AdminTrustFactors />} />
         <Route path="messages" element={<AdminMessages />} />
         <Route path="payments" element={<AdminPayments />} />
         <Route path="seo" element={<AdminSeo />} />

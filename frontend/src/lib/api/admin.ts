@@ -537,3 +537,36 @@ export function useAdminSendMessage() {
     },
   })
 }
+
+// --- Trust score factors (a fixed catalog — admins tune weight/on-off, never add/remove) ---
+
+export interface AdminTrustScoreFactor {
+  id: number
+  key: string
+  label: string
+  description: string
+  max_points: number
+  is_active: boolean
+}
+
+export function useAdminTrustScoreFactors() {
+  return useQuery({
+    queryKey: ['admin', 'trust-score-factors'],
+    queryFn: async () => {
+      const { data } = await apiClient.get<{ data: AdminTrustScoreFactor[] }>('/admin/trust-score-factors')
+      return data.data
+    },
+  })
+}
+
+export function useUpdateTrustScoreFactor() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ id, ...input }: { id: number; is_active?: boolean; max_points?: number }) => {
+      await ensureCsrfCookie()
+      const { data } = await apiClient.put<{ data: AdminTrustScoreFactor }>(`/admin/trust-score-factors/${id}`, input)
+      return data.data
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['admin', 'trust-score-factors'] }),
+  })
+}

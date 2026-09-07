@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { BarChart3, Bookmark, Calculator, CalendarCheck, Plus, ShieldCheck, Sparkles, Trash2 } from 'lucide-react'
+import { BarChart3, Bookmark, Calculator, CalendarCheck, Pencil, Plus, ShieldCheck, Sparkles, Trash2 } from 'lucide-react'
 import { FeatureListingModal } from '../components/payments/FeatureListingModal'
 import { useCurrentUser } from '../lib/api/auth'
 import { useOwnerProperties, useTransitionListing, type ListingStatus } from '../lib/api/listings'
@@ -165,6 +165,9 @@ function ListingRow({ listing, transition }: ListingRowProps) {
               Extend
             </Button>
           )}
+          <ButtonLink to={`/dashboard/listings/${listing.id}/edit`} size="sm" variant="ghost">
+            <Pencil className="h-4 w-4" /> Edit
+          </ButtonLink>
           <Button size="sm" variant="ghost" onClick={() => setShowAnalytics((v) => !v)}>
             <BarChart3 className="h-4 w-4" /> {showAnalytics ? 'Hide stats' : 'View stats'}
           </Button>

@@ -161,6 +161,45 @@ export function useTransitionListing() {
   })
 }
 
+/** A listing's own editable content — title/price/description/etc, not the
+ * property/address it belongs to (that's fixed at creation). */
+export function useOwnerListing(listingId: number | undefined) {
+  return useQuery({
+    queryKey: ['owner', 'listing', listingId],
+    queryFn: async () => {
+      const { data } = await apiClient.get<{ data: ListingDetail }>(`/owner/listings/${listingId}`)
+      return data.data
+    },
+    enabled: !!listingId,
+  })
+}
+
+export interface UpdateListingInput {
+  title?: string
+  description?: string
+  price?: number
+  price_period?: 'total' | 'monthly'
+  negotiable?: boolean
+  availability_date?: string
+  amenity_ids?: number[]
+}
+
+export function useUpdateListing() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ listingId, input }: { listingId: number; input: UpdateListingInput }) => {
+      await ensureCsrfCookie()
+      const { data } = await apiClient.put<{ data: ListingDetail }>(`/owner/listings/${listingId}`, input)
+      return data.data
+    },
+    onSuccess: (listing, { listingId }) => {
+      queryClient.invalidateQueries({ queryKey: ['owner'] })
+      queryClient.invalidateQueries({ queryKey: ['owner', 'listing', listingId] })
+      queryClient.invalidateQueries({ queryKey: ['listings', 'detail', listing.slug] })
+    },
+  })
+}
+
 export interface OwnerProperty extends Property {
   id: number
   listings: {

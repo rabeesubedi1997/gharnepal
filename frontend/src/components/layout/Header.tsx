@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, NavLink, useNavigate } from 'react-router-dom'
-import { Heart, Home, LogOut, Menu, MessageCircle, Plus, X } from 'lucide-react'
+import { Heart, Home, LogOut, Menu, MessageCircle, Plus, Settings, X } from 'lucide-react'
 import { clsx } from 'clsx'
 import { ButtonLink } from '../ui/Button'
 import { useCurrentUser, useLogout } from '../../lib/api/auth'
@@ -64,6 +64,7 @@ export function Header() {
               <Link to="/dashboard" className="text-sm font-medium text-ink-900 hover:text-trust-700">
                 {user.name.split(' ')[0]}
               </Link>
+              <IconLink to="/account/settings" label="Account settings" icon={<Settings className="h-5 w-5" />} />
               <button
                 type="button"
                 onClick={handleLogout}
@@ -98,7 +99,7 @@ export function Header() {
               { to: '/saved', label: 'Saved' },
               { to: '/messages', label: 'Messages' },
               { to: '/post-property', label: 'Post property' },
-              user ? { to: '/dashboard', label: 'Dashboard' } : { to: '/login', label: 'Log in' },
+              ...(user ? [{ to: '/dashboard', label: 'Dashboard' }, { to: '/account/settings', label: 'Account settings' }] : [{ to: '/login', label: 'Log in' }]),
             ].map((item) => (
               <li key={item.to}>
                 <NavLink

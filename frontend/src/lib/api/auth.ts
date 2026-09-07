@@ -81,3 +81,44 @@ export function useLogout() {
     onSuccess: () => queryClient.setQueryData(['auth', 'me'], null),
   })
 }
+
+export function useUpdateProfile() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (name: string) => {
+      await ensureCsrfCookie()
+      const { data } = await apiClient.put<{ data: AuthUser }>('/account/profile', { name })
+      return data.data
+    },
+    onSuccess: (user) => queryClient.setQueryData(['auth', 'me'], user),
+  })
+}
+
+export function useUpdatePassword() {
+  return useMutation({
+    mutationFn: async (input: { current_password: string; password: string; password_confirmation: string }) => {
+      await ensureCsrfCookie()
+      await apiClient.put('/account/password', input)
+    },
+  })
+}
+
+export function useRequestPhoneOtp() {
+  return useMutation({
+    mutationFn: async (phone: string) => {
+      await ensureCsrfCookie()
+      await apiClient.post('/account/phone/request-otp', { phone })
+    },
+  })
+}
+
+export function useVerifyPhoneOtp() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (input: { phone: string; code: string }) => {
+      await ensureCsrfCookie()
+      await apiClient.post('/account/phone/verify-otp', input)
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['auth', 'me'] }),
+  })
+}
