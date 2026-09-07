@@ -230,10 +230,10 @@ function PostRequestModal({ open, onClose }: { open: boolean; onClose: () => voi
             ))}
           </Select>
           <div className="grid grid-cols-2 gap-3">
-            <Input label="Budget min (Rs, optional)" type="number" min={0} value={form.budget_min} onChange={(e) => setForm((f) => ({ ...f, budget_min: e.target.value }))} />
-            <Input label="Budget max (Rs, optional)" type="number" min={0} value={form.budget_max} onChange={(e) => setForm((f) => ({ ...f, budget_max: e.target.value }))} />
+            <Input label="Budget min (Rs, optional)" type="number" min={0} placeholder="No minimum" value={form.budget_min} onChange={(e) => setForm((f) => ({ ...f, budget_min: e.target.value }))} />
+            <Input label="Budget max (Rs, optional)" type="number" min={0} placeholder="No maximum" value={form.budget_max} onChange={(e) => setForm((f) => ({ ...f, budget_max: e.target.value }))} />
           </div>
-          <Input label="Minimum bedrooms (optional)" type="number" min={0} max={20} value={form.bedrooms_min} onChange={(e) => setForm((f) => ({ ...f, bedrooms_min: e.target.value }))} />
+          <Input label="Minimum bedrooms (optional)" type="number" min={0} max={20} placeholder="e.g. 2" value={form.bedrooms_min} onChange={(e) => setForm((f) => ({ ...f, bedrooms_min: e.target.value }))} />
           <Select label="Preferred city (optional)" value={form.municipality_id} onChange={(e) => setForm((f) => ({ ...f, municipality_id: e.target.value }))}>
             <option value="">Any city</option>
             {municipalities?.map((m) => (

@@ -51,6 +51,7 @@ export function FilterPanel({ filters, onChange }: Props) {
           label="Min price"
           type="number"
           min="0"
+          placeholder="No minimum"
           value={filters.min_price ?? ''}
           onChange={(e) => onChange({ ...filters, min_price: e.target.value ? Number(e.target.value) : undefined })}
         />
@@ -58,6 +59,7 @@ export function FilterPanel({ filters, onChange }: Props) {
           label="Max price"
           type="number"
           min="0"
+          placeholder="No maximum"
           value={filters.max_price ?? ''}
           onChange={(e) => onChange({ ...filters, max_price: e.target.value ? Number(e.target.value) : undefined })}
         />

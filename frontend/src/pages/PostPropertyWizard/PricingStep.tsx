@@ -48,6 +48,7 @@ export function PricingStep({ value, onChange, errors, onNext, onBack, isSubmitt
           label="Price (NPR)"
           type="number"
           min="1"
+          placeholder="e.g. 5000000"
           value={value.price}
           error={errors.price}
           onChange={(e) => onChange({ ...value, price: e.target.value })}

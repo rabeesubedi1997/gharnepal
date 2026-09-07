@@ -18,7 +18,7 @@ export function LandDetailsStep({ value, onChange, onNext, onBack, isSubmitting 
         you know now — you can update it later.
       </p>
 
-      <Input label="Kitta number (optional)" value={value.kitta_number ?? ''} onChange={(e) => onChange({ ...value, kitta_number: e.target.value })} />
+      <Input label="Kitta number (optional)" placeholder="e.g. 112/9" value={value.kitta_number ?? ''} onChange={(e) => onChange({ ...value, kitta_number: e.target.value })} />
 
       <Select
         label="Lalpurja (ownership certificate) available?"
@@ -54,6 +54,7 @@ export function LandDetailsStep({ value, onChange, onNext, onBack, isSubmitting 
         type="number"
         min="0"
         step="0.5"
+        placeholder="e.g. 4"
         value={value.road_width_meters ?? ''}
         onChange={(e) => onChange({ ...value, road_width_meters: e.target.value ? Number(e.target.value) : null })}
       />

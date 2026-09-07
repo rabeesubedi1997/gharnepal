@@ -44,6 +44,7 @@ export function BasicsStep({ value, onChange, errors, onNext }: Props) {
           type="number"
           min="0"
           step="0.01"
+          placeholder="e.g. 1200"
           value={value.area_value}
           error={errors.area_value}
           onChange={(e) => onChange({ ...value, area_value: e.target.value })}
@@ -65,6 +66,7 @@ export function BasicsStep({ value, onChange, errors, onNext }: Props) {
             label="Bedrooms"
             type="number"
             min="0"
+            placeholder="e.g. 3"
             value={value.bedrooms}
             error={errors.bedrooms}
             onChange={(e) => onChange({ ...value, bedrooms: e.target.value })}
@@ -73,6 +75,7 @@ export function BasicsStep({ value, onChange, errors, onNext }: Props) {
             label="Bathrooms"
             type="number"
             min="0"
+            placeholder="e.g. 2"
             value={value.bathrooms}
             error={errors.bathrooms}
             onChange={(e) => onChange({ ...value, bathrooms: e.target.value })}
@@ -85,12 +88,14 @@ export function BasicsStep({ value, onChange, errors, onNext }: Props) {
           label="Floors (optional)"
           type="number"
           min="0"
+          placeholder="e.g. 2"
           value={value.floors}
           onChange={(e) => onChange({ ...value, floors: e.target.value })}
         />
         <Input
           label="Year built (optional)"
           type="number"
+          placeholder="e.g. 2018"
           value={value.year_built}
           onChange={(e) => onChange({ ...value, year_built: e.target.value })}
         />
@@ -101,6 +106,7 @@ export function BasicsStep({ value, onChange, errors, onNext }: Props) {
           label="Parking spaces"
           type="number"
           min="0"
+          placeholder="e.g. 1"
           value={value.parking_spaces}
           onChange={(e) => {
             const spaces = e.target.value

@@ -95,16 +95,16 @@ export function RentalCalculator() {
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <Card className="flex flex-col gap-4 p-4">
-          <Input label="Monthly rent (NPR)" type="number" min="0" value={form.monthly_rent} onChange={set('monthly_rent')} />
-          <Input label="Deposit (months of rent)" type="number" min="0" step="0.5" value={form.deposit_months} onChange={set('deposit_months')} />
+          <Input label="Monthly rent (NPR)" type="number" min="0" placeholder="e.g. 25000" value={form.monthly_rent} onChange={set('monthly_rent')} />
+          <Input label="Deposit (months of rent)" type="number" min="0" step="0.5" placeholder="e.g. 2" value={form.deposit_months} onChange={set('deposit_months')} />
           <div className="grid grid-cols-2 gap-3">
-            <Input label="Utilities / month" type="number" min="0" value={form.utilities_monthly} onChange={set('utilities_monthly')} />
-            <Input label="Internet / month" type="number" min="0" value={form.internet_monthly} onChange={set('internet_monthly')} />
-            <Input label="Parking / month" type="number" min="0" value={form.parking_monthly} onChange={set('parking_monthly')} />
-            <Input label="Maintenance / month" type="number" min="0" value={form.maintenance_monthly} onChange={set('maintenance_monthly')} />
+            <Input label="Utilities / month" type="number" min="0" placeholder="e.g. 2000" value={form.utilities_monthly} onChange={set('utilities_monthly')} />
+            <Input label="Internet / month" type="number" min="0" placeholder="e.g. 1500" value={form.internet_monthly} onChange={set('internet_monthly')} />
+            <Input label="Parking / month" type="number" min="0" placeholder="e.g. 1000" value={form.parking_monthly} onChange={set('parking_monthly')} />
+            <Input label="Maintenance / month" type="number" min="0" placeholder="e.g. 1500" value={form.maintenance_monthly} onChange={set('maintenance_monthly')} />
           </div>
-          <Input label="Brokerage fee (one-time)" type="number" min="0" value={form.brokerage_fee} onChange={set('brokerage_fee')} />
-          <Input label="Estimated moving cost (one-time)" type="number" min="0" value={form.moving_cost_estimate} onChange={set('moving_cost_estimate')} />
+          <Input label="Brokerage fee (one-time)" type="number" min="0" placeholder="e.g. 25000" value={form.brokerage_fee} onChange={set('brokerage_fee')} />
+          <Input label="Estimated moving cost (one-time)" type="number" min="0" placeholder="e.g. 10000" value={form.moving_cost_estimate} onChange={set('moving_cost_estimate')} />
           <Button isLoading={calculate.isPending} disabled={!form.monthly_rent} onClick={handleCalculate}>
             Calculate
           </Button>

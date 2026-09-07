@@ -164,10 +164,10 @@ export function MatchPreferences() {
               <option value="land">Land</option>
               <option value="commercial">Commercial</option>
             </Select>
-            <Input label="Min budget (NPR)" type="number" min="0" value={form.budget_min} onChange={(e) => setForm({ ...form, budget_min: e.target.value })} />
-            <Input label="Max budget (NPR)" type="number" min="0" value={form.budget_max} onChange={(e) => setForm({ ...form, budget_max: e.target.value })} />
-            <Input label="Min bedrooms" type="number" min="0" max="20" value={form.min_bedrooms} onChange={(e) => setForm({ ...form, min_bedrooms: e.target.value })} />
-            <Input label="Family size" type="number" min="1" max="20" value={form.family_size} onChange={(e) => setForm({ ...form, family_size: e.target.value })} />
+            <Input label="Min budget (NPR)" type="number" min="0" placeholder="No minimum" value={form.budget_min} onChange={(e) => setForm({ ...form, budget_min: e.target.value })} />
+            <Input label="Max budget (NPR)" type="number" min="0" placeholder="No maximum" value={form.budget_max} onChange={(e) => setForm({ ...form, budget_max: e.target.value })} />
+            <Input label="Min bedrooms" type="number" min="0" max="20" placeholder="e.g. 2" value={form.min_bedrooms} onChange={(e) => setForm({ ...form, min_bedrooms: e.target.value })} />
+            <Input label="Family size" type="number" min="1" max="20" placeholder="e.g. 4" value={form.family_size} onChange={(e) => setForm({ ...form, family_size: e.target.value })} />
           </div>
           <Select
             label="Preferred city"
@@ -205,6 +205,7 @@ export function MatchPreferences() {
             type="number"
             min="5"
             max="180"
+            placeholder="e.g. 30"
             value={form.commute_limit_minutes}
             onChange={(e) => setForm({ ...form, commute_limit_minutes: e.target.value })}
           />

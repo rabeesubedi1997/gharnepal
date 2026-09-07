@@ -199,11 +199,12 @@ function MunicipalitiesTab() {
               <option value="municipality">Municipality</option>
               <option value="rural_municipality">Rural municipality</option>
             </Select>
-            <Input label="Code" value={form.code} onChange={(e) => setForm({ ...form, code: e.target.value })} />
+            <Input label="Code" placeholder="e.g. M-KTM" value={form.code} onChange={(e) => setForm({ ...form, code: e.target.value })} />
             <Input
               label="Number of wards"
               type="number"
               min="1"
+              placeholder="e.g. 32"
               value={form.ward_count}
               onChange={(e) => setForm({ ...form, ward_count: e.target.value })}
             />
@@ -272,7 +273,7 @@ function WardsTab() {
           </Card>
           <Card className="flex flex-col gap-3 p-4">
             <h3 className="font-medium text-ink-900">Add ward</h3>
-            <Input label="Ward number" type="number" min="1" value={form.ward_number} onChange={(e) => setForm({ ...form, ward_number: e.target.value })} />
+            <Input label="Ward number" type="number" min="1" placeholder="e.g. 5" value={form.ward_number} onChange={(e) => setForm({ ...form, ward_number: e.target.value })} />
             <Input label="Name (optional)" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
             {error && <p className="text-sm text-danger-600">{error}</p>}
             <Button

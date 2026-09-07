@@ -83,19 +83,20 @@ export function PurchaseCalculator() {
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <Card className="flex flex-col gap-4 p-4">
-          <Input label="Property price (NPR)" type="number" min="0" value={form.property_price} onChange={set('property_price')} />
+          <Input label="Property price (NPR)" type="number" min="0" placeholder="e.g. 5000000" value={form.property_price} onChange={set('property_price')} />
           <div className="grid grid-cols-2 gap-3">
-            <Input label="Down payment %" type="number" min="0" max="100" value={form.down_payment_percent} onChange={set('down_payment_percent')} />
-            <Input label="Loan interest %/yr" type="number" min="0" step="0.1" value={form.loan_interest_rate_annual} onChange={set('loan_interest_rate_annual')} />
-            <Input label="Loan tenure (years)" type="number" min="1" value={form.loan_tenure_years} onChange={set('loan_tenure_years')} />
-            <Input label="Registration cost %" type="number" min="0" step="0.1" value={form.registration_cost_percent} onChange={set('registration_cost_percent')} />
+            <Input label="Down payment %" type="number" min="0" max="100" placeholder="e.g. 20" value={form.down_payment_percent} onChange={set('down_payment_percent')} />
+            <Input label="Loan interest %/yr" type="number" min="0" step="0.1" placeholder="e.g. 10.5" value={form.loan_interest_rate_annual} onChange={set('loan_interest_rate_annual')} />
+            <Input label="Loan tenure (years)" type="number" min="1" placeholder="e.g. 20" value={form.loan_tenure_years} onChange={set('loan_tenure_years')} />
+            <Input label="Registration cost %" type="number" min="0" step="0.1" placeholder="e.g. 4" value={form.registration_cost_percent} onChange={set('registration_cost_percent')} />
           </div>
-          <Input label="Legal fees (one-time)" type="number" min="0" value={form.legal_fees} onChange={set('legal_fees')} />
-          <Input label="Renovation estimate (one-time)" type="number" min="0" value={form.renovation_estimate} onChange={set('renovation_estimate')} />
+          <Input label="Legal fees (one-time)" type="number" min="0" placeholder="e.g. 50000" value={form.legal_fees} onChange={set('legal_fees')} />
+          <Input label="Renovation estimate (one-time)" type="number" min="0" placeholder="e.g. 200000" value={form.renovation_estimate} onChange={set('renovation_estimate')} />
           <Input
             label="Expected monthly rent (optional — for rental yield)"
             type="number"
             min="0"
+            placeholder="e.g. 25000"
             value={form.monthly_rent_estimate}
             onChange={set('monthly_rent_estimate')}
           />
