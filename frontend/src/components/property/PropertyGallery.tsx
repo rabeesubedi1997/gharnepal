@@ -3,12 +3,17 @@ import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { clsx } from 'clsx'
 import type { MediaItem } from '../../lib/api/listings'
 
+const AUTO_ADVANCE_MS = 3000
+
 /** Sliding photo gallery for a listing's detail page — arrow nav, swipe on
- * touch devices, keyboard arrows, and a smooth slide transition instead of
- * an instant image swap. Falls back to a single static image when there's
+ * touch devices, keyboard arrows, a smooth slide transition instead of an
+ * instant image swap, and (with multiple photos) auto-advance every 3s that
+ * pauses while the pointer is over the gallery so a hovering viewer isn't
+ * yanked away mid-look. Falls back to a single static image when there's
  * only one photo, and an empty state when there are none. */
 export function PropertyGallery({ images, title }: { images: MediaItem[]; title: string }) {
   const [index, setIndex] = useState(0)
+  const [paused, setPaused] = useState(false)
   const touchStartX = useRef<number | null>(null)
 
   const go = (next: number) => setIndex(((next % images.length) + images.length) % images.length)
@@ -24,6 +29,12 @@ export function PropertyGallery({ images, title }: { images: MediaItem[]; title:
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [index, images.length])
 
+  useEffect(() => {
+    if (images.length <= 1 || paused) return
+    const timer = setInterval(() => setIndex((i) => (i + 1) % images.length), AUTO_ADVANCE_MS)
+    return () => clearInterval(timer)
+  }, [images.length, paused])
+
   if (images.length === 0) {
     return (
       <div className="flex aspect-video w-full items-center justify-center rounded-card bg-stone-100 text-ink-700/40">
@@ -35,15 +46,20 @@ export function PropertyGallery({ images, title }: { images: MediaItem[]; title:
   return (
     <div className="flex flex-col gap-2">
       <div
-        className="relative aspect-video w-full overflow-hidden rounded-card bg-stone-100"
+        className="group relative aspect-video w-full overflow-hidden rounded-card bg-stone-100"
+        onMouseEnter={() => setPaused(true)}
+        onMouseLeave={() => setPaused(false)}
         onTouchStart={(e) => {
+          setPaused(true)
           touchStartX.current = e.touches[0].clientX
         }}
         onTouchEnd={(e) => {
-          if (touchStartX.current == null) return
-          const delta = e.changedTouches[0].clientX - touchStartX.current
-          if (Math.abs(delta) > 40) go(index + (delta < 0 ? 1 : -1))
-          touchStartX.current = null
+          if (touchStartX.current != null) {
+            const delta = e.changedTouches[0].clientX - touchStartX.current
+            if (Math.abs(delta) > 40) go(index + (delta < 0 ? 1 : -1))
+            touchStartX.current = null
+          }
+          setPaused(false)
         }}
       >
         <div
@@ -55,8 +71,12 @@ export function PropertyGallery({ images, title }: { images: MediaItem[]; title:
           style={{ transform: `translateX(-${(index * 100) / images.length}%)`, width: `${images.length * 100}%` }}
         >
           {images.map((img) => (
-            <div key={img.id} className="h-full shrink-0" style={{ width: `${100 / images.length}%` }}>
-              <img src={img.url} alt={title} className="h-full w-full object-cover" />
+            <div key={img.id} className="h-full shrink-0 overflow-hidden" style={{ width: `${100 / images.length}%` }}>
+              <img
+                src={img.url}
+                alt={title}
+                className="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-110"
+              />
             </div>
           ))}
         </div>
