@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\V1\Account\MatchResultController;
 use App\Http\Controllers\Api\V1\Account\PhoneVerificationController;
 use App\Http\Controllers\Api\V1\Account\SavedSearchController;
 use App\Http\Controllers\Api\V1\Account\VerificationController;
+use App\Http\Controllers\Api\V1\Admin\AdvertisementController as AdminAdvertisementController;
 use App\Http\Controllers\Api\V1\Admin\AgencyController as AdminAgencyController;
 use App\Http\Controllers\Api\V1\Admin\AmenityController as AdminAmenityController;
 use App\Http\Controllers\Api\V1\Admin\BannerController as AdminBannerController;
@@ -42,6 +43,7 @@ use App\Http\Controllers\Api\V1\Owner\MediaController;
 use App\Http\Controllers\Api\V1\Owner\PaymentController as OwnerPaymentController;
 use App\Http\Controllers\Api\V1\Owner\PropertyController;
 use App\Http\Controllers\Api\V1\Owner\PropertyListingController;
+use App\Http\Controllers\Api\V1\Public\AdvertisementController;
 use App\Http\Controllers\Api\V1\Public\AgencyController;
 use App\Http\Controllers\Api\V1\Public\AmenityController;
 use App\Http\Controllers\Api\V1\Public\BannerController;
@@ -125,6 +127,9 @@ Route::prefix('v1')->group(function () {
 
     // Homepage banners
     Route::get('banners', [BannerController::class, 'index']);
+
+    // Advertisements — targeted ad slots across pages (see AdvertisementPlacement)
+    Route::get('advertisements', [AdvertisementController::class, 'index']);
 
     // Blog — real content pages for SEO
     Route::get('blog', [BlogController::class, 'index']);
@@ -262,6 +267,11 @@ Route::prefix('v1')->group(function () {
         Route::post('banners', [AdminBannerController::class, 'store']);
         Route::put('banners/{banner}', [AdminBannerController::class, 'update']);
         Route::delete('banners/{banner}', [AdminBannerController::class, 'destroy']);
+
+        Route::get('advertisements', [AdminAdvertisementController::class, 'index']);
+        Route::post('advertisements', [AdminAdvertisementController::class, 'store']);
+        Route::put('advertisements/{advertisement}', [AdminAdvertisementController::class, 'update']);
+        Route::delete('advertisements/{advertisement}', [AdminAdvertisementController::class, 'destroy']);
 
         Route::get('blog', [AdminBlogPostController::class, 'index']);
         Route::get('blog/{blogPost}', [AdminBlogPostController::class, 'show']);

@@ -10,6 +10,7 @@ import { filtersFromSearchParams, filtersToSearchParams } from '../../lib/search
 import { PropertyCard } from '../../components/property/PropertyCard'
 import { MapView } from '../../components/property/MapView'
 import { FilterPanel } from './FilterPanel'
+import { AdSlot } from '../../components/marketing/AdSlot'
 import { Button } from '../../components/ui/Button'
 import { Modal } from '../../components/ui/Modal'
 import { EmptyState } from '../../components/ui/EmptyState'
@@ -100,8 +101,9 @@ export function Search() {
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[260px_1fr]">
-        <aside className="hidden lg:block">
+        <aside className="hidden flex-col gap-4 lg:flex">
           <FilterPanel filters={filters} onChange={setFilters} />
+          <AdSlot placement="search_sidebar" aspectClassName="aspect-square" />
         </aside>
 
         <Modal open={filtersOpen} onClose={() => setFiltersOpen(false)} title="Filters">

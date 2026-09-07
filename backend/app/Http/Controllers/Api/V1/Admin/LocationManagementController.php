@@ -16,6 +16,7 @@ use App\Models\Ward;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 
 class LocationManagementController extends Controller
@@ -97,9 +98,15 @@ class LocationManagementController extends Controller
             'type' => ['required', Rule::in(['metropolitan', 'sub_metropolitan', 'municipality', 'rural_municipality'])],
             'code' => ['required', 'string', 'max:20', 'unique:municipalities,code'],
             'ward_count' => ['required', 'integer', 'min:1', 'max:50'],
+            'image' => ['nullable', 'file', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
         ]);
 
-        $municipality = Municipality::create($data);
+        $imagePath = $request->hasFile('image') ? $request->file('image')->store('municipalities', 'public') : null;
+
+        $municipality = Municipality::create([
+            ...collect($data)->except('image')->all(),
+            'image_path' => $imagePath,
+        ]);
 
         // Auto-provision wards 1..N so the municipality is immediately usable —
         // matches how NepalLocationSeeder seeds the MVP cities.
@@ -118,14 +125,26 @@ class LocationManagementController extends Controller
             'name_ne' => ['nullable', 'string', 'max:255'],
             'type' => ['sometimes', Rule::in(['metropolitan', 'sub_metropolitan', 'municipality', 'rural_municipality'])],
             'code' => ['sometimes', 'string', 'max:20', Rule::unique('municipalities', 'code')->ignore($municipality->id)],
+            'image' => ['sometimes', 'file', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
         ]);
-        $municipality->update($data);
+
+        if ($request->hasFile('image')) {
+            if ($municipality->image_path) {
+                Storage::disk('public')->delete($municipality->image_path);
+            }
+            $data['image_path'] = $request->file('image')->store('municipalities', 'public');
+        }
+
+        $municipality->update(collect($data)->except('image')->all());
 
         return new MunicipalityResource($municipality);
     }
 
     public function destroyMunicipality(Municipality $municipality): Response
     {
+        if ($municipality->image_path) {
+            Storage::disk('public')->delete($municipality->image_path);
+        }
         $municipality->delete();
 
         return response()->noContent();

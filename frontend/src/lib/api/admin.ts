@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { apiClient, ensureCsrfCookie } from './client'
 import type { ListingDetail } from './listings'
 import type { Banner } from './banners'
+import type { AdPlacement, Advertisement } from './advertisements'
 
 interface PaginatedResponse<T> {
   data: T[]
@@ -378,6 +379,92 @@ export function useDeleteBanner() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin', 'banners'] })
       queryClient.invalidateQueries({ queryKey: ['banners'] })
+    },
+  })
+}
+
+// --- Advertising (targeted ad slots — a separate concept from the homepage banner slider) ---
+
+export interface AdvertisementInput {
+  title?: string
+  subtitle?: string
+  link_url?: string
+  cta_label?: string
+  placement?: AdPlacement
+  sort_order?: number
+  is_active?: boolean
+  image?: File
+}
+
+function advertisementFormData(input: AdvertisementInput): FormData {
+  const form = new FormData()
+  if (input.title !== undefined) form.append('title', input.title)
+  if (input.subtitle !== undefined) form.append('subtitle', input.subtitle)
+  if (input.link_url !== undefined) form.append('link_url', input.link_url)
+  if (input.cta_label !== undefined) form.append('cta_label', input.cta_label)
+  if (input.placement !== undefined) form.append('placement', input.placement)
+  if (input.sort_order !== undefined) form.append('sort_order', String(input.sort_order))
+  if (input.is_active !== undefined) form.append('is_active', input.is_active ? '1' : '0')
+  if (input.image) form.append('image', input.image)
+  return form
+}
+
+export function useAdminAdvertisements() {
+  return useQuery({
+    queryKey: ['admin', 'advertisements'],
+    queryFn: async () => {
+      const { data } = await apiClient.get<{ data: Advertisement[] }>('/admin/advertisements')
+      return data.data
+    },
+  })
+}
+
+export function useCreateAdvertisement() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (input: AdvertisementInput) => {
+      await ensureCsrfCookie()
+      const { data } = await apiClient.post<{ data: Advertisement }>('/admin/advertisements', advertisementFormData(input), {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      })
+      return data.data
+    },
+    onSuccess: (ad) => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'advertisements'] })
+      queryClient.invalidateQueries({ queryKey: ['advertisements', ad.placement] })
+    },
+  })
+}
+
+export function useUpdateAdvertisement() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ id, ...input }: AdvertisementInput & { id: number }) => {
+      await ensureCsrfCookie()
+      const form = advertisementFormData(input)
+      form.append('_method', 'PUT') // PHP won't parse a multipart PUT body — spoof via POST
+      const { data } = await apiClient.post<{ data: Advertisement }>(`/admin/advertisements/${id}`, form, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      })
+      return data.data
+    },
+    onSuccess: (ad) => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'advertisements'] })
+      queryClient.invalidateQueries({ queryKey: ['advertisements', ad.placement] })
+    },
+  })
+}
+
+export function useDeleteAdvertisement() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (id: number) => {
+      await ensureCsrfCookie()
+      await apiClient.delete(`/admin/advertisements/${id}`)
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'advertisements'] })
+      queryClient.invalidateQueries({ queryKey: ['advertisements'] })
     },
   })
 }

@@ -18,6 +18,7 @@ import {
   useDeleteNeighborhood,
   useDeleteProvince,
   useDeleteWard,
+  useUpdateMunicipality,
 } from '../../lib/api/adminLocations'
 import { AdminPageHeader } from '../../components/admin/AdminPageHeader'
 import { Card } from '../../components/ui/Card'
@@ -164,8 +165,10 @@ function MunicipalitiesTab() {
   const [districtId, setDistrictId] = useState<number>()
   const { data: municipalities } = useMunicipalities(districtId)
   const create = useCreateMunicipality()
+  const update = useUpdateMunicipality()
   const remove = useDeleteMunicipality()
   const [form, setForm] = useState({ name: '', code: '', type: 'municipality', ward_count: '10' })
+  const [image, setImage] = useState<File | null>(null)
   const [error, setError] = useState<string | null>(null)
 
   return (
@@ -186,7 +189,39 @@ function MunicipalitiesTab() {
           <Card className="p-4">
             <h3 className="mb-3 font-medium text-ink-900">Municipalities</h3>
             {municipalities?.map((m) => (
-              <Row key={m.id} label={m.name} sub={`${m.type.replace('_', ' ')} · ${m.ward_count} wards`} onDelete={() => remove.mutate(m.id)} />
+              <div key={m.id} className="flex items-center justify-between gap-2 border-b border-stone-100 py-2 last:border-0">
+                <div className="flex min-w-0 items-center gap-2.5">
+                  {m.image_url ? (
+                    <img src={m.image_url} alt="" className="h-10 w-14 shrink-0 rounded-md object-cover" />
+                  ) : (
+                    <span className="flex h-10 w-14 shrink-0 items-center justify-center rounded-md bg-stone-100 text-ink-700/30">
+                      <MapPin className="h-4 w-4" />
+                    </span>
+                  )}
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-medium text-ink-900">{m.name}</p>
+                    <p className="text-xs text-ink-700/60">{m.type.replace('_', ' ')} · {m.ward_count} wards</p>
+                  </div>
+                </div>
+                <div className="flex shrink-0 items-center gap-1">
+                  <label className="cursor-pointer rounded-md px-2 py-1.5 text-xs font-medium text-trust-700 hover:bg-trust-100">
+                    {m.image_url ? 'Replace photo' : 'Add photo'}
+                    <input
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp"
+                      className="hidden"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0]
+                        if (file) update.mutate({ id: m.id, image: file })
+                        e.target.value = ''
+                      }}
+                    />
+                  </label>
+                  <button type="button" onClick={() => remove.mutate(m.id)} aria-label="Delete" className="rounded-md p-1.5 text-ink-700/50 hover:bg-stone-100 hover:text-danger-600">
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
             ))}
             {municipalities?.length === 0 && <p className="text-sm text-ink-700/60">No municipalities yet.</p>}
           </Card>
@@ -208,15 +243,24 @@ function MunicipalitiesTab() {
               value={form.ward_count}
               onChange={(e) => setForm({ ...form, ward_count: e.target.value })}
             />
+            <label className="flex flex-col gap-1.5 text-sm font-medium text-ink-900">
+              Photo (optional — shown on the homepage "Browse by city" tile)
+              <input
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                onChange={(e) => setImage(e.target.files?.[0] ?? null)}
+                className="rounded-lg border border-stone-200 px-3 py-2 text-sm"
+              />
+            </label>
             {error && <p className="text-sm text-danger-600">{error}</p>}
             <Button
               isLoading={create.isPending}
               disabled={!form.name || !form.code}
               onClick={() =>
                 create.mutate(
-                  { ...form, district_id: districtId, ward_count: Number(form.ward_count) },
+                  { ...form, district_id: districtId, ward_count: Number(form.ward_count), image: image ?? undefined },
                   {
-                    onSuccess: () => { setForm({ name: '', code: '', type: 'municipality', ward_count: '10' }); setError(null) },
+                    onSuccess: () => { setForm({ name: '', code: '', type: 'municipality', ward_count: '10' }); setImage(null); setError(null) },
                     onError: (e) => setError(getErrorMessage(e)),
                   },
                 )

@@ -12,6 +12,7 @@ import {
   ListChecks,
   LogOut,
   MapPin,
+  Megaphone,
   Menu,
   MessageSquareText,
   MessagesSquare,
@@ -74,7 +75,10 @@ const NAV_GROUPS: { title: string; tone: AdminTone; items: { to: string; label: 
   {
     title: 'SEO & marketing',
     tone: 'trust',
-    items: [{ to: '/admin/seo', label: 'SEO pages', icon: Search }],
+    items: [
+      { to: '/admin/seo', label: 'SEO pages', icon: Search },
+      { to: '/admin/advertisements', label: 'Advertising', icon: Megaphone },
+    ],
   },
 ]
 

@@ -20,6 +20,7 @@ import { Skeleton } from '../components/ui/Skeleton'
 import { clsx } from 'clsx'
 import { MapView } from '../components/property/MapView'
 import { PropertyGallery } from '../components/property/PropertyGallery'
+import { AdSlot } from '../components/marketing/AdSlot'
 import { PropertyCard } from '../components/property/PropertyCard'
 import { LandDueDiligenceChecklist } from '../components/property/LandDueDiligenceChecklist'
 import { useVerifyLandProfile, type LandProfile } from '../lib/api/landProfile'
@@ -302,6 +303,7 @@ export function ListingDetail() {
               </a>
             )}
           </Card>
+          <AdSlot placement="listing_detail_sidebar" aspectClassName="aspect-square" />
         </div>
       </div>
 

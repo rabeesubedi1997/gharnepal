@@ -24,6 +24,7 @@ export interface Municipality {
   type: 'metropolitan' | 'sub_metropolitan' | 'municipality' | 'rural_municipality'
   code: string
   ward_count: number
+  image_url: string | null
 }
 
 export interface Ward {

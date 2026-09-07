@@ -17,6 +17,7 @@ class MunicipalityResource extends JsonResource
             'type' => $this->type,
             'code' => $this->code,
             'ward_count' => $this->ward_count,
+            'image_url' => $this->imageUrl(),
         ];
     }
 }
