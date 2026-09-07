@@ -20,6 +20,7 @@ class MessageController extends Controller
         $data = $request->validate(['body' => ['required', 'string', 'max:2000']]);
 
         $message = $this->messaging->send($conversation, $request->user(), $data['body']);
+        $message->setRelation('conversation', $conversation);
 
         return (new MessageResource($message))->response()->setStatusCode(201);
     }

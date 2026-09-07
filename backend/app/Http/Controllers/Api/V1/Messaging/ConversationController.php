@@ -55,6 +55,13 @@ class ConversationController extends Controller
 
         $this->messaging->markRead($conversation, $request->user());
 
-        return new ConversationResource($conversation->load(['listing.property.media', 'propertyRequest', 'buyer', 'owner', 'messages' => fn ($q) => $q->oldest()->with('sender.roles')]));
+        $conversation->load(['listing.property.media', 'propertyRequest', 'buyer', 'owner', 'messages' => fn ($q) => $q->oldest()]);
+
+        // MessageResource needs each message's parent conversation (to tell a
+        // real participant from an admin who stepped in) — set the inverse
+        // relation from the copy we already have instead of an N+1 query.
+        $conversation->messages->each(fn ($message) => $message->setRelation('conversation', $conversation));
+
+        return new ConversationResource($conversation);
     }
 }

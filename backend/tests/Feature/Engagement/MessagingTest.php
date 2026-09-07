@@ -3,6 +3,7 @@
 namespace Tests\Feature\Engagement;
 
 use App\Models\PropertyRequest;
+use App\Models\Role;
 use App\Models\User;
 use App\Notifications\NewMessageNotification;
 use Database\Seeders\NepalLocationSeeder;
@@ -66,6 +67,26 @@ class MessagingTest extends TestCase
 
         Notification::assertSentTo($buyer, NewMessageNotification::class);
         Notification::assertNotSentTo($owner, NewMessageNotification::class);
+    }
+
+    public function test_an_admin_who_is_a_genuine_participant_is_not_flagged_as_support(): void
+    {
+        // A user who happens to hold the admin role but is chatting through
+        // their own real buyer/owner account should look like any other
+        // participant — "is_from_support" means "stepped in from outside",
+        // not "this account has the admin role".
+        $adminBuyer = User::factory()->create();
+        $adminBuyer->roles()->attach(Role::firstOrCreate(['key' => Role::ADMIN], ['name' => 'Administrator']));
+        $owner = User::factory()->create();
+        $listing = $this->publishedListing($owner);
+
+        $conversationId = $this->actingAs($adminBuyer, 'sanctum')->postJson('/api/v1/conversations', [
+            'listing_id' => $listing->id,
+            'message' => 'Hi, is this still available?',
+        ])->json('data.id');
+
+        $show = $this->actingAs($adminBuyer, 'sanctum')->getJson("/api/v1/conversations/{$conversationId}");
+        $show->assertOk()->assertJsonPath('data.messages.0.is_from_support', false);
     }
 
     public function test_contacting_the_same_listing_twice_reuses_the_thread(): void

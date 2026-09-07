@@ -506,6 +506,7 @@ export function useAdminConversations(filters: { status?: 'open' | 'closed'; q?:
       return data
     },
     placeholderData: (prev) => prev,
+    refetchInterval: 15000, // matches the participant-facing conversation list's poll cadence
   })
 }
 
@@ -517,6 +518,7 @@ export function useAdminConversation(id: number | null) {
       return data.data
     },
     enabled: id != null,
+    refetchInterval: id != null ? 4000 : false, // matches the participant-facing thread's poll cadence
   })
 }
 
