@@ -114,6 +114,34 @@ class PropertyCreationTest extends TestCase
             ->assertJsonPath('data.parking_type', 'bike');
     }
 
+    public function test_a_property_can_be_pinned_to_an_exact_map_location(): void
+    {
+        $user = User::factory()->create();
+
+        $response = $this->actingAs($user, 'sanctum')->postJson('/api/v1/properties', [
+            'property_type' => 'land',
+            'area_value' => 5,
+            'area_unit' => 'aana',
+            'address' => [...$this->addressPayload(), 'lat' => 27.7172, 'lng' => 85.3240],
+        ]);
+
+        $response->assertCreated()
+            ->assertJsonPath('data.address.lat', 27.7172)
+            ->assertJsonPath('data.address.lng', 85.3240);
+    }
+
+    public function test_a_pinned_location_must_be_valid_coordinates(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user, 'sanctum')->postJson('/api/v1/properties', [
+            'property_type' => 'land',
+            'area_value' => 5,
+            'area_unit' => 'aana',
+            'address' => [...$this->addressPayload(), 'lat' => 200, 'lng' => 85.3240],
+        ])->assertUnprocessable()->assertJsonValidationErrors('address.lat');
+    }
+
     public function test_an_invalid_parking_type_is_rejected(): void
     {
         $user = User::factory()->create();

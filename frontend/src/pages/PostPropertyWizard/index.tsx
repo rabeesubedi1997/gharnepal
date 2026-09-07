@@ -119,6 +119,8 @@ export function PostPropertyWizard() {
           neighborhood_id: address.neighborhood_id,
           street_address: address.street_address || undefined,
           landmark: address.landmark || undefined,
+          lat: address.lat ?? undefined,
+          lng: address.lng ?? undefined,
         },
       },
       {

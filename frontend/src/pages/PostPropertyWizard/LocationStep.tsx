@@ -1,4 +1,5 @@
 import { AddressFields } from '../../components/property/AddressFields'
+import { PropertyLocationPicker } from '../../components/property/PropertyLocationPicker'
 import { Input } from '../../components/ui/Input'
 import { Button } from '../../components/ui/Button'
 import type { AddressState } from './types'
@@ -29,6 +30,12 @@ export function LocationStep({ value, onChange, errors, onNext, onBack, isSubmit
         label="Nearby landmark (optional)"
         value={value.landmark}
         onChange={(e) => onChange({ ...value, landmark: e.target.value })}
+      />
+
+      <PropertyLocationPicker
+        lat={value.lat}
+        lng={value.lng}
+        onChange={(lat, lng) => onChange({ ...value, lat, lng })}
       />
 
       <div className="mt-2 flex justify-between">

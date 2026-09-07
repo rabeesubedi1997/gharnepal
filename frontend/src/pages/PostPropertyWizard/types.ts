@@ -32,11 +32,15 @@ export const initialBasics: BasicsState = {
 export interface AddressState extends AddressValue {
   street_address: string
   landmark: string
+  lat: number | null
+  lng: number | null
 }
 
 export const initialAddress: AddressState = {
   street_address: '',
   landmark: '',
+  lat: null,
+  lng: null,
 }
 
 export interface PricingState {
