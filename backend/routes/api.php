@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\V1\Admin\AmenityController as AdminAmenityControlle
 use App\Http\Controllers\Api\V1\Admin\BannerController as AdminBannerController;
 use App\Http\Controllers\Api\V1\Admin\BlogPostController as AdminBlogPostController;
 use App\Http\Controllers\Api\V1\Admin\CommunityNoteModerationController;
+use App\Http\Controllers\Api\V1\Admin\ConversationController as AdminConversationController;
 use App\Http\Controllers\Api\V1\Admin\DashboardController;
 use App\Http\Controllers\Api\V1\Admin\DuplicateFlagController;
 use App\Http\Controllers\Api\V1\Admin\ListingModerationController;
@@ -267,6 +268,9 @@ Route::prefix('v1')->group(function () {
         Route::post('blog', [AdminBlogPostController::class, 'store']);
         Route::put('blog/{blogPost}', [AdminBlogPostController::class, 'update']);
         Route::delete('blog/{blogPost}', [AdminBlogPostController::class, 'destroy']);
+
+        Route::get('conversations', [AdminConversationController::class, 'index']);
+        Route::get('conversations/{conversation}', [AdminConversationController::class, 'show']);
 
         Route::prefix('locations')->group(function () {
             Route::post('provinces', [LocationManagementController::class, 'storeProvince']);

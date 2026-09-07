@@ -1,45 +1,53 @@
 @import "tailwindcss";
 
 /*
- * Design tokens — modeled directly on Zillow's real visual language (picked
- * by the user over Airbnb/Redfin/Booking.com when shown side by side): crisp
- * white background, one confident blue as the single primary/brand color,
- * neutral cool grays for structure, color reserved for genuine status
- * meaning (success/warning/danger) rather than decorative per-section hues.
- * Deliberately NOT a warm cream background + serif headings + earthy accent
- * — that combination read as generic "AI product" template, which is what
- * prompted this rework.
+ * Design tokens — third pass. The first pass (cream bg + serif headings +
+ * earthy accent) read as a generic "AI product" template. The second pass
+ * (Zillow's literal palette: stark white + flat saturated blue hero blocks)
+ * read as cheap/templated for a different reason — a solid-color rectangle
+ * with centered white text has no depth, and blue-as-primary next to an
+ * orange CTA is two competing "loud" hues fighting each other.
+ *
+ * This pass is a deliberately original identity, not a copy of either
+ * reference site: a warm (not stark, not cream) neutral background, a single
+ * deep pine-green as the one confident brand color (evokes Nepal's hills
+ * without leaning on a literal earth-tone/serif "handmade" cliché), and a
+ * terracotta accent used ONLY for small highlights (Featured badges) — never
+ * as a second competing button color next to the brand green. Depth comes
+ * from shadow/elevation and a soft, slightly larger card radius rather than
+ * flat color blocks.
  *
  * Keep in sync with `src/design-system/tokens.ts` (used anywhere JS needs a raw
  * color value, e.g. map markers or chart series, outside of Tailwind classes).
  */
 @theme {
-  --font-display: "Inter", "Noto Sans Devanagari", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Plus Jakarta Sans", "Noto Sans Devanagari", ui-sans-serif, system-ui, sans-serif;
   --font-sans: "Inter", "Noto Sans Devanagari", ui-sans-serif, system-ui, sans-serif;
 
-  /* Background / surface — white + neutral cool gray, not warm cream */
-  --color-stone-50: #ffffff;
-  --color-stone-100: #f4f5f7;
-  --color-stone-200: #e2e5ea;
+  /* Background / surface — warm off-white, not stark white and not cream */
+  --color-stone-50: #faf9f6;
+  --color-stone-100: #f0eee8;
+  --color-stone-200: #e2ded4;
 
-  /* Ink — neutral charcoal/slate, no green tint */
-  --color-ink-900: #1a1d21;
-  --color-ink-700: #4b5563;
+  /* Ink — warm near-black, no blue/slate tint */
+  --color-ink-900: #211f1a;
+  --color-ink-700: #59564d;
 
-  /* Trust / primary brand — Zillow blue */
-  --color-trust-700: #0074e4;
-  --color-trust-600: #1a86ee;
-  --color-trust-100: #e3f1fd;
+  /* Trust / primary brand — deep pine green, one confident color used sparingly */
+  --color-trust-700: #1f4b3f;
+  --color-trust-600: #2c6753;
+  --color-trust-100: #e4ede8;
 
-  /* Accent — secondary warm color, used sparingly (Featured badges, Post property CTA) */
-  --color-accent-600: #c2542d;
-  --color-accent-500: #d97b3f;
-  --color-accent-100: #fbe8d8;
+  /* Accent — warm terracotta, reserved for small highlights only (Featured
+     badges) — deliberately NOT used for a second competing button color */
+  --color-accent-600: #bf5f2c;
+  --color-accent-500: #d67c40;
+  --color-accent-100: #f8e6d8;
 
-  /* Links — same blue system as trust, not a separate hue */
-  --color-link-600: #0074e4;
-  --color-link-700: #005bb8;
-  --color-link-100: #e3f1fd;
+  /* Links — same green system as trust, not a separate hue */
+  --color-link-600: #1f4b3f;
+  --color-link-700: #163829;
+  --color-link-100: #e4ede8;
 
   /* Status */
   --color-danger-600: #dc2626;
@@ -49,7 +57,7 @@
   --color-success-600: #15803d;
   --color-success-100: #dcfce7;
 
-  --radius-card: 0.5rem;
+  --radius-card: 0.75rem;
 }
 
 html, body {

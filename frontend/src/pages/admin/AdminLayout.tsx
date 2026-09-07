@@ -14,6 +14,7 @@ import {
   MapPin,
   Menu,
   MessageSquareText,
+  MessagesSquare,
   Newspaper,
   Receipt,
   Search,
@@ -62,6 +63,7 @@ const NAV_GROUPS: { title: string; tone: AdminTone; items: { to: string; label: 
       { to: '/admin/verifications', label: 'Verifications', icon: ShieldCheck },
       { to: '/admin/community-notes', label: 'Community notes', icon: MessageSquareText },
       { to: '/admin/ratings', label: 'Ratings & reviews', icon: Star },
+      { to: '/admin/messages', label: 'Messages', icon: MessagesSquare },
     ],
   },
   {

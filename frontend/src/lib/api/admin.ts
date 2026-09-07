@@ -381,3 +381,54 @@ export function useDeleteBanner() {
     },
   })
 }
+
+// --- Conversation moderation (read-only — admins investigate reported abuse/spam, never post) ---
+
+export interface AdminConversationParticipant {
+  id: number
+  name: string
+  email: string
+}
+
+export interface AdminConversationMessage {
+  id: number
+  body: string
+  sender: { id: number; name: string } | null
+  read_at: string | null
+  created_at: string
+}
+
+export interface AdminConversation {
+  id: number
+  status: 'open' | 'closed'
+  listing: { id: number; slug: string; title: string } | null
+  property_request: { id: number; purpose: string; property_type: string } | null
+  buyer: AdminConversationParticipant | null
+  owner: AdminConversationParticipant | null
+  messages_count: number | null
+  last_message_at: string | null
+  last_message_preview: string | null
+  messages?: AdminConversationMessage[]
+}
+
+export function useAdminConversations(filters: { status?: 'open' | 'closed'; q?: string }) {
+  return useQuery({
+    queryKey: ['admin', 'conversations', filters],
+    queryFn: async () => {
+      const { data } = await apiClient.get<PaginatedResponse<AdminConversation>>('/admin/conversations', { params: filters })
+      return data
+    },
+    placeholderData: (prev) => prev,
+  })
+}
+
+export function useAdminConversation(id: number | null) {
+  return useQuery({
+    queryKey: ['admin', 'conversations', 'detail', id],
+    queryFn: async () => {
+      const { data } = await apiClient.get<{ data: AdminConversation }>(`/admin/conversations/${id}`)
+      return data.data
+    },
+    enabled: id != null,
+  })
+}

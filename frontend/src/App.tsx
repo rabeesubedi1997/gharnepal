@@ -14,6 +14,7 @@ import { Users as AdminUsers } from './pages/admin/Users'
 import { Agencies as AdminAgencies } from './pages/admin/Agencies'
 import { Amenities as AdminAmenities } from './pages/admin/Amenities'
 import { Ratings as AdminRatings } from './pages/admin/Ratings'
+import { Messages as AdminMessages } from './pages/admin/Messages'
 import { Banners as AdminBanners } from './pages/admin/Banners'
 import { Blog as AdminBlog } from './pages/admin/Blog'
 import { BlogEditor as AdminBlogEditor } from './pages/admin/BlogEditor'
@@ -179,6 +180,7 @@ export default function App() {
         <Route path="amenities" element={<AdminAmenities />} />
         <Route path="community-notes" element={<CommunityNotesModeration />} />
         <Route path="ratings" element={<AdminRatings />} />
+        <Route path="messages" element={<AdminMessages />} />
         <Route path="payments" element={<AdminPayments />} />
         <Route path="seo" element={<AdminSeo />} />
         <Route path="seo/:key" element={<AdminSeoPageEditor />} />

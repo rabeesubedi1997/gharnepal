@@ -55,7 +55,7 @@ export function Header() {
         <div className="hidden shrink-0 items-center gap-2 lg:flex">
           <IconLink to="/saved" label="Saved" icon={<Heart className="h-5 w-5" />} />
           <IconLink to="/messages" label="Messages" icon={<MessageCircle className="h-5 w-5" />} />
-          <ButtonLink to="/post-property" size="sm" variant="secondary" className="shrink-0 whitespace-nowrap">
+          <ButtonLink to="/post-property" size="sm" variant="primary" className="shrink-0 whitespace-nowrap">
             <Plus className="h-4 w-4" /> Post property
           </ButtonLink>
           {user ? (
