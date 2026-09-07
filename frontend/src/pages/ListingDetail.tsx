@@ -147,6 +147,9 @@ export function ListingDetail() {
                       <Eye className="h-4 w-4" aria-hidden="true" /> {formatCompactCount(listing.views_count)} views
                     </span>
                   )}
+                  <span className="text-ink-700/50" title="Mention this code when calling or messaging about this listing">
+                    Ref: {listing.reference_code}
+                  </span>
                 </p>
                 <div className="mt-1">
                   <RatingStars average={listing.rating.average} count={listing.rating.count} size="md" />
@@ -269,6 +272,7 @@ export function ListingDetail() {
                   {
                     id: listing.id,
                     slug: listing.slug,
+                    reference_code: listing.reference_code,
                     title: listing.title,
                     price: listing.price,
                     purpose: listing.purpose,

@@ -16,6 +16,7 @@ class PropertyListingSummaryResource extends JsonResource
         return [
             'id' => $this->id,
             'slug' => $this->slug,
+            'reference_code' => $this->referenceCode(),
             'title' => $this->title,
             'purpose' => $this->purpose,
             'price' => (float) $this->price,

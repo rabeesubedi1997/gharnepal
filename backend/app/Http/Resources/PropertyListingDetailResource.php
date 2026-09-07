@@ -17,6 +17,7 @@ class PropertyListingDetailResource extends JsonResource
             'seo' => app(SeoService::class)->effectiveForListing($this->resource),
             'id' => $this->id,
             'slug' => $this->slug,
+            'reference_code' => $this->referenceCode(),
             'title' => $this->title,
             'description' => $this->description,
             'purpose' => $this->purpose,

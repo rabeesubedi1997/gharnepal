@@ -26,6 +26,7 @@ export type ListingStatus =
 export interface ListingSummary {
   id: number
   slug: string
+  reference_code: string
   title: string
   purpose: ListingPurpose
   price: number
@@ -56,6 +57,7 @@ export interface ListingDetail {
   seo: EffectiveSeo
   id: number
   slug: string
+  reference_code: string
   title: string
   description: string | null
   purpose: ListingPurpose

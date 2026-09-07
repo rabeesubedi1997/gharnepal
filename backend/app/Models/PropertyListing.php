@@ -117,4 +117,14 @@ class PropertyListing extends Model
     {
         return $this->featured_until !== null && $this->featured_until->isFuture();
     }
+
+    /**
+     * A short, speakable reference for phone/WhatsApp conversations ("the code is
+     * GN-00042") — derived from the id rather than stored, since the id is already
+     * a stable, unique, sequential number with nothing else to compute.
+     */
+    public function referenceCode(): string
+    {
+        return 'GN-'.str_pad((string) $this->id, 5, '0', STR_PAD_LEFT);
+    }
 }
