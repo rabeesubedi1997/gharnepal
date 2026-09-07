@@ -6,6 +6,7 @@ use App\Models\Role;
 use App\Models\User;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Auth;
 use Tests\TestCase;
 
 class RegistrationTest extends TestCase
@@ -32,6 +33,22 @@ class RegistrationTest extends TestCase
             ->assertJsonPath('data.roles', [Role::BUYER]);
 
         $this->assertDatabaseHas('users', ['email' => 'sita@example.com']);
+
+        $token = $response->json('token');
+        $this->assertIsString($token);
+        $this->assertNotEmpty($token);
+
+        // The register endpoint also authenticated this test's client via a
+        // session guard (an artifact of PHPUnit reusing one container across
+        // requests within a test), whose cached user instance would otherwise
+        // still be reused here (self-reporting wasRecentlyCreated). Log it out
+        // so this request authenticates fresh, purely off the bearer token.
+        Auth::guard('web')->logout();
+
+        $this->withHeader('Authorization', "Bearer {$token}")
+            ->getJson('/api/v1/auth/me')
+            ->assertOk()
+            ->assertJsonPath('data.email', 'sita@example.com');
     }
 
     public function test_registration_requires_a_unique_email(): void

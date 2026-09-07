@@ -13,6 +13,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
+use Laravel\Sanctum\PersonalAccessToken;
 
 class AuthController extends Controller
 {
@@ -37,7 +38,14 @@ class AuthController extends Controller
             $request->session()->regenerate();
         }
 
-        return (new UserResource($user->load('roles')))->response()->setStatusCode(201);
+        // Always issue a personal access token alongside the session: the web
+        // SPA ignores it and keeps using its cookie, while a native client
+        // (which has no session to speak of) uses it as a Bearer token.
+        $token = $user->createToken('mobile')->plainTextToken;
+
+        return (new UserResource($user->load('roles')))
+            ->additional(['token' => $token])
+            ->response()->setStatusCode(201);
     }
 
     public function login(LoginRequest $request): UserResource
@@ -60,11 +68,22 @@ class AuthController extends Controller
             $request->session()->regenerate();
         }
 
-        return new UserResource($request->user()->load('roles'));
+        $user = $request->user();
+        $token = $user->createToken('mobile')->plainTextToken;
+
+        return (new UserResource($user->load('roles')))->additional(['token' => $token]);
     }
 
     public function logout(Request $request): JsonResponse
     {
+        // The web SPA authenticates via a session-backed TransientToken,
+        // which carries no database row to revoke; only a native client's
+        // real PersonalAccessToken (the bearer token it sent) needs deleting.
+        $token = $request->user()?->currentAccessToken();
+        if ($token instanceof PersonalAccessToken) {
+            $token->delete();
+        }
+
         Auth::guard('web')->logout();
 
         if ($request->hasSession()) {
