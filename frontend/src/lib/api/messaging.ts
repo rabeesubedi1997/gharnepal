@@ -7,6 +7,7 @@ export interface Message {
   body: string
   sender_id: number
   is_mine: boolean
+  is_from_support: boolean
   read_at: string | null
   created_at: string
 }

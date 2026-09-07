@@ -60,8 +60,14 @@ class MessagingService
 
         $conversation->update(['last_message_at' => now()]);
 
-        $recipient = $conversation->otherParticipant($sender);
-        $recipient->notify(new NewMessageNotification($message));
+        // Notify every real participant except the sender — not just
+        // "the other one of buyer/owner", which silently drops the owner
+        // (or notifies the wrong side) when the sender is an admin
+        // stepping into the thread rather than one of the two participants.
+        collect([$conversation->buyer, $conversation->owner])
+            ->filter(fn (?User $u) => $u && $u->id !== $sender->id)
+            ->unique('id')
+            ->each(fn (User $recipient) => $recipient->notify(new NewMessageNotification($message)));
 
         // Only an owner's reply moves the response-reliability factor.
         if ($conversation->owner_user_id === $sender->id && $conversation->listing?->status === PropertyListing::STATUS_PUBLISHED) {

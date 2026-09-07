@@ -2,20 +2,27 @@
 
 namespace App\Http\Controllers\Api\V1\Admin;
 
+use App\Domain\Engagement\Services\MessagingService;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Admin\ConversationResource;
+use App\Http\Resources\Admin\MessageResource;
 use App\Models\Conversation;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Validation\Rule;
 
 /**
- * Read-only moderation view over buyer<->owner conversations. Admins never
- * post into a thread here — this exists so reports of abuse/spam/scams can
- * actually be investigated, which the platform had no way to do before.
+ * Moderation view over buyer<->owner conversations, so a reported spam/scam
+ * thread can actually be investigated. Admins can also reply into a thread
+ * — e.g. to answer a question or step into a dispute — which shows up for
+ * both real participants like any other message, attributed to the admin's
+ * name so it's not mistaken for the other party.
  */
 class ConversationController extends Controller
 {
+    public function __construct(private readonly MessagingService $messaging) {}
+
     public function index(Request $request): AnonymousResourceCollection
     {
         $request->validate([
@@ -45,5 +52,14 @@ class ConversationController extends Controller
         return new ConversationResource(
             $conversation->load(['buyer', 'owner', 'listing', 'propertyRequest', 'messages.sender'])
         );
+    }
+
+    public function sendMessage(Request $request, Conversation $conversation): JsonResponse
+    {
+        $data = $request->validate(['body' => ['required', 'string', 'max:2000']]);
+
+        $message = $this->messaging->send($conversation, $request->user(), $data['body']);
+
+        return (new MessageResource($message->load('sender')))->response()->setStatusCode(201);
     }
 }

@@ -281,6 +281,7 @@ Route::prefix('v1')->group(function () {
 
         Route::get('conversations', [AdminConversationController::class, 'index']);
         Route::get('conversations/{conversation}', [AdminConversationController::class, 'show']);
+        Route::post('conversations/{conversation}/messages', [AdminConversationController::class, 'sendMessage']);
 
         Route::prefix('locations')->group(function () {
             Route::post('provinces', [LocationManagementController::class, 'storeProvince']);

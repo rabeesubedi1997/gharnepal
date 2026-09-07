@@ -4,8 +4,10 @@ namespace Tests\Feature\Engagement;
 
 use App\Models\PropertyRequest;
 use App\Models\User;
+use App\Notifications\NewMessageNotification;
 use Database\Seeders\NepalLocationSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Notification;
 use Tests\TestCase;
 
 class MessagingTest extends TestCase
@@ -40,6 +42,30 @@ class MessagingTest extends TestCase
 
         $show = $this->actingAs($buyer, 'sanctum')->getJson("/api/v1/conversations/{$conversationId}");
         $show->assertOk()->assertJsonCount(2, 'data.messages');
+    }
+
+    public function test_a_reply_notifies_only_the_other_participant_not_the_sender(): void
+    {
+        $owner = User::factory()->create();
+        $listing = $this->publishedListing($owner);
+        $buyer = User::factory()->create();
+
+        Notification::fake();
+        $conversationId = $this->actingAs($buyer, 'sanctum')->postJson('/api/v1/conversations', [
+            'listing_id' => $listing->id,
+            'message' => 'Is this still available?',
+        ])->json('data.id');
+
+        Notification::assertSentTo($owner, NewMessageNotification::class);
+        Notification::assertNotSentTo($buyer, NewMessageNotification::class);
+
+        Notification::fake();
+        $this->actingAs($owner, 'sanctum')->postJson("/api/v1/conversations/{$conversationId}/messages", [
+            'body' => 'Yes, still available!',
+        ]);
+
+        Notification::assertSentTo($buyer, NewMessageNotification::class);
+        Notification::assertNotSentTo($owner, NewMessageNotification::class);
     }
 
     public function test_contacting_the_same_listing_twice_reuses_the_thread(): void

@@ -469,7 +469,7 @@ export function useDeleteAdvertisement() {
   })
 }
 
-// --- Conversation moderation (read-only — admins investigate reported abuse/spam, never post) ---
+// --- Conversation moderation (admins investigate reported abuse/spam, and can reply into a thread) ---
 
 export interface AdminConversationParticipant {
   id: number
@@ -517,5 +517,23 @@ export function useAdminConversation(id: number | null) {
       return data.data
     },
     enabled: id != null,
+  })
+}
+
+export function useAdminSendMessage() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ conversationId, body }: { conversationId: number; body: string }) => {
+      await ensureCsrfCookie()
+      const { data } = await apiClient.post<{ data: AdminConversationMessage }>(
+        `/admin/conversations/${conversationId}/messages`,
+        { body },
+      )
+      return data.data
+    },
+    onSuccess: (_message, { conversationId }) => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'conversations', 'detail', conversationId] })
+      queryClient.invalidateQueries({ queryKey: ['admin', 'conversations'] })
+    },
   })
 }

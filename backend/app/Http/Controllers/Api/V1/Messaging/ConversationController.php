@@ -55,6 +55,6 @@ class ConversationController extends Controller
 
         $this->messaging->markRead($conversation, $request->user());
 
-        return new ConversationResource($conversation->load(['listing.property.media', 'propertyRequest', 'buyer', 'owner', 'messages' => fn ($q) => $q->oldest()]));
+        return new ConversationResource($conversation->load(['listing.property.media', 'propertyRequest', 'buyer', 'owner', 'messages' => fn ($q) => $q->oldest()->with('sender.roles')]));
     }
 }

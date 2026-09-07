@@ -1,10 +1,12 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { MessageSquareText, ShieldAlert } from 'lucide-react'
-import { useAdminConversation, useAdminConversations, type AdminConversation } from '../../lib/api/admin'
+import { MessageSquareText, Send, ShieldAlert } from 'lucide-react'
+import { useAdminConversation, useAdminConversations, useAdminSendMessage, type AdminConversation } from '../../lib/api/admin'
+import { getErrorMessage } from '../../lib/api/errors'
 import { AdminPageHeader } from '../../components/admin/AdminPageHeader'
 import { Card } from '../../components/ui/Card'
 import { Badge } from '../../components/ui/Badge'
+import { Button } from '../../components/ui/Button'
 import { Input, Select } from '../../components/ui/Input'
 import { Modal } from '../../components/ui/Modal'
 import { EmptyState } from '../../components/ui/EmptyState'
@@ -29,7 +31,7 @@ export function Messages() {
         icon={MessageSquareText}
         tone="warning"
         title="Messages"
-        description="Read-only view of buyer/owner conversations — use it to investigate a reported thread. Admins never post into a conversation."
+        description="Buyer/owner conversations — investigate a reported thread, or reply directly to step into one."
         action={
           <>
             <Input
@@ -100,9 +102,27 @@ export function Messages() {
 
 function ConversationDetailModal({ conversationId, onClose }: { conversationId: number | null; onClose: () => void }) {
   const { data: conversation, isPending } = useAdminConversation(conversationId)
+  const sendMessage = useAdminSendMessage()
+  const [reply, setReply] = useState('')
+  const [error, setError] = useState<string | null>(null)
+
+  const handleClose = () => {
+    setReply('')
+    setError(null)
+    onClose()
+  }
+
+  const handleSend = () => {
+    if (!conversationId || !reply.trim()) return
+    setError(null)
+    sendMessage.mutate(
+      { conversationId, body: reply.trim() },
+      { onSuccess: () => setReply(''), onError: (e) => setError(getErrorMessage(e)) },
+    )
+  }
 
   return (
-    <Modal open={conversationId != null} onClose={onClose} title={conversation ? threadSubject(conversation) : 'Conversation'}>
+    <Modal open={conversationId != null} onClose={handleClose} title={conversation ? threadSubject(conversation) : 'Conversation'}>
       {isPending && (
         <div className="flex flex-col gap-2">
           <Skeleton className="h-12 w-full" />
@@ -118,17 +138,48 @@ function ConversationDetailModal({ conversationId, onClose }: { conversationId: 
               View listing: {conversation.listing.title}
             </Link>
           )}
-          <div className="flex flex-col gap-2">
-            {conversation.messages?.map((m) => (
-              <div key={m.id} className="rounded-lg border border-stone-200 bg-stone-100/50 p-3">
-                <p className="text-xs font-semibold text-ink-900">{m.sender?.name ?? 'Unknown sender'}</p>
-                <p className="mt-1 whitespace-pre-wrap text-sm text-ink-700/90">{m.body}</p>
-                <p className="mt-1 text-[11px] text-ink-700/50">{new Date(m.created_at).toLocaleString()}</p>
-              </div>
-            ))}
+          <div className="flex max-h-80 flex-col gap-2 overflow-y-auto">
+            {conversation.messages?.map((m) => {
+              const isSupport = m.sender?.id !== conversation.buyer?.id && m.sender?.id !== conversation.owner?.id
+              return (
+                <div
+                  key={m.id}
+                  className={
+                    isSupport
+                      ? 'rounded-lg border border-trust-700/30 bg-trust-100 p-3'
+                      : 'rounded-lg border border-stone-200 bg-stone-100/50 p-3'
+                  }
+                >
+                  <p className="flex items-center gap-1.5 text-xs font-semibold text-ink-900">
+                    {m.sender?.name ?? 'Unknown sender'}
+                    {isSupport && <Badge tone="trust">Support</Badge>}
+                  </p>
+                  <p className="mt-1 whitespace-pre-wrap text-sm text-ink-700/90">{m.body}</p>
+                  <p className="mt-1 text-[11px] text-ink-700/50">{new Date(m.created_at).toLocaleString()}</p>
+                </div>
+              )
+            })}
             {conversation.messages?.length === 0 && (
               <p className="text-sm text-ink-700/60">No messages yet.</p>
             )}
+          </div>
+
+          <div className="flex flex-col gap-2 border-t border-stone-200 pt-3">
+            <label className="text-sm font-medium text-ink-900" htmlFor="admin-reply">
+              Reply as support
+            </label>
+            <textarea
+              id="admin-reply"
+              rows={3}
+              value={reply}
+              onChange={(e) => setReply(e.target.value)}
+              placeholder="Message both the buyer and the owner…"
+              className="rounded-lg border border-stone-200 bg-white px-3 py-2 text-sm text-ink-900 focus:outline-none focus:ring-2 focus:ring-trust-700"
+            />
+            {error && <p className="text-sm text-danger-600">{error}</p>}
+            <Button className="self-end" size="sm" isLoading={sendMessage.isPending} disabled={!reply.trim()} onClick={handleSend}>
+              <Send className="h-3.5 w-3.5" /> Send
+            </Button>
           </div>
         </div>
       )}

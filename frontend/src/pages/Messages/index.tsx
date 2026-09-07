@@ -130,11 +130,18 @@ function Thread({ conversationId }: { conversationId: number }) {
             <div
               className={clsx(
                 'max-w-[75%] rounded-lg px-3 py-2 text-sm',
-                m.is_mine ? 'bg-trust-700 text-white' : 'bg-stone-100 text-ink-900',
+                m.is_from_support
+                  ? 'border border-accent-500/40 bg-accent-100 text-ink-900'
+                  : m.is_mine
+                    ? 'bg-trust-700 text-white'
+                    : 'bg-stone-100 text-ink-900',
               )}
             >
+              {m.is_from_support && (
+                <p className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-accent-600">Ghar Nepal support</p>
+              )}
               {m.body}
-              <p className={clsx('mt-1 text-[10px]', m.is_mine ? 'text-trust-100' : 'text-ink-700/50')}>
+              <p className={clsx('mt-1 text-[10px]', m.is_mine && !m.is_from_support ? 'text-trust-100' : 'text-ink-700/50')}>
                 {new Date(m.created_at).toLocaleString(undefined, { hour: '2-digit', minute: '2-digit', month: 'short', day: 'numeric' })}
               </p>
             </div>
