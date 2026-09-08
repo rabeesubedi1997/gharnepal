@@ -44,6 +44,25 @@ class AccountScreen extends ConsumerWidget {
           ),
           const Divider(),
           ListTile(
+            leading: const Icon(Icons.dashboard_outlined),
+            title: const Text('My properties'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => context.push('/dashboard'),
+          ),
+          ListTile(
+            leading: const Icon(Icons.add_home_outlined),
+            title: const Text('Post a property'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => context.push('/post-property'),
+          ),
+          ListTile(
+            leading: const Icon(Icons.receipt_long_outlined),
+            title: const Text('Payment history'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => context.push('/payments'),
+          ),
+          const Divider(),
+          ListTile(
             leading: const Icon(Icons.request_quote_outlined),
             title: const Text('Property requests'),
             trailing: const Icon(Icons.chevron_right),

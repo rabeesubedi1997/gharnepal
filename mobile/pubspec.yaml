@@ -67,6 +67,9 @@ dependencies:
   # Opens the poster's wa.me WhatsApp link from Listing Detail.
   url_launcher: ^6.3.1
 
+  # Gallery/camera photo picking for the Post-Property Wizard's media step.
+  image_picker: ^1.1.2
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

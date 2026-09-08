@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/network/providers.dart';
 import '../data/listings_repository.dart';
+import '../data/models/amenity.dart';
 import '../data/models/listing_detail.dart';
 import '../data/models/listing_summary.dart';
 import '../data/models/search_filters.dart';
@@ -80,4 +81,8 @@ final searchResultsProvider =
 
 final listingDetailProvider = FutureProvider.family<ListingDetail, String>((ref, slug) {
   return ref.read(listingsRepositoryProvider).detail(slug);
+});
+
+final amenitiesProvider = FutureProvider<List<Amenity>>((ref) {
+  return ref.read(listingsRepositoryProvider).amenities();
 });

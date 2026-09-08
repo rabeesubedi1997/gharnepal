@@ -28,7 +28,48 @@ class AreaInfo {
   final Map<String, double>? display;
 }
 
-/// Mirrors `PropertyResource` nested on the listing detail's `property` field.
+/// The abbreviated per-listing summary nested in `PropertyResource.listings`
+/// — used on the Owner Dashboard's "My Properties" cards, one property can
+/// (rarely) have more than one listing over its lifetime.
+class OwnerListingSummary {
+  OwnerListingSummary({
+    required this.id,
+    required this.slug,
+    required this.title,
+    required this.status,
+    required this.purpose,
+    required this.price,
+    required this.isFeatured,
+    this.featuredUntil,
+  });
+
+  factory OwnerListingSummary.fromJson(Map<String, dynamic> json) {
+    return OwnerListingSummary(
+      id: json['id'] as int,
+      slug: json['slug'] as String,
+      title: json['title'] as String,
+      status: json['status'] as String,
+      purpose: json['purpose'] as String,
+      price: asDoubleOr(json['price'], 0),
+      isFeatured: json['is_featured'] as bool? ?? false,
+      featuredUntil: json['featured_until'] as String?,
+    );
+  }
+
+  final int id;
+  final String slug;
+  final String title;
+  final String status;
+  final String purpose;
+  final double price;
+  final bool isFeatured;
+  final String? featuredUntil;
+}
+
+/// Mirrors `PropertyResource` nested on the listing detail's `property`
+/// field, and also used standalone as an item of the Owner Dashboard's
+/// "My Properties" list (`GET /owner/properties`), where `listings` is
+/// populated instead of empty.
 class Property {
   Property({
     required this.id,
@@ -44,6 +85,7 @@ class Property {
     this.address,
     required this.media,
     this.landProfile,
+    this.listings = const [],
   });
 
   factory Property.fromJson(Map<String, dynamic> json) {
@@ -65,6 +107,9 @@ class Property {
       landProfile: json['land_profile'] != null
           ? LandProfile.fromJson(json['land_profile'] as Map<String, dynamic>)
           : null,
+      listings: (json['listings'] as List<dynamic>? ?? const [])
+          .map((l) => OwnerListingSummary.fromJson(l as Map<String, dynamic>))
+          .toList(growable: false),
     );
   }
 
@@ -81,6 +126,7 @@ class Property {
   final Address? address;
   final List<MediaItem> media;
   final LandProfile? landProfile;
+  final List<OwnerListingSummary> listings;
 
   List<MediaItem> get images => media.where((m) => m.type == 'image').toList(growable: false);
 }

@@ -3,6 +3,7 @@ import 'package:dio/dio.dart';
 import '../../../core/network/api_client.dart';
 import '../../../core/network/api_exception.dart';
 import '../../../core/network/paginated_result.dart';
+import 'models/amenity.dart';
 import 'models/listing_detail.dart';
 import 'models/listing_summary.dart';
 import 'models/search_filters.dart';
@@ -30,6 +31,19 @@ class ListingsRepository {
     try {
       final response = await _dio.get('/listings/$slug');
       return ListingDetail.fromJson(response.data['data'] as Map<String, dynamic>);
+    } on DioException catch (error) {
+      throw apiExceptionFrom(error);
+    }
+  }
+
+  /// The fixed, seeded catalog of selectable amenities — used by the
+  /// Post-Property Wizard's Pricing step and Edit Listing.
+  Future<List<Amenity>> amenities() async {
+    try {
+      final response = await _dio.get('/amenities');
+      return (response.data['data'] as List<dynamic>)
+          .map((a) => Amenity.fromJson(a as Map<String, dynamic>))
+          .toList(growable: false);
     } on DioException catch (error) {
       throw apiExceptionFrom(error);
     }

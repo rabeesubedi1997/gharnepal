@@ -12,6 +12,10 @@ import '../../features/listings/presentation/listing_detail_screen.dart';
 import '../../features/messaging/presentation/conversation_thread_screen.dart';
 import '../../features/messaging/presentation/conversations_screen.dart';
 import '../../features/notifications/presentation/notifications_screen.dart';
+import '../../features/owner/presentation/dashboard_screen.dart';
+import '../../features/owner/presentation/edit_listing_screen.dart';
+import '../../features/owner/presentation/payment_history_screen.dart';
+import '../../features/owner/presentation/post_property_wizard_screen.dart';
 import '../../features/property_requests/presentation/property_requests_screen.dart';
 import '../../features/search/presentation/search_screen.dart';
 import '../../features/splash/splash_screen.dart';
@@ -81,6 +85,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/property-requests', builder: (context, state) => const PropertyRequestsScreen()),
       GoRoute(path: '/viewing-requests', builder: (context, state) => const ViewingRequestsScreen()),
       GoRoute(path: '/notifications', builder: (context, state) => const NotificationsScreen()),
+      GoRoute(path: '/dashboard', builder: (context, state) => const DashboardScreen()),
+      GoRoute(path: '/post-property', builder: (context, state) => const PostPropertyWizardScreen()),
+      GoRoute(
+        path: '/owner/listings/:id/edit',
+        builder: (context, state) => EditListingScreen(listingId: int.parse(state.pathParameters['id']!)),
+      ),
+      GoRoute(path: '/payments', builder: (context, state) => const PaymentHistoryScreen()),
     ],
   );
 });
