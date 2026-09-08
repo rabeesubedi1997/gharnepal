@@ -63,9 +63,17 @@ class CostCalculatorController extends Controller
     {
         $scenario = null;
 
-        if ($request->user() && $request->boolean('save')) {
+        // Explicitly the sanctum guard: these routes carry no auth:sanctum
+        // middleware (saving is opt-in for whoever happens to be logged in,
+        // not a requirement), so nothing ever calls Auth::shouldUse('sanctum')
+        // — $request->user() would silently resolve via the default 'web'
+        // guard and always be null for a bearer-token client, silently
+        // dropping save=true instead of persisting the scenario.
+        $user = $request->user('sanctum');
+
+        if ($user && $request->boolean('save')) {
             $scenario = CostCalculatorScenario::create([
-                'user_id' => $request->user()->id,
+                'user_id' => $user->id,
                 'property_listing_id' => $data['listing_id'] ?? null,
                 'type' => $type,
                 'name' => $data['name'] ?? null,

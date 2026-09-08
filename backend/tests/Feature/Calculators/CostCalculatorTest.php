@@ -47,6 +47,27 @@ class CostCalculatorTest extends TestCase
         $this->assertDatabaseHas('cost_calculator_scenarios', ['user_id' => $user->id, 'name' => 'My dream house']);
     }
 
+    public function test_a_bearer_token_client_can_save_a_scenario(): void
+    {
+        // Deliberately not actingAs(): that helper calls Auth::shouldUse()
+        // itself, which would mask the real bug — this route carries no
+        // auth:sanctum middleware (saving is opt-in, not a requirement), so
+        // nothing switches the request's default guard for a real HTTP
+        // request. A genuine bearer-token request is the only way to catch it.
+        $user = User::factory()->create();
+        $token = $user->createToken('test')->plainTextToken;
+
+        $response = $this->withHeader('Authorization', "Bearer {$token}")->postJson('/api/v1/calculators/rental', [
+            'monthly_rent' => 18000,
+            'save' => true,
+            'name' => 'Bearer client scenario',
+        ]);
+
+        $response->assertOk();
+        $this->assertNotNull($response->json('data.scenario.id'), 'save=true should persist a scenario for a bearer-token client too');
+        $this->assertDatabaseHas('cost_calculator_scenarios', ['user_id' => $user->id, 'name' => 'Bearer client scenario']);
+    }
+
     public function test_a_user_can_list_and_delete_their_saved_scenarios(): void
     {
         $user = User::factory()->create();

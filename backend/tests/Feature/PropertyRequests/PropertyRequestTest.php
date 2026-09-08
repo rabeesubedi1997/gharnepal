@@ -90,6 +90,28 @@ class PropertyRequestTest extends TestCase
             ->assertForbidden();
     }
 
+    public function test_is_mine_is_correct_for_a_bearer_token_client_on_the_public_index(): void
+    {
+        // Deliberately not actingAs(): that helper calls Auth::shouldUse()
+        // itself, which would mask the real bug — the public index route
+        // carries no auth:sanctum middleware, so nothing switches the
+        // request's default guard away from 'web' for a real HTTP request.
+        // A genuine bearer-token request is the only way to catch this.
+        $poster = User::factory()->create();
+        $token = $poster->createToken('test')->plainTextToken;
+        PropertyRequest::create(['user_id' => $poster->id, 'purpose' => 'rent', 'status' => 'open']);
+
+        $someoneElse = User::factory()->create();
+        PropertyRequest::create(['user_id' => $someoneElse->id, 'purpose' => 'sale', 'status' => 'open']);
+
+        $response = $this->withHeader('Authorization', "Bearer {$token}")->getJson('/api/v1/property-requests');
+
+        $response->assertOk();
+        $byIsMine = collect($response->json('data'))->keyBy('is_mine');
+        $this->assertTrue($byIsMine->has(true), 'the bearer-authenticated poster\'s own request should report is_mine=true');
+        $this->assertTrue($byIsMine->has(false), 'the other user\'s request should report is_mine=false');
+    }
+
     public function test_my_requests_lists_own_requests_regardless_of_status(): void
     {
         $user = User::factory()->create();

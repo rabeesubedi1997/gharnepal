@@ -35,8 +35,13 @@ class PropertyListingDetailResource extends JsonResource
                 'average' => $this->ratings_avg_score !== null ? round((float) $this->ratings_avg_score, 1) : null,
                 'count' => (int) ($this->ratings_count ?? 0),
             ],
-            'my_rating' => $request->user()
-                ? $this->ratings()->where('user_id', $request->user()->id)->first()?->only(['id', 'score', 'comment'])
+            // Explicitly the sanctum guard: this route (GET /listings/{slug})
+            // carries no auth:sanctum middleware, so nothing ever calls
+            // Auth::shouldUse('sanctum') — $request->user() would silently
+            // resolve via the default 'web' guard and always be null for a
+            // bearer-token client, even one that really did rate this listing.
+            'my_rating' => $request->user('sanctum')
+                ? $this->ratings()->where('user_id', $request->user('sanctum')->id)->first()?->only(['id', 'score', 'comment'])
                 : null,
             'property' => new PropertyResource($property),
             'amenities' => AmenityResource::collection($this->whenLoaded('amenities')),

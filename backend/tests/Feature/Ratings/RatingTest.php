@@ -150,6 +150,29 @@ class RatingTest extends TestCase
             ->assertJsonPath('data.0.user.name', 'Rater One');
     }
 
+    public function test_my_rating_is_correct_for_a_bearer_token_client(): void
+    {
+        // Deliberately not actingAs(): that helper calls Auth::shouldUse()
+        // itself, which would mask the real bug — GET /listings/{slug}
+        // carries no auth:sanctum middleware, so nothing switches the
+        // request's default guard for a real HTTP request. A genuine
+        // bearer-token request is the only way to catch it.
+        [$listing] = $this->publishedListing();
+        $rater = User::factory()->create();
+        $token = $rater->createToken('test')->plainTextToken;
+
+        $this->actingAs($rater, 'sanctum')->postJson("/api/v1/listings/{$listing->id}/ratings", [
+            'score' => 4,
+            'comment' => 'Nice place.',
+        ]);
+
+        $detail = $this->withHeader('Authorization', "Bearer {$token}")->getJson("/api/v1/listings/{$listing->slug}");
+
+        $detail->assertOk()
+            ->assertJsonPath('data.my_rating.score', 4)
+            ->assertJsonPath('data.my_rating.comment', 'Nice place.');
+    }
+
     public function test_admin_can_hide_and_unhide_a_rating(): void
     {
         [$listing] = $this->publishedListing();

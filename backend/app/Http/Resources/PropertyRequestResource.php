@@ -20,7 +20,14 @@ class PropertyRequestResource extends JsonResource
             'notes' => $this->notes,
             'status' => $this->status,
             'posted_by' => $this->whenLoaded('user', fn () => $this->user?->name),
-            'is_mine' => $request->user()?->id === $this->user_id,
+            // Explicitly the sanctum guard, not the request's default: the
+            // public index route (GET /property-requests) carries no
+            // auth:sanctum middleware, so nothing ever calls
+            // Auth::shouldUse('sanctum') to make $request->user() resolve
+            // through it — without this it silently falls back to the
+            // default 'web' guard and is always null for a bearer-token
+            // client, making every request look like someone else's.
+            'is_mine' => $request->user('sanctum')?->id === $this->user_id,
             'created_at' => $this->created_at,
         ];
     }

@@ -6,6 +6,7 @@ use App\Models\Agency;
 use App\Models\Role;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Auth;
 use Tests\TestCase;
 
 class AdminConsoleTest extends TestCase
@@ -93,6 +94,42 @@ class AdminConsoleTest extends TestCase
         // request, so it's the DB state that must reflect suspension — not
         // the in-memory $target object from before the admin's update.
         $this->actingAs($target->fresh(), 'sanctum')->getJson('/api/v1/account/favorites')->assertForbidden();
+    }
+
+    public function test_a_suspended_users_bearer_token_is_blocked_from_protected_routes(): void
+    {
+        // The test above uses actingAs(), which calls Auth::shouldUse()
+        // itself and would mask the real bug: EnsureAccountIsActive is
+        // registered on the global middleware stack, which runs before
+        // route/group middleware (including auth:sanctum) ever resolves the
+        // guard — so $request->user() there needs the sanctum guard asked
+        // for explicitly, or a real bearer-token client's suspension check
+        // is silently inert on every route in the app. A genuine bearer
+        // request is the only way to catch that.
+        $admin = $this->admin();
+        $target = User::factory()->create();
+        $token = $target->createToken('test')->plainTextToken;
+
+        $this->withHeader('Authorization', "Bearer {$token}")
+            ->getJson('/api/v1/account/favorites')
+            ->assertOk();
+
+        // The sanctum guard caches its resolved user for the rest of this
+        // *test's* container (an artifact of PHPUnit reusing one container
+        // across requests within a test — a real bearer-token client is a
+        // fresh process every time and never carries this over). Forget it
+        // so the next request re-resolves from the database and actually
+        // sees the suspension.
+        Auth::forgetGuards();
+
+        $this->actingAs($admin, 'sanctum')->patchJson("/api/v1/admin/users/{$target->id}/status", ['status' => 'suspended'])
+            ->assertOk();
+
+        Auth::forgetGuards();
+
+        $this->withHeader('Authorization', "Bearer {$token}")
+            ->getJson('/api/v1/account/favorites')
+            ->assertForbidden();
     }
 
     public function test_admin_cannot_suspend_their_own_account(): void
