@@ -5,6 +5,30 @@ import 'package:go_router/go_router.dart';
 import '../../features/account/presentation/account_screen.dart';
 import '../../features/agencies/presentation/agencies_screen.dart';
 import '../../features/agencies/presentation/agency_profile_screen.dart';
+import '../../features/admin/agencies/presentation/admin_agencies_screen.dart';
+import '../../features/admin/advertisements/presentation/admin_advertisements_screen.dart';
+import '../../features/admin/banners/presentation/admin_banners_screen.dart';
+import '../../features/admin/blog/presentation/admin_blog_editor_screen.dart';
+import '../../features/admin/blog/presentation/admin_blog_screen.dart';
+import '../../features/admin/community_notes/presentation/admin_community_notes_screen.dart';
+import '../../features/admin/conversations/presentation/admin_conversation_thread_screen.dart';
+import '../../features/admin/conversations/presentation/admin_conversations_screen.dart';
+import '../../features/admin/dashboard/presentation/admin_dashboard_screen.dart';
+import '../../features/admin/duplicate_flags/presentation/admin_duplicate_flags_screen.dart';
+import '../../features/admin/land_profiles/presentation/admin_land_profile_verify_screen.dart';
+import '../../features/admin/listings/presentation/admin_listing_detail_screen.dart';
+import '../../features/admin/listings/presentation/admin_listings_screen.dart';
+import '../../features/admin/locations/presentation/admin_locations_screen.dart';
+import '../../features/admin/neighborhood_scores/presentation/admin_neighborhood_scores_screen.dart';
+import '../../features/admin/payments/presentation/admin_payments_screen.dart';
+import '../../features/admin/ratings/presentation/admin_ratings_screen.dart';
+import '../../features/admin/reports/presentation/admin_reports_screen.dart';
+import '../../features/admin/seo/presentation/admin_seo_page_editor_screen.dart';
+import '../../features/admin/seo/presentation/admin_seo_screen.dart';
+import '../../features/admin/trust/presentation/admin_trust_factors_screen.dart';
+import '../../features/admin/trust/presentation/admin_trust_override_screen.dart';
+import '../../features/admin/users/presentation/admin_users_screen.dart';
+import '../../features/admin/verifications/presentation/admin_verifications_screen.dart';
 import '../../features/auth/application/auth_controller.dart';
 import '../../features/auth/presentation/login_screen.dart';
 import '../../features/auth/presentation/register_screen.dart';
@@ -55,11 +79,12 @@ bool _isPublic(String path) {
 /// Redirect logic mirrors frontend/src/components/auth/RequireAuth.tsx:
 /// unresolved session -> splash; a protected route while logged out ->
 /// login; signed in on an auth screen -> home. Public routes (browsing) are
-/// reachable by guests, same as the website. Admin-only routes (added once
-/// the admin console is built) will add one more check here
-/// (`user.roles.contains('admin')`), the same flat single-tier check the
-/// website uses — see the build plan's confirmed decision to treat admin as
-/// one tier, not a separate "super admin" split.
+/// reachable by guests, same as the website. Admin routes additionally
+/// require `user.isAdmin` — the same flat single-tier check the backend's
+/// `EnsureUserIsAdmin` middleware uses (see the build plan's confirmed
+/// decision to treat admin as one tier, not a separate "super admin"
+/// split); a non-admin hitting `/admin/*` is bounced to home exactly like
+/// the website's own `RequireAuth adminOnly` behavior.
 final appRouterProvider = Provider<GoRouter>((ref) {
   return GoRouter(
     initialLocation: '/splash',
@@ -69,16 +94,20 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       final at = state.matchedLocation;
       final onSplash = at == '/splash';
       final onAuthScreen = at == '/login' || at == '/register';
+      final isAdminRoute = at == '/admin' || at.startsWith('/admin/');
 
       if (session.isLoading) return onSplash ? null : '/splash';
 
-      final loggedOut = session.hasError || session.valueOrNull == null;
+      final user = session.valueOrNull;
+      final loggedOut = session.hasError || user == null;
 
       if (loggedOut) {
         if (onSplash) return '/';
         if (onAuthScreen || _isPublic(at)) return null;
         return '/login';
       }
+
+      if (isAdminRoute && !user.isAdmin) return '/';
 
       return onSplash || onAuthScreen ? '/' : null;
     },
@@ -130,6 +159,61 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/blog/:slug',
         builder: (context, state) => BlogPostDetailScreen(slug: state.pathParameters['slug']!),
+      ),
+
+      // Admin console — every route below is additionally gated on
+      // `user.isAdmin` in the redirect above. See AdminDrawer for the full
+      // nav; only the dashboard carries the drawer, every other screen owns
+      // its own AppBar/back button.
+      GoRoute(path: '/admin', builder: (context, state) => const AdminDashboardScreen()),
+      GoRoute(path: '/admin/users', builder: (context, state) => const AdminUsersScreen()),
+      GoRoute(path: '/admin/agencies', builder: (context, state) => const AdminAgenciesScreen()),
+      GoRoute(path: '/admin/listings', builder: (context, state) => const AdminListingsScreen()),
+      GoRoute(
+        path: '/admin/listings/:id',
+        builder: (context, state) =>
+            AdminListingDetailScreen(propertyListingId: int.parse(state.pathParameters['id']!)),
+      ),
+      GoRoute(path: '/admin/reports', builder: (context, state) => const AdminReportsScreen()),
+      GoRoute(path: '/admin/duplicate-flags', builder: (context, state) => const AdminDuplicateFlagsScreen()),
+      GoRoute(path: '/admin/verifications', builder: (context, state) => const AdminVerificationsScreen()),
+      GoRoute(path: '/admin/trust-factors', builder: (context, state) => const AdminTrustFactorsScreen()),
+      GoRoute(
+        path: '/admin/trust-override/:listingId',
+        builder: (context, state) =>
+            AdminTrustOverrideScreen(listingId: int.parse(state.pathParameters['listingId']!)),
+      ),
+      GoRoute(
+        path: '/admin/land-profiles/:propertyId',
+        builder: (context, state) =>
+            AdminLandProfileVerifyScreen(propertyId: int.parse(state.pathParameters['propertyId']!)),
+      ),
+      GoRoute(path: '/admin/locations', builder: (context, state) => const AdminLocationsScreen()),
+      GoRoute(
+        path: '/admin/neighborhood-scores',
+        builder: (context, state) => const AdminNeighborhoodScoresScreen(),
+      ),
+      GoRoute(path: '/admin/community-notes', builder: (context, state) => const AdminCommunityNotesScreen()),
+      GoRoute(path: '/admin/ratings', builder: (context, state) => const AdminRatingsScreen()),
+      GoRoute(path: '/admin/payments', builder: (context, state) => const AdminPaymentsScreen()),
+      GoRoute(path: '/admin/conversations', builder: (context, state) => const AdminConversationsScreen()),
+      GoRoute(
+        path: '/admin/conversations/:id',
+        builder: (context, state) =>
+            AdminConversationThreadScreen(conversationId: int.parse(state.pathParameters['id']!)),
+      ),
+      GoRoute(path: '/admin/banners', builder: (context, state) => const AdminBannersScreen()),
+      GoRoute(path: '/admin/advertisements', builder: (context, state) => const AdminAdvertisementsScreen()),
+      GoRoute(path: '/admin/blog', builder: (context, state) => const AdminBlogScreen()),
+      GoRoute(path: '/admin/blog/new', builder: (context, state) => const AdminBlogEditorScreen()),
+      GoRoute(
+        path: '/admin/blog/:id/edit',
+        builder: (context, state) => AdminBlogEditorScreen(postId: int.parse(state.pathParameters['id']!)),
+      ),
+      GoRoute(path: '/admin/seo', builder: (context, state) => const AdminSeoScreen()),
+      GoRoute(
+        path: '/admin/seo/:key',
+        builder: (context, state) => AdminSeoPageEditorScreen(pageKey: state.pathParameters['key']!),
       ),
     ],
   );

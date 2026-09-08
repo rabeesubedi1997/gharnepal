@@ -105,6 +105,15 @@ class AccountScreen extends ConsumerWidget {
             trailing: const Icon(Icons.chevron_right),
             onTap: () => context.push('/settings'),
           ),
+          if (user.isAdmin) ...[
+            const Divider(),
+            ListTile(
+              leading: const Icon(Icons.admin_panel_settings_outlined, color: AppColors.trust700),
+              title: const Text('Admin console', style: TextStyle(fontWeight: FontWeight.w700)),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => context.push('/admin'),
+            ),
+          ],
           const Divider(),
           ListTile(
             leading: const Icon(Icons.logout, color: AppColors.danger600),
