@@ -85,6 +85,32 @@ dev_dependencies:
   # rules and activating additional ones.
   flutter_lints: ^6.0.0
 
+  # Phase 7 branding: generate the launcher icon (incl. Android adaptive
+  # icon) and the native splash screen from the source art in assets/icon/
+  # — run `dart run flutter_launcher_icons` / `dart run flutter_native_splash:create`
+  # after editing the config below, then delete these two dev deps' output
+  # is committed (generated Android res files), not the tools themselves.
+  flutter_launcher_icons: ^0.14.3
+  flutter_native_splash: ^2.4.4
+
+# Source art: assets/icon/icon.png (full-bleed trust-green square, used for
+# legacy/Play-Store icon contexts) and assets/icon/icon_foreground.png (the
+# same white house glyph on a transparent background, sized within
+# Android's adaptive-icon safe zone) — both a simple flat house pictogram
+# matching the splash screen's existing Icons.home_work_outlined motif.
+flutter_launcher_icons:
+  android: true
+  image_path: "assets/icon/icon.png"
+  adaptive_icon_background: "#1F4B3F"
+  adaptive_icon_foreground: "assets/icon/icon_foreground.png"
+
+flutter_native_splash:
+  color: "#1F4B3F"
+  image: "assets/icon/splash_logo.png"
+  android_12:
+    color: "#1F4B3F"
+    image: "assets/icon/splash_logo.png"
+
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
 
@@ -96,10 +122,8 @@ flutter:
   # the material Icons class.
   uses-material-design: true
 
-  # To add assets to your application, add an assets section, like this:
-  # assets:
-  #   - images/a_dot_burr.jpeg
-  #   - images/a_dot_ham.jpeg
+  assets:
+    - assets/icon/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
