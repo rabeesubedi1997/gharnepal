@@ -70,6 +70,10 @@ dependencies:
   # Gallery/camera photo picking for the Post-Property Wizard's media step.
   image_picker: ^1.1.2
 
+  # General file picking (jpg/png/pdf) for the Verification Center's KYC
+  # document upload — image_picker alone can't select a PDF.
+  file_picker: ^8.1.6
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

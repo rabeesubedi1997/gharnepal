@@ -102,8 +102,73 @@ class HomeScreen extends ConsumerWidget {
                       ),
                     ),
             ),
+            const SizedBox(height: 24),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Text('Explore', style: Theme.of(context).textTheme.titleLarge),
+            ),
+            const SizedBox(height: 12),
+            const _ExploreRow(),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// Public-discovery shortcuts guests can reach without logging in —
+/// neighborhoods/agencies/blog/calculators all have guest-accessible
+/// backend endpoints (see `_isPublic` in app_router.dart).
+class _ExploreRow extends StatelessWidget {
+  const _ExploreRow();
+
+  @override
+  Widget build(BuildContext context) {
+    final items = <(IconData, String, String)>[
+      (Icons.location_city_outlined, 'Neighborhoods', '/neighborhoods'),
+      (Icons.business_outlined, 'Agents & agencies', '/agencies'),
+      (Icons.calculate_outlined, 'Calculators', '/calculators'),
+      (Icons.newspaper_outlined, 'Blog', '/blog'),
+    ];
+
+    return SizedBox(
+      height: 96,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        itemCount: items.length,
+        separatorBuilder: (context, _) => const SizedBox(width: 12),
+        itemBuilder: (context, index) {
+          final (icon, label, path) = items[index];
+          return SizedBox(
+            width: 96,
+            child: Material(
+              color: AppColors.stone100,
+              borderRadius: BorderRadius.circular(12),
+              child: InkWell(
+                borderRadius: BorderRadius.circular(12),
+                onTap: () => context.push(path),
+                child: Padding(
+                  padding: const EdgeInsets.all(8),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(icon, color: AppColors.trust700),
+                      const SizedBox(height: 6),
+                      Text(
+                        label,
+                        textAlign: TextAlign.center,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          );
+        },
       ),
     );
   }

@@ -73,6 +73,16 @@ class AuthController extends AsyncNotifier<AuthUser?> {
     await ref.read(authRepositoryProvider).logout();
     state = const AsyncData(null);
   }
+
+  /// Re-fetches `/auth/me` and swaps in the fresh copy — used after Settings
+  /// mutations (profile name, phone verification) that change fields on the
+  /// cached `AuthUser` without a full login/logout cycle. Errors are ignored:
+  /// the mutation itself already succeeded, so a transient refresh failure
+  /// shouldn't undo that or force a loading spinner over the whole app.
+  Future<void> refreshUser() async {
+    final fresh = await AsyncValue.guard(() => ref.read(authRepositoryProvider).me());
+    fresh.whenData((user) => state = AsyncData(user));
+  }
 }
 
 final authControllerProvider = AsyncNotifierProvider<AuthController, AuthUser?>(

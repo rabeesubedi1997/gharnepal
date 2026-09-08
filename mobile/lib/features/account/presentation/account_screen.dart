@@ -82,6 +82,31 @@ class AccountScreen extends ConsumerWidget {
           ),
           const Divider(),
           ListTile(
+            leading: const Icon(Icons.auto_awesome_outlined),
+            title: const Text('Smart Match'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => context.push('/match-results'),
+          ),
+          ListTile(
+            leading: const Icon(Icons.calculate_outlined),
+            title: const Text('Calculators'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => context.push('/calculators'),
+          ),
+          ListTile(
+            leading: const Icon(Icons.verified_user_outlined),
+            title: const Text('Verification center'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => context.push('/verifications'),
+          ),
+          ListTile(
+            leading: const Icon(Icons.settings_outlined),
+            title: const Text('Settings'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => context.push('/settings'),
+          ),
+          const Divider(),
+          ListTile(
             leading: const Icon(Icons.logout, color: AppColors.danger600),
             title: const Text('Log out', style: TextStyle(color: AppColors.danger600)),
             onTap: () => ref.read(authControllerProvider.notifier).logout(),
