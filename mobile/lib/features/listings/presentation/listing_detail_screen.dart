@@ -6,8 +6,13 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/formatters/npr_formatter.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../features/auth/application/auth_controller.dart';
+import '../../../features/messaging/presentation/start_conversation_sheet.dart';
+import '../../../features/viewing_requests/presentation/request_viewing_sheet.dart';
 import '../../../widgets/app_badge.dart';
+import '../../../widgets/app_button.dart';
 import '../../../widgets/error_state.dart';
+import '../../../widgets/favorite_button.dart';
 import '../../../widgets/property_card.dart';
 import '../../../widgets/trust_badge.dart';
 import '../application/listings_providers.dart';
@@ -17,9 +22,8 @@ import '../data/models/property.dart';
 
 /// Mirrors frontend/src/pages/ListingDetail.tsx: gallery, price/area (incl.
 /// Nepali land units), amenities, land due-diligence checklist, trust badge,
-/// similar listings, and a WhatsApp deep link to the poster. "Message
-/// owner"/"Request a viewing" are added in Phase 3 once the messaging and
-/// viewing-request backends are wired up — this screen is browsing-only.
+/// similar listings, a WhatsApp deep link to the poster, and "Message
+/// owner"/"Request a viewing" actions (guests are sent to login first).
 class ListingDetailScreen extends ConsumerWidget {
   const ListingDetailScreen({super.key, required this.slug});
 
@@ -45,13 +49,41 @@ class ListingDetailScreen extends ConsumerWidget {
   }
 }
 
-class _ListingDetailBody extends StatelessWidget {
+class _ListingDetailBody extends ConsumerWidget {
   const _ListingDetailBody({required this.listing});
 
   final ListingDetail listing;
 
+  Future<void> _messageOwner(BuildContext context, WidgetRef ref) async {
+    if (ref.read(authControllerProvider).valueOrNull == null) {
+      context.push('/login');
+      return;
+    }
+    final conversationId = await StartConversationSheet.show(
+      context,
+      listingId: listing.id,
+      title: 'Message ${listing.poster?.name ?? 'the owner'}',
+    );
+    if (conversationId != null && context.mounted) {
+      context.push('/messages/$conversationId');
+    }
+  }
+
+  Future<void> _requestViewing(BuildContext context, WidgetRef ref) async {
+    if (ref.read(authControllerProvider).valueOrNull == null) {
+      context.push('/login');
+      return;
+    }
+    final requested = await RequestViewingSheet.show(context, listing.id);
+    if (requested == true && context.mounted) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Viewing request sent.')));
+    }
+  }
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final images = listing.property.images;
 
     return CustomScrollView(
@@ -59,6 +91,7 @@ class _ListingDetailBody extends StatelessWidget {
         SliverAppBar(
           expandedHeight: 260,
           pinned: true,
+          actions: [FavoriteButton(listingId: listing.id)],
           flexibleSpace: FlexibleSpaceBar(
             background: images.isEmpty
                 ? Container(color: AppColors.stone200, child: const Icon(Icons.home_outlined, size: 48))
@@ -136,6 +169,27 @@ class _ListingDetailBody extends StatelessWidget {
                 if (listing.trust != null) ...[
                   const SizedBox(height: 16),
                   TrustBadge(trust: listing.trust!),
+                ],
+                if (!listing.isClosed) ...[
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: AppButton(
+                          label: 'Message owner',
+                          variant: AppButtonVariant.outlined,
+                          onPressed: () => _messageOwner(context, ref),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: AppButton(
+                          label: 'Request a viewing',
+                          onPressed: () => _requestViewing(context, ref),
+                        ),
+                      ),
+                    ],
+                  ),
                 ],
                 if (listing.description != null && listing.description!.isNotEmpty) ...[
                   const SizedBox(height: 20),

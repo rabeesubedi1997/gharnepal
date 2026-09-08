@@ -5,12 +5,15 @@ import 'package:go_router/go_router.dart';
 import 'package:latlong2/latlong.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../../widgets/app_bottom_nav.dart';
 import '../../../widgets/empty_state.dart';
 import '../../../widgets/error_state.dart';
 import '../../../widgets/property_card.dart';
 import '../../../widgets/skeleton.dart';
+import '../../auth/application/auth_controller.dart';
 import '../../listings/application/listings_providers.dart';
 import '../../listings/data/models/listing_summary.dart';
+import '../../saved_searches/presentation/save_search_dialog.dart';
 import 'filter_sheet.dart';
 
 /// Search/browse: filters + a list/map toggle, mirroring
@@ -40,6 +43,17 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
             icon: Icon(_showMap ? Icons.view_list : Icons.map_outlined),
             tooltip: _showMap ? 'List view' : 'Map view',
             onPressed: () => setState(() => _showMap = !_showMap),
+          ),
+          IconButton(
+            icon: const Icon(Icons.bookmark_add_outlined),
+            tooltip: 'Save this search',
+            onPressed: () async {
+              if (ref.read(authControllerProvider).valueOrNull == null) {
+                context.push('/login');
+                return;
+              }
+              await SaveSearchDialog.show(context, filters);
+            },
           ),
           IconButton(
             icon: const Icon(Icons.tune),
@@ -104,6 +118,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                 );
         },
       ),
+      bottomNavigationBar: const AppBottomNav(currentIndex: 1),
     );
   }
 }

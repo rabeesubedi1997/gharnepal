@@ -5,6 +5,7 @@ import '../core/formatters/npr_formatter.dart';
 import '../core/theme/app_colors.dart';
 import '../features/listings/data/models/listing_summary.dart';
 import 'app_badge.dart';
+import 'favorite_button.dart';
 import 'trust_badge.dart';
 
 /// Mirrors `frontend/src/components/property/PropertyCard.tsx`: cover image,
@@ -57,12 +58,17 @@ class PropertyCard extends StatelessWidget {
                 if (listing.isClosed)
                   Positioned(
                     top: 8,
-                    right: 8,
+                    right: 44,
                     child: AppBadge(
                       label: listing.status == 'sold' ? 'Sold' : 'Rented',
                       tone: BadgeTone.neutral,
                     ),
                   ),
+                Positioned(
+                  top: 8,
+                  right: 8,
+                  child: FavoriteButton(listingId: listing.id, compact: true),
+                ),
                 if (listing.trustScore != null)
                   Positioned(
                     bottom: 8,

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../../widgets/app_bottom_nav.dart';
 import '../../../widgets/empty_state.dart';
 import '../../../widgets/error_state.dart';
 import '../../../widgets/skeleton.dart';
@@ -14,6 +15,7 @@ import '../../locations/application/locations_providers.dart';
 import '../../locations/data/municipality.dart';
 import '../../marketing/application/marketing_providers.dart';
 import '../../marketing/data/banner.dart';
+import '../../notifications/application/notifications_providers.dart';
 
 /// The real Home screen: banner carousel, hero search entry, and a
 /// "browse by city" grid — mirroring frontend/src/pages/Home.tsx.
@@ -30,24 +32,30 @@ class HomeScreen extends ConsumerWidget {
     final user = ref.watch(authControllerProvider).valueOrNull;
     final banners = ref.watch(bannersProvider);
     final municipalities = ref.watch(municipalitiesProvider);
+    final unreadNotifications = ref.watch(notificationsProvider).valueOrNull?.unreadCount ?? 0;
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Ghar Nepal'),
         actions: [
+          if (user != null)
+            IconButton(
+              icon: Badge(
+                isLabelVisible: unreadNotifications > 0,
+                label: Text('$unreadNotifications'),
+                child: const Icon(Icons.notifications_none),
+              ),
+              tooltip: 'Notifications',
+              onPressed: () => context.push('/notifications'),
+            ),
           IconButton(
             icon: Icon(user != null ? Icons.person_outline : Icons.login),
             tooltip: user != null ? 'Account' : 'Log in',
-            onPressed: () {
-              if (user == null) {
-                context.push('/login');
-              } else {
-                ref.read(authControllerProvider.notifier).logout();
-              }
-            },
+            onPressed: () => context.push(user != null ? '/account' : '/login'),
           ),
         ],
       ),
+      bottomNavigationBar: const AppBottomNav(currentIndex: 0),
       body: RefreshIndicator(
         onRefresh: () async {
           ref.invalidate(bannersProvider);
