@@ -81,6 +81,17 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
 
+  # Phase 8: end-to-end flows (integration_test/app_test.dart) driven on a
+  # real device/emulator against the live backend, not the widget-test
+  # HTTP fakes — see that file's header comment for why.
+  integration_test:
+    sdk: flutter
+  # Only used to fake the gallery picker in that same test (real platform
+  # image-picker UI is outside the app process, so integration_test can't
+  # drive it) — already a transitive dep of image_picker, pinned explicitly
+  # per `depend_on_referenced_packages`.
+  image_picker_platform_interface: ^2.11.1
+
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is
   # activated in the `analysis_options.yaml` file located at the root of your

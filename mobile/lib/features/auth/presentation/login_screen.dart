@@ -38,6 +38,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     await ref
         .read(authControllerProvider.notifier)
         .login(email: _emailController.text.trim(), password: _passwordController.text);
+    // A successful login flips authControllerProvider's state, which the
+    // router's redirect listener reacts to immediately — by the time this
+    // continues, a fast-enough auth response can already have navigated
+    // away from (and disposed) this screen. Only an error needs handling
+    // here at all; on success there's nothing left for this widget to do.
+    if (!mounted) return;
 
     final session = ref.read(authControllerProvider);
     session.whenOrNull(

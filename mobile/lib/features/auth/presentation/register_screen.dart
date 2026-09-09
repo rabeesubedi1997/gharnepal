@@ -48,6 +48,11 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           password: _passwordController.text,
           passwordConfirmation: _confirmController.text,
         );
+    // Same race as LoginScreen._submit: a successful registration flips
+    // authControllerProvider's state, and the router's redirect listener
+    // can navigate away from (and dispose) this screen before this
+    // continuation runs.
+    if (!mounted) return;
 
     final session = ref.read(authControllerProvider);
     session.whenOrNull(
