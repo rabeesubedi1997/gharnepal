@@ -40,7 +40,14 @@ return [
 
         'public' => [
             'driver' => 'local',
-            'root' => storage_path('app/public'),
+            // Points directly at public/storage rather than storage/app/public
+            // + a `php artisan storage:link` symlink: shared hosts reached
+            // only through a File Manager (no terminal, no artisan) usually
+            // can't create that symlink at all. Writes go straight to the
+            // web-accessible folder instead — harmless locally too, since
+            // the existing dev symlink (if present) just makes the two
+            // paths resolve to the same place anyway.
+            'root' => public_path('storage'),
             'url' => rtrim(env('APP_URL', 'http://localhost'), '/').'/storage',
             'visibility' => 'public',
             'throw' => false,
