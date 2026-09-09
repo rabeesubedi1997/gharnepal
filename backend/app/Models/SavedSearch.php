@@ -12,6 +12,7 @@ class SavedSearch extends Model
     protected function casts(): array
     {
         return [
+            'user_id' => 'integer',
             'filters' => 'array',
             'last_notified_at' => 'datetime',
         ];

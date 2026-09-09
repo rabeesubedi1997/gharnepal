@@ -31,6 +31,21 @@ class Property extends Model
         'created_by',
     ];
 
+    protected function casts(): array
+    {
+        return [
+            'owner_user_id' => 'integer',
+            'total_area_sqm' => 'decimal:2',
+            'total_area_value_entered' => 'decimal:2',
+            'bedrooms' => 'integer',
+            'bathrooms' => 'integer',
+            'floors' => 'integer',
+            'year_built' => 'integer',
+            'parking_spaces' => 'integer',
+            'created_by' => 'integer',
+        ];
+    }
+
     public function owner(): BelongsTo
     {
         return $this->belongsTo(User::class, 'owner_user_id');

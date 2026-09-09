@@ -11,7 +11,10 @@ class Advertisement extends Model
 
     protected function casts(): array
     {
-        return ['is_active' => 'boolean'];
+        return [
+            'sort_order' => 'integer',
+            'is_active' => 'boolean',
+        ];
     }
 
     public function imageUrl(): string

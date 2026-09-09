@@ -12,6 +12,8 @@ class CostCalculatorScenario extends Model
     protected function casts(): array
     {
         return [
+            'user_id' => 'integer',
+            'property_listing_id' => 'integer',
             'inputs' => 'array',
             'computed_result' => 'array',
         ];

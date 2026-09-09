@@ -22,6 +22,9 @@ class Neighborhood extends Model
     protected function casts(): array
     {
         return [
+            'ward_id' => 'integer',
+            'centroid_lat' => 'float',
+            'centroid_lng' => 'float',
             'is_curated' => 'boolean',
         ];
     }

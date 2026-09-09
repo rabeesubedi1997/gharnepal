@@ -23,6 +23,20 @@ class Address extends Model
         'geohash',
     ];
 
+    protected function casts(): array
+    {
+        return [
+            'addressable_id' => 'integer',
+            'province_id' => 'integer',
+            'district_id' => 'integer',
+            'municipality_id' => 'integer',
+            'ward_id' => 'integer',
+            'neighborhood_id' => 'integer',
+            'lat' => 'float',
+            'lng' => 'float',
+        ];
+    }
+
     public function addressable(): MorphTo
     {
         return $this->morphTo();

@@ -14,7 +14,9 @@ class PriceHistory extends Model
     protected function casts(): array
     {
         return [
+            'property_listing_id' => 'integer',
             'price' => 'decimal:2',
+            'changed_by' => 'integer',
             'changed_at' => 'datetime',
         ];
     }

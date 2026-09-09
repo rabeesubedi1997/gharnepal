@@ -23,6 +23,9 @@ class PaymentTransaction extends Model
     protected function casts(): array
     {
         return [
+            'user_id' => 'integer',
+            'property_listing_id' => 'integer',
+            'plan_days' => 'integer',
             'amount' => 'decimal:2',
             'completed_at' => 'datetime',
         ];

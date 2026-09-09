@@ -11,7 +11,11 @@ class Message extends Model
 
     protected function casts(): array
     {
-        return ['read_at' => 'datetime'];
+        return [
+            'conversation_id' => 'integer',
+            'sender_user_id' => 'integer',
+            'read_at' => 'datetime',
+        ];
     }
 
     public function conversation(): BelongsTo

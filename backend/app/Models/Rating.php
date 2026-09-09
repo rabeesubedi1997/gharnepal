@@ -10,6 +10,15 @@ class Rating extends Model
 {
     protected $fillable = ['user_id', 'rateable_type', 'rateable_id', 'score', 'comment', 'status'];
 
+    protected function casts(): array
+    {
+        return [
+            'user_id' => 'integer',
+            'rateable_id' => 'integer',
+            'score' => 'integer',
+        ];
+    }
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);

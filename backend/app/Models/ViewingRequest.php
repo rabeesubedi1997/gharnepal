@@ -23,6 +23,10 @@ class ViewingRequest extends Model
     protected function casts(): array
     {
         return [
+            'property_listing_id' => 'integer',
+            'requester_user_id' => 'integer',
+            'host_user_id' => 'integer',
+            'conversation_id' => 'integer',
             'proposed_datetime' => 'datetime',
             'confirmed_datetime' => 'datetime',
         ];

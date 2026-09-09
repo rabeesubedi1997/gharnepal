@@ -12,6 +12,15 @@ class ListingReport extends Model
         'status', 'reviewed_by', 'resolution_note',
     ];
 
+    protected function casts(): array
+    {
+        return [
+            'property_listing_id' => 'integer',
+            'reported_by' => 'integer',
+            'reviewed_by' => 'integer',
+        ];
+    }
+
     public function listing(): BelongsTo
     {
         return $this->belongsTo(PropertyListing::class, 'property_listing_id');

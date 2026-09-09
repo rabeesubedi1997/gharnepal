@@ -18,9 +18,12 @@ class LandProfile extends Model
     protected function casts(): array
     {
         return [
+            'property_id' => 'integer',
+            'lalpurja_document_media_id' => 'integer',
             'road_access' => 'boolean',
             'electricity_access' => 'boolean',
             'road_width_meters' => 'decimal:2',
+            'verified_by' => 'integer',
             'verified_at' => 'datetime',
         ];
     }

@@ -42,10 +42,15 @@ class MatchPreference extends Model
     protected function casts(): array
     {
         return [
+            'user_id' => 'integer',
             'budget_min' => 'decimal:2',
             'budget_max' => 'decimal:2',
+            'min_bedrooms' => 'integer',
+            'preferred_municipality_id' => 'integer',
             'work_lat' => 'decimal:7',
             'work_lng' => 'decimal:7',
+            'commute_limit_minutes' => 'integer',
+            'family_size' => 'integer',
             'requires_school_nearby' => 'boolean',
             'requires_parking' => 'boolean',
             'investment_purpose' => 'boolean',

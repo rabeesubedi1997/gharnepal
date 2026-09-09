@@ -11,6 +11,14 @@ class Municipality extends Model
 {
     protected $fillable = ['district_id', 'name', 'name_ne', 'type', 'code', 'ward_count', 'image_path'];
 
+    protected function casts(): array
+    {
+        return [
+            'district_id' => 'integer',
+            'ward_count' => 'integer',
+        ];
+    }
+
     public function district(): BelongsTo
     {
         return $this->belongsTo(District::class);

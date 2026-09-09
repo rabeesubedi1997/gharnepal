@@ -27,6 +27,7 @@ class SeoPage extends Model
         return [
             'robots_index' => 'boolean',
             'robots_follow' => 'boolean',
+            'updated_by' => 'integer',
         ];
     }
 

@@ -12,7 +12,13 @@ class Conversation extends Model
 
     protected function casts(): array
     {
-        return ['last_message_at' => 'datetime'];
+        return [
+            'property_listing_id' => 'integer',
+            'property_request_id' => 'integer',
+            'buyer_user_id' => 'integer',
+            'owner_user_id' => 'integer',
+            'last_message_at' => 'datetime',
+        ];
     }
 
     public function listing(): BelongsTo

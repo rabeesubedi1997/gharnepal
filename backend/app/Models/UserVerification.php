@@ -14,7 +14,12 @@ class UserVerification extends Model
 
     protected function casts(): array
     {
-        return ['reviewed_at' => 'datetime'];
+        return [
+            'user_id' => 'integer',
+            'document_media_id' => 'integer',
+            'reviewed_by' => 'integer',
+            'reviewed_at' => 'datetime',
+        ];
     }
 
     public function user(): BelongsTo

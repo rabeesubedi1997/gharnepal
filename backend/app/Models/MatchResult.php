@@ -14,6 +14,9 @@ class MatchResult extends Model
     protected function casts(): array
     {
         return [
+            'user_id' => 'integer',
+            'property_listing_id' => 'integer',
+            'score' => 'integer',
             'reasons' => 'array',
             'computed_at' => 'datetime',
         ];

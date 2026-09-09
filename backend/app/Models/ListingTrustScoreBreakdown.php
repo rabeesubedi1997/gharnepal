@@ -9,6 +9,16 @@ class ListingTrustScoreBreakdown extends Model
 {
     protected $fillable = ['listing_trust_score_id', 'trust_score_factor_id', 'points_awarded', 'max_points', 'explanation'];
 
+    protected function casts(): array
+    {
+        return [
+            'listing_trust_score_id' => 'integer',
+            'trust_score_factor_id' => 'integer',
+            'points_awarded' => 'integer',
+            'max_points' => 'integer',
+        ];
+    }
+
     public function trustScore(): BelongsTo
     {
         return $this->belongsTo(ListingTrustScore::class, 'listing_trust_score_id');

@@ -10,6 +10,13 @@ class District extends Model
 {
     protected $fillable = ['province_id', 'name', 'name_ne', 'code'];
 
+    protected function casts(): array
+    {
+        return [
+            'province_id' => 'integer',
+        ];
+    }
+
     public function province(): BelongsTo
     {
         return $this->belongsTo(Province::class);

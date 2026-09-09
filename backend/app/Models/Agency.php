@@ -25,6 +25,7 @@ class Agency extends Model
     protected function casts(): array
     {
         return [
+            'verified_by' => 'integer',
             'verified_at' => 'datetime',
         ];
     }

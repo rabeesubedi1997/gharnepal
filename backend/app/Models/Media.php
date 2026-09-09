@@ -13,6 +13,18 @@ class Media extends Model
         'size_bytes', 'width', 'height', 'sort_order', 'uploaded_by',
     ];
 
+    protected function casts(): array
+    {
+        return [
+            'mediable_id' => 'integer',
+            'size_bytes' => 'integer',
+            'width' => 'integer',
+            'height' => 'integer',
+            'sort_order' => 'integer',
+            'uploaded_by' => 'integer',
+        ];
+    }
+
     public function mediable(): MorphTo
     {
         return $this->morphTo();

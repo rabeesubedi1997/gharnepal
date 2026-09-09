@@ -39,6 +39,80 @@ Future<bool> _confirmDelete(BuildContext context, String label) async {
   return confirmed ?? false;
 }
 
+/// Replaces `ListTile` for every row in this screen's 5 tabs. `ListTile`
+/// enforces a fixed Material two-line height budget that doesn't grow for
+/// longer subtitles — in particular the Devanagari `name_ne` text (taller
+/// glyph metrics than Latin) or a long "type · ward count · code" subtitle
+/// would get clipped and visually overlap the title/next row instead of
+/// wrapping. This Row+Column layout sizes itself to its content instead,
+/// with an explicit `maxLines`/ellipsis cap so runaway text still can't
+/// blow out the row — it just gets truncated cleanly.
+class _LocationRow extends StatelessWidget {
+  const _LocationRow({
+    this.leading,
+    required this.title,
+    this.subtitle,
+    this.selected = false,
+    this.onTap,
+    this.actions = const [],
+  });
+
+  final Widget? leading;
+  final String title;
+  final String? subtitle;
+  final bool selected;
+  final VoidCallback? onTap;
+  final List<Widget> actions;
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 8),
+      color: selected ? AppColors.trust100 : null,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              if (leading != null) ...[leading!, const SizedBox(width: 12)],
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(fontWeight: FontWeight.w600),
+                    ),
+                    if (subtitle != null) ...[
+                      const SizedBox(height: 3),
+                      Text(
+                        subtitle!,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(color: AppColors.ink700, fontSize: 12, height: 1.3),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              if (actions.isNotEmpty) ...[
+                const SizedBox(width: 4),
+                Row(mainAxisSize: MainAxisSize.min, children: actions),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 /// Compact inline error treatment for the secondary scoping dropdowns
 /// embedded in each tab — the full-weight [ErrorState] would be too heavy
 /// here, but a retry action is still required.
@@ -211,29 +285,23 @@ class _ProvincesTab extends ConsumerWidget {
                   : ListView(
                       children: [
                         for (final p in items)
-                          Card(
-                            margin: const EdgeInsets.only(bottom: 8),
-                            color: p.id == selectedId ? AppColors.trust100 : null,
-                            child: ListTile(
-                              title: Text(p.name),
-                              subtitle: Text('${p.code}${p.nameNe != null ? ' · ${p.nameNe}' : ''}'),
-                              onTap: () => onSelect(p.id),
-                              trailing: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  IconButton(
-                                    icon: const Icon(Icons.edit_outlined),
-                                    tooltip: 'Edit ${p.name}',
-                                    onPressed: () => _edit(context, ref, p),
-                                  ),
-                                  IconButton(
-                                    icon: const Icon(Icons.delete_outline),
-                                    tooltip: 'Delete ${p.name}',
-                                    onPressed: () => _delete(context, ref, p),
-                                  ),
-                                ],
+                          _LocationRow(
+                            title: p.name,
+                            subtitle: '${p.code}${p.nameNe != null ? ' · ${p.nameNe}' : ''}',
+                            selected: p.id == selectedId,
+                            onTap: () => onSelect(p.id),
+                            actions: [
+                              IconButton(
+                                icon: const Icon(Icons.edit_outlined),
+                                tooltip: 'Edit ${p.name}',
+                                onPressed: () => _edit(context, ref, p),
                               ),
-                            ),
+                              IconButton(
+                                icon: const Icon(Icons.delete_outline),
+                                tooltip: 'Delete ${p.name}',
+                                onPressed: () => _delete(context, ref, p),
+                              ),
+                            ],
                           ),
                       ],
                     ),
@@ -411,29 +479,23 @@ class _DistrictsTab extends ConsumerWidget {
                             : ListView(
                                 children: [
                                   for (final d in items)
-                                    Card(
-                                      margin: const EdgeInsets.only(bottom: 8),
-                                      color: d.id == selectedId ? AppColors.trust100 : null,
-                                      child: ListTile(
-                                        title: Text(d.name),
-                                        subtitle: Text('${d.code}${d.nameNe != null ? ' · ${d.nameNe}' : ''}'),
-                                        onTap: () => onSelect(d.id),
-                                        trailing: Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            IconButton(
-                                              icon: const Icon(Icons.edit_outlined),
-                                              tooltip: 'Edit ${d.name}',
-                                              onPressed: () => _edit(context, ref, d),
-                                            ),
-                                            IconButton(
-                                              icon: const Icon(Icons.delete_outline),
-                                              tooltip: 'Delete ${d.name}',
-                                              onPressed: () => _delete(context, ref, d),
-                                            ),
-                                          ],
+                                    _LocationRow(
+                                      title: d.name,
+                                      subtitle: '${d.code}${d.nameNe != null ? ' · ${d.nameNe}' : ''}',
+                                      selected: d.id == selectedId,
+                                      onTap: () => onSelect(d.id),
+                                      actions: [
+                                        IconButton(
+                                          icon: const Icon(Icons.edit_outlined),
+                                          tooltip: 'Edit ${d.name}',
+                                          onPressed: () => _edit(context, ref, d),
                                         ),
-                                      ),
+                                        IconButton(
+                                          icon: const Icon(Icons.delete_outline),
+                                          tooltip: 'Delete ${d.name}',
+                                          onPressed: () => _delete(context, ref, d),
+                                        ),
+                                      ],
                                     ),
                                 ],
                               ),
@@ -613,32 +675,26 @@ class _MunicipalitiesTab extends ConsumerWidget {
                   : ListView(
                       children: [
                         for (final m in items)
-                          Card(
-                            margin: const EdgeInsets.only(bottom: 8),
-                            color: m.id == selectedId ? AppColors.trust100 : null,
-                            child: ListTile(
-                              leading: m.imageUrl != null
-                                  ? CircleAvatar(backgroundImage: NetworkImage(m.imageUrl!))
-                                  : const CircleAvatar(child: Icon(Icons.location_city_outlined)),
-                              title: Text(m.name),
-                              subtitle: Text('${_municipalityTypeLabel(m.type)} · ${m.wardCount} wards · ${m.code}'),
-                              onTap: () => onSelect(m.id),
-                              trailing: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  IconButton(
-                                    icon: const Icon(Icons.edit_outlined),
-                                    tooltip: 'Edit ${m.name}',
-                                    onPressed: () => _edit(context, ref, m),
-                                  ),
-                                  IconButton(
-                                    icon: const Icon(Icons.delete_outline),
-                                    tooltip: 'Delete ${m.name}',
-                                    onPressed: () => _delete(context, ref, m),
-                                  ),
-                                ],
+                          _LocationRow(
+                            leading: m.imageUrl != null
+                                ? CircleAvatar(backgroundImage: NetworkImage(m.imageUrl!))
+                                : const CircleAvatar(child: Icon(Icons.location_city_outlined)),
+                            title: m.name,
+                            subtitle: '${_municipalityTypeLabel(m.type)} · ${m.wardCount} wards · ${m.code}',
+                            selected: m.id == selectedId,
+                            onTap: () => onSelect(m.id),
+                            actions: [
+                              IconButton(
+                                icon: const Icon(Icons.edit_outlined),
+                                tooltip: 'Edit ${m.name}',
+                                onPressed: () => _edit(context, ref, m),
                               ),
-                            ),
+                              IconButton(
+                                icon: const Icon(Icons.delete_outline),
+                                tooltip: 'Delete ${m.name}',
+                                onPressed: () => _delete(context, ref, m),
+                              ),
+                            ],
                           ),
                       ],
                     ),
@@ -939,19 +995,18 @@ class _WardsTab extends ConsumerWidget {
                             : ListView(
                                 children: [
                                   for (final w in items)
-                                    Card(
-                                      margin: const EdgeInsets.only(bottom: 8),
-                                      child: ListTile(
-                                        title: Text('Ward ${w.wardNumber}${w.name != null ? ' — ${w.name}' : ''}'),
-                                        subtitle: w.centroidLat != null && w.centroidLng != null
-                                            ? Text('${w.centroidLat}, ${w.centroidLng}')
-                                            : null,
-                                        trailing: IconButton(
+                                    _LocationRow(
+                                      title: 'Ward ${w.wardNumber}${w.name != null ? ' — ${w.name}' : ''}',
+                                      subtitle: w.centroidLat != null && w.centroidLng != null
+                                          ? '${w.centroidLat}, ${w.centroidLng}'
+                                          : null,
+                                      actions: [
+                                        IconButton(
                                           icon: const Icon(Icons.delete_outline),
                                           tooltip: 'Delete Ward ${w.wardNumber}',
                                           onPressed: () => _delete(context, ref, w),
                                         ),
-                                      ),
+                                      ],
                                     ),
                                 ],
                               ),
@@ -1155,27 +1210,21 @@ class _NeighborhoodsTabState extends ConsumerState<_NeighborhoodsTab> {
                             : ListView(
                                 children: [
                                   for (final n in items)
-                                    Card(
-                                      margin: const EdgeInsets.only(bottom: 8),
-                                      child: ListTile(
-                                        title: Text(n.name),
-                                        subtitle: Text(n.isCurated ? 'Curated' : 'Not curated'),
-                                        trailing: Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            IconButton(
-                                              icon: const Icon(Icons.edit_outlined),
-                                              tooltip: 'Edit ${n.name}',
-                                              onPressed: () => _edit(context, n),
-                                            ),
-                                            IconButton(
-                                              icon: const Icon(Icons.delete_outline),
-                                              tooltip: 'Delete ${n.name}',
-                                              onPressed: () => _delete(context, n),
-                                            ),
-                                          ],
+                                    _LocationRow(
+                                      title: n.name,
+                                      subtitle: n.isCurated ? 'Curated' : 'Not curated',
+                                      actions: [
+                                        IconButton(
+                                          icon: const Icon(Icons.edit_outlined),
+                                          tooltip: 'Edit ${n.name}',
+                                          onPressed: () => _edit(context, n),
                                         ),
-                                      ),
+                                        IconButton(
+                                          icon: const Icon(Icons.delete_outline),
+                                          tooltip: 'Delete ${n.name}',
+                                          onPressed: () => _delete(context, n),
+                                        ),
+                                      ],
                                     ),
                                 ],
                               ),

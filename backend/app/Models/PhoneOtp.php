@@ -12,6 +12,8 @@ class PhoneOtp extends Model
     protected function casts(): array
     {
         return [
+            'user_id' => 'integer',
+            'attempts' => 'integer',
             'expires_at' => 'datetime',
             'consumed_at' => 'datetime',
         ];

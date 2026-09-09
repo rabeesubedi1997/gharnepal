@@ -19,7 +19,11 @@ class NeighborhoodScore extends Model
 
     protected function casts(): array
     {
-        return ['computed_at' => 'datetime'];
+        return [
+            'neighborhood_id' => 'integer',
+            'overall_score' => 'integer',
+            'computed_at' => 'datetime',
+        ];
     }
 
     public function neighborhood(): BelongsTo

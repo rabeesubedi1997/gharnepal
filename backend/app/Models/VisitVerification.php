@@ -15,11 +15,13 @@ class VisitVerification extends Model
     protected function casts(): array
     {
         return [
+            'viewing_request_id' => 'integer',
             'visited' => 'boolean',
             'matched_listing' => 'boolean',
             'price_accurate' => 'boolean',
             'host_attended' => 'boolean',
             'documents_shown' => 'boolean',
+            'submitted_by' => 'integer',
             'submitted_at' => 'datetime',
         ];
     }

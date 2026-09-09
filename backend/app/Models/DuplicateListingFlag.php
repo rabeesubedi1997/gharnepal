@@ -14,7 +14,13 @@ class DuplicateListingFlag extends Model
 
     protected function casts(): array
     {
-        return ['match_reasons' => 'array'];
+        return [
+            'property_listing_id' => 'integer',
+            'duplicate_of_listing_id' => 'integer',
+            'match_score' => 'integer',
+            'match_reasons' => 'array',
+            'reviewed_by' => 'integer',
+        ];
     }
 
     public function listing(): BelongsTo

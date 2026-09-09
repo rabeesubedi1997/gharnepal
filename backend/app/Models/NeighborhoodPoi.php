@@ -11,7 +11,13 @@ class NeighborhoodPoi extends Model
 
     protected function casts(): array
     {
-        return ['verified' => 'boolean'];
+        return [
+            'neighborhood_id' => 'integer',
+            'lat' => 'float',
+            'lng' => 'float',
+            'added_by' => 'integer',
+            'verified' => 'boolean',
+        ];
     }
 
     public function neighborhood(): BelongsTo

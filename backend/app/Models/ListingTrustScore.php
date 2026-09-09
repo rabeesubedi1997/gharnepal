@@ -12,7 +12,12 @@ class ListingTrustScore extends Model
 
     protected function casts(): array
     {
-        return ['computed_at' => 'datetime'];
+        return [
+            'property_listing_id' => 'integer',
+            'computed_score' => 'integer',
+            'total_score' => 'integer',
+            'computed_at' => 'datetime',
+        ];
     }
 
     public function listing(): BelongsTo

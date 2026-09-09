@@ -22,6 +22,9 @@ class TrustScoreFactor extends Model
 
     protected function casts(): array
     {
-        return ['is_active' => 'boolean'];
+        return [
+            'max_points' => 'integer',
+            'is_active' => 'boolean',
+        ];
     }
 }

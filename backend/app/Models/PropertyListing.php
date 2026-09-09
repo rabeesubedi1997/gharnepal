@@ -33,12 +33,16 @@ class PropertyListing extends Model
     protected function casts(): array
     {
         return [
+            'property_id' => 'integer',
             'price' => 'decimal:2',
             'negotiable' => 'boolean',
             'availability_date' => 'date',
             'published_at' => 'datetime',
             'expires_at' => 'datetime',
             'featured_until' => 'datetime',
+            'views_count' => 'integer',
+            'created_by' => 'integer',
+            'reviewed_by' => 'integer',
             'reviewed_at' => 'datetime',
         ];
     }

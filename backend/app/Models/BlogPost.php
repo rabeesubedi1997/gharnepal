@@ -22,6 +22,7 @@ class BlogPost extends Model
     protected function casts(): array
     {
         return [
+            'author_id' => 'integer',
             'published_at' => 'datetime',
         ];
     }

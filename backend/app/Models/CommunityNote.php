@@ -14,7 +14,12 @@ class CommunityNote extends Model
 
     protected function casts(): array
     {
-        return ['moderated_at' => 'datetime'];
+        return [
+            'neighborhood_id' => 'integer',
+            'submitted_by' => 'integer',
+            'moderated_by' => 'integer',
+            'moderated_at' => 'datetime',
+        ];
     }
 
     public function neighborhood(): BelongsTo

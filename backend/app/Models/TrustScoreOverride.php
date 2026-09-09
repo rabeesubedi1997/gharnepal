@@ -11,7 +11,12 @@ class TrustScoreOverride extends Model
 
     protected function casts(): array
     {
-        return ['active' => 'boolean'];
+        return [
+            'property_listing_id' => 'integer',
+            'admin_user_id' => 'integer',
+            'override_score' => 'integer',
+            'active' => 'boolean',
+        ];
     }
 
     public function listing(): BelongsTo

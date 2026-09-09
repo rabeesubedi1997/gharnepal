@@ -24,6 +24,17 @@ class PropertyRequest extends Model
         'status',
     ];
 
+    protected function casts(): array
+    {
+        return [
+            'user_id' => 'integer',
+            'budget_min' => 'integer',
+            'budget_max' => 'integer',
+            'bedrooms_min' => 'integer',
+            'municipality_id' => 'integer',
+        ];
+    }
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);

@@ -10,6 +10,16 @@ class Ward extends Model
 {
     protected $fillable = ['municipality_id', 'ward_number', 'name', 'centroid_lat', 'centroid_lng'];
 
+    protected function casts(): array
+    {
+        return [
+            'municipality_id' => 'integer',
+            'ward_number' => 'integer',
+            'centroid_lat' => 'float',
+            'centroid_lng' => 'float',
+        ];
+    }
+
     public function municipality(): BelongsTo
     {
         return $this->belongsTo(Municipality::class);

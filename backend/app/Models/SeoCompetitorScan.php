@@ -26,6 +26,8 @@ class SeoCompetitorScan extends Model
         return [
             'scanned_headings' => 'array',
             'scanned_keywords' => 'array',
+            'word_count' => 'integer',
+            'scanned_by' => 'integer',
         ];
     }
 
