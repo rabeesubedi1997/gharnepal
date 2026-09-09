@@ -117,6 +117,12 @@ flutter_launcher_icons:
   image_path: "assets/icon/icon.png"
   adaptive_icon_background: "#1F4B3F"
   adaptive_icon_foreground: "assets/icon/icon_foreground.png"
+  # Android 13+'s "Themed icons" system setting recolors the app icon to a
+  # single system accent color, using this layer instead of the background/
+  # foreground pair above — without it, a device with that setting on falls
+  # back to a generic icon instead of this app's real one. Reuses the same
+  # white house glyph, which is already flat/monochrome.
+  adaptive_icon_monochrome: "assets/icon/icon_foreground.png"
 
 flutter_native_splash:
   color: "#1F4B3F"
