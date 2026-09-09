@@ -33,3 +33,5 @@
 .idea
 .DS_Store
 Thumbs.db
+/gharnepal-deploy.zip
+/deploy/
