@@ -100,14 +100,14 @@ class _UploadCardState extends ConsumerState<_UploadCard> {
   bool _submitting = false;
 
   Future<void> _pickFile() async {
-    final result = await FilePicker.platform.pickFiles(
+    final picked = await FilePicker.pickFile(
       type: FileType.custom,
       allowedExtensions: ['jpg', 'jpeg', 'png', 'pdf'],
     );
-    final picked = result?.files.singleOrNull;
     if (picked == null) return;
 
-    if (picked.size > VerificationCenterScreen._maxBytes) {
+    final size = picked.lengthSync() ?? await picked.length();
+    if (size > VerificationCenterScreen._maxBytes) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('File must be under 10MB.')));
       }

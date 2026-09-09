@@ -106,7 +106,6 @@ class AdminConversation {
   /// "support" message if its sender is neither the buyer nor the owner.
   bool isSupportMessage(AdminMessage message) {
     final senderId = message.sender?.id;
-    if (senderId == null) return false;
     return senderId != buyer?.id && senderId != owner?.id;
   }
 

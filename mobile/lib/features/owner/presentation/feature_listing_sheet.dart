@@ -110,7 +110,17 @@ class _FeatureListingSheetState extends ConsumerState<FeatureListingSheet> {
             padding: EdgeInsets.symmetric(vertical: 24),
             child: Center(child: CircularProgressIndicator()),
           ),
-          error: (_, _) => const Text('Could not load plans.'),
+          error: (_, _) => Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            child: Row(
+              children: [
+                const Icon(Icons.error_outline, size: 18, color: AppColors.danger600),
+                const SizedBox(width: 8),
+                const Expanded(child: Text('Could not load plans.')),
+                TextButton(onPressed: () => ref.invalidate(featuredPlansProvider), child: const Text('Retry')),
+              ],
+            ),
+          ),
           data: (items) => Column(children: [for (final plan in items) _PlanTile(plan: plan, onTap: _purchase)]),
         ),
         if (_busy) const Padding(padding: EdgeInsets.only(top: 12), child: LinearProgressIndicator()),

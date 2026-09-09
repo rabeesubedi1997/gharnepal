@@ -39,6 +39,31 @@ Future<bool> _confirmDelete(BuildContext context, String label) async {
   return confirmed ?? false;
 }
 
+/// Compact inline error treatment for the secondary scoping dropdowns
+/// embedded in each tab — the full-weight [ErrorState] would be too heavy
+/// here, but a retry action is still required.
+class _InlineLoadError extends StatelessWidget {
+  const _InlineLoadError({required this.message, required this.onRetry});
+
+  final String message;
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        children: [
+          const Icon(Icons.error_outline, size: 18, color: AppColors.danger600),
+          const SizedBox(width: 8),
+          Expanded(child: Text(message)),
+          TextButton(onPressed: onRetry, child: const Text('Retry')),
+        ],
+      ),
+    );
+  }
+}
+
 /// Tabbed Province/District/Municipality/Ward/Neighborhood CRUD, mirroring
 /// the website's admin location manager. Each level below Province is
 /// scoped by a cascading parent selector — Municipality is the one
@@ -198,10 +223,12 @@ class _ProvincesTab extends ConsumerWidget {
                                 children: [
                                   IconButton(
                                     icon: const Icon(Icons.edit_outlined),
+                                    tooltip: 'Edit ${p.name}',
                                     onPressed: () => _edit(context, ref, p),
                                   ),
                                   IconButton(
                                     icon: const Icon(Icons.delete_outline),
+                                    tooltip: 'Delete ${p.name}',
                                     onPressed: () => _delete(context, ref, p),
                                   ),
                                 ],
@@ -349,7 +376,10 @@ class _DistrictsTab extends ConsumerWidget {
         children: [
           provinces.when(
             loading: () => const Skeleton(height: 56),
-            error: (_, _) => const Text('Could not load provinces.'),
+            error: (_, _) => _InlineLoadError(
+              message: 'Could not load provinces.',
+              onRetry: () => ref.invalidate(adminProvincesProvider),
+            ),
             data: (items) => DropdownButtonFormField<int>(
               initialValue: provinceId,
               decoration: const InputDecoration(labelText: 'Province'),
@@ -393,10 +423,12 @@ class _DistrictsTab extends ConsumerWidget {
                                           children: [
                                             IconButton(
                                               icon: const Icon(Icons.edit_outlined),
+                                              tooltip: 'Edit ${d.name}',
                                               onPressed: () => _edit(context, ref, d),
                                             ),
                                             IconButton(
                                               icon: const Icon(Icons.delete_outline),
+                                              tooltip: 'Delete ${d.name}',
                                               onPressed: () => _delete(context, ref, d),
                                             ),
                                           ],
@@ -596,10 +628,12 @@ class _MunicipalitiesTab extends ConsumerWidget {
                                 children: [
                                   IconButton(
                                     icon: const Icon(Icons.edit_outlined),
+                                    tooltip: 'Edit ${m.name}',
                                     onPressed: () => _edit(context, ref, m),
                                   ),
                                   IconButton(
                                     icon: const Icon(Icons.delete_outline),
+                                    tooltip: 'Delete ${m.name}',
                                     onPressed: () => _delete(context, ref, m),
                                   ),
                                 ],
@@ -631,7 +665,10 @@ class _AnyDistrictDropdown extends ConsumerWidget {
 
     return provinces.when(
       loading: () => const Skeleton(height: 56),
-      error: (_, _) => const Text('Could not load districts.'),
+      error: (_, _) => _InlineLoadError(
+        message: 'Could not load districts.',
+        onRetry: () => ref.invalidate(adminProvincesProvider),
+      ),
       data: (provinceList) => _AllDistrictsDropdown(
         provinces: provinceList,
         selectedId: selectedId,
@@ -764,7 +801,10 @@ class _MunicipalityFormDialogState extends ConsumerState<_MunicipalityFormDialog
           children: [
             provinces.when(
               loading: () => const Skeleton(height: 56),
-              error: (_, _) => const Text('Could not load districts.'),
+              error: (_, _) => _InlineLoadError(
+                message: 'Could not load districts.',
+                onRetry: () => ref.invalidate(adminProvincesProvider),
+              ),
               data: (provinceList) => _AllDistrictsDropdown(
                 provinces: provinceList,
                 selectedId: _districtId,
@@ -862,7 +902,10 @@ class _WardsTab extends ConsumerWidget {
         children: [
           municipalities.when(
             loading: () => const Skeleton(height: 56),
-            error: (_, _) => const Text('Could not load municipalities.'),
+            error: (_, _) => _InlineLoadError(
+              message: 'Could not load municipalities.',
+              onRetry: () => ref.invalidate(adminMunicipalitiesProvider(null)),
+            ),
             data: (items) => DropdownButtonFormField<int>(
               initialValue: municipalityId,
               decoration: const InputDecoration(labelText: 'Municipality'),
@@ -905,6 +948,7 @@ class _WardsTab extends ConsumerWidget {
                                             : null,
                                         trailing: IconButton(
                                           icon: const Icon(Icons.delete_outline),
+                                          tooltip: 'Delete Ward ${w.wardNumber}',
                                           onPressed: () => _delete(context, ref, w),
                                         ),
                                       ),
@@ -1057,7 +1101,10 @@ class _NeighborhoodsTabState extends ConsumerState<_NeighborhoodsTab> {
         children: [
           municipalities.when(
             loading: () => const Skeleton(height: 56),
-            error: (_, _) => const Text('Could not load municipalities.'),
+            error: (_, _) => _InlineLoadError(
+              message: 'Could not load municipalities.',
+              onRetry: () => ref.invalidate(adminMunicipalitiesProvider(null)),
+            ),
             data: (items) => DropdownButtonFormField<int>(
               initialValue: widget.municipalityId,
               decoration: const InputDecoration(labelText: 'Municipality'),
@@ -1075,7 +1122,10 @@ class _NeighborhoodsTabState extends ConsumerState<_NeighborhoodsTab> {
                 final wards = ref.watch(adminWardsProvider(widget.municipalityId));
                 return wards.when(
                   loading: () => const Skeleton(height: 56),
-                  error: (_, _) => const Text('Could not load wards.'),
+                  error: (_, _) => _InlineLoadError(
+                    message: 'Could not load wards.',
+                    onRetry: () => ref.invalidate(adminWardsProvider(widget.municipalityId)),
+                  ),
                   data: (items) => DropdownButtonFormField<int>(
                     initialValue: _wardId,
                     decoration: const InputDecoration(labelText: 'Ward'),
@@ -1115,10 +1165,12 @@ class _NeighborhoodsTabState extends ConsumerState<_NeighborhoodsTab> {
                                           children: [
                                             IconButton(
                                               icon: const Icon(Icons.edit_outlined),
+                                              tooltip: 'Edit ${n.name}',
                                               onPressed: () => _edit(context, n),
                                             ),
                                             IconButton(
                                               icon: const Icon(Icons.delete_outline),
+                                              tooltip: 'Delete ${n.name}',
                                               onPressed: () => _delete(context, n),
                                             ),
                                           ],

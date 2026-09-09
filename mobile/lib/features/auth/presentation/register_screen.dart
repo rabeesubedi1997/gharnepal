@@ -101,8 +101,11 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     labelText: 'Full name',
                     errorText: _fieldErrors['name'],
                   ),
-                  validator: (value) =>
-                      (value == null || value.isEmpty) ? 'Name is required' : null,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) return 'Name is required';
+                    if (value.trim().length < 2) return 'Enter your full name';
+                    return null;
+                  },
                 ),
                 const SizedBox(height: 16),
                 TextFormField(
@@ -112,8 +115,13 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     labelText: 'Email',
                     errorText: _fieldErrors['email'],
                   ),
-                  validator: (value) =>
-                      (value == null || value.isEmpty) ? 'Email is required' : null,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) return 'Email is required';
+                    if (!RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(value)) {
+                      return 'Enter a valid email address';
+                    }
+                    return null;
+                  },
                 ),
                 const SizedBox(height: 16),
                 TextFormField(

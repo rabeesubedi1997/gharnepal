@@ -5,6 +5,7 @@ import '../data/listings_repository.dart';
 import '../data/models/amenity.dart';
 import '../data/models/listing_detail.dart';
 import '../data/models/listing_summary.dart';
+import '../data/models/rating.dart';
 import '../data/models/search_filters.dart';
 
 final listingsRepositoryProvider = Provider<ListingsRepository>((ref) {
@@ -85,4 +86,11 @@ final listingDetailProvider = FutureProvider.family<ListingDetail, String>((ref,
 
 final amenitiesProvider = FutureProvider<List<Amenity>>((ref) {
   return ref.read(listingsRepositoryProvider).amenities();
+});
+
+/// All visible reviews for a listing (Listing Detail's "Ratings & reviews"
+/// list). Invalidated after a submit/edit/delete so the list and the
+/// aggregate on [listingDetailProvider] both stay in sync.
+final listingRatingsProvider = FutureProvider.family<List<ListingRating>, int>((ref, listingId) {
+  return ref.read(listingsRepositoryProvider).ratings(listingId);
 });

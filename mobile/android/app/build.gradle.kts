@@ -6,7 +6,13 @@ plugins {
 
 android {
     namespace = "com.gharnepal.ghar_nepal"
-    compileSdk = flutter.compileSdkVersion
+    // Pinned above the Flutter SDK's own default (34): flutter_secure_storage
+    // 11.x (needed for a compatible win32 version once file_picker/share_plus
+    // were upgraded — see pubspec.yaml) requires compileSdk 37+. Only
+    // compileSdk needs bumping here — targetSdk/minSdk (actual runtime
+    // behavior/device support) are untouched, per the Android Gradle
+    // Plugin's own guidance on this error.
+    compileSdk = 37
     ndkVersion = flutter.ndkVersion
 
     compileOptions {

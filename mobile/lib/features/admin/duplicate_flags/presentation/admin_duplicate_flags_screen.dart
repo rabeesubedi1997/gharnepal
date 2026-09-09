@@ -207,24 +207,28 @@ class _ListingRefTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final slug = ref.slug;
     return InkWell(
-      onTap: () => context.push('/admin/listings/${ref.id}'),
+      onTap: slug == null ? null : () => context.push('/listings/$slug'),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            ref.title,
+            ref.title ?? 'Listing removed',
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
-            style: Theme.of(
-              context,
-            ).textTheme.bodyMedium?.copyWith(color: AppColors.link600, decoration: TextDecoration.underline),
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              color: slug == null ? null : AppColors.link600,
+              decoration: slug == null ? null : TextDecoration.underline,
+            ),
           ),
-          const SizedBox(height: 2),
-          Text(
-            NprFormatter.format(ref.price),
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600),
-          ),
+          if (ref.price != null) ...[
+            const SizedBox(height: 2),
+            Text(
+              NprFormatter.format(ref.price!),
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600),
+            ),
+          ],
         ],
       ),
     );

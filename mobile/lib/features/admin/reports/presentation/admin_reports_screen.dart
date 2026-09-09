@@ -171,9 +171,9 @@ class _ReportCardState extends ConsumerState<_ReportCard> {
             Row(
               children: [
                 Expanded(
-                  child: listingTitle != null && report.listing.id != null
+                  child: listingTitle != null && report.listing.slug != null
                       ? InkWell(
-                          onTap: () => context.push('/admin/listings/${report.listing.id}'),
+                          onTap: () => context.push('/listings/${report.listing.slug}'),
                           child: Text(
                             listingTitle,
                             style: Theme.of(context).textTheme.titleSmall?.copyWith(

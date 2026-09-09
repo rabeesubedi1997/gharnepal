@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../../core/network/api_exception.dart';
+import '../../../core/theme/app_colors.dart';
 import '../../../widgets/app_button.dart';
 import '../../../widgets/error_state.dart';
 import '../../listings/application/listings_providers.dart';
@@ -181,7 +182,17 @@ class _EditListingFormState extends ConsumerState<_EditListingForm> {
         const SizedBox(height: 8),
         amenities.when(
           loading: () => const Center(child: CircularProgressIndicator()),
-          error: (_, _) => const Text('Could not load amenities.'),
+          error: (_, _) => Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            child: Row(
+              children: [
+                const Icon(Icons.error_outline, size: 18, color: AppColors.danger600),
+                const SizedBox(width: 8),
+                const Expanded(child: Text('Could not load amenities.')),
+                TextButton(onPressed: () => ref.invalidate(amenitiesProvider), child: const Text('Retry')),
+              ],
+            ),
+          ),
           data: (items) => Wrap(
             spacing: 8,
             runSpacing: 8,

@@ -7,10 +7,12 @@ import 'package:intl/intl.dart';
 
 import '../../../core/formatters/area_unit_converter.dart';
 import '../../../core/network/api_exception.dart';
+import '../../../core/theme/app_colors.dart';
 import '../../../widgets/app_button.dart';
 import '../../listings/application/listings_providers.dart';
 import '../../listings/data/models/media_item.dart';
 import '../../locations/application/locations_providers.dart';
+import '../../matching/presentation/work_location_picker.dart';
 import '../application/owner_providers.dart';
 
 /// Mirrors frontend/src/pages/PostPropertyWizard/index.tsx — but the real
@@ -43,6 +45,8 @@ class _PostPropertyWizardScreenState extends ConsumerState<PostPropertyWizardScr
   int? _neighborhoodId;
   final _streetController = TextEditingController();
   final _landmarkController = TextEditingController();
+  double? _lat;
+  double? _lng;
 
   // --- Step 1: basics ---
   final _areaValueController = TextEditingController();
@@ -83,6 +87,7 @@ class _PostPropertyWizardScreenState extends ConsumerState<PostPropertyWizardScr
   final _titleController = TextEditingController();
   final _descriptionController = TextEditingController();
   final Set<int> _amenityIds = {};
+  String? _titleError;
 
   int? _listingId;
 
@@ -188,6 +193,8 @@ class _PostPropertyWizardScreenState extends ConsumerState<PostPropertyWizardScr
             neighborhoodId: _neighborhoodId,
             streetAddress: _streetController.text.trim(),
             landmark: _landmarkController.text.trim(),
+            lat: _lat,
+            lng: _lng,
           );
       if (!mounted) return;
       setState(() {
@@ -267,10 +274,13 @@ class _PostPropertyWizardScreenState extends ConsumerState<PostPropertyWizardScr
 
   Future<void> _submitPricingStep() async {
     final price = double.tryParse(_priceController.text.trim());
-    if (price == null || price <= 0 || _titleController.text.trim().isEmpty) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Enter a valid price and title.')));
+    final title = _titleController.text.trim();
+    final titleError = title.length < 5 ? 'Give your listing a descriptive title' : null;
+    setState(() => _titleError = titleError);
+    if (price == null || price <= 0 || titleError != null) {
+      if (price == null || price <= 0) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Enter a valid price.')));
+      }
       return;
     }
 
@@ -285,7 +295,7 @@ class _PostPropertyWizardScreenState extends ConsumerState<PostPropertyWizardScr
             pricePeriod: _purpose == 'rent' ? _pricePeriod : null,
             negotiable: _negotiable,
             availabilityDate: _availabilityDate,
-            title: _titleController.text.trim(),
+            title: title,
             description: _descriptionController.text.trim(),
             amenityIds: _amenityIds.toList(),
           );
@@ -410,7 +420,10 @@ class _PostPropertyWizardScreenState extends ConsumerState<PostPropertyWizardScr
         const SizedBox(height: 8),
         provinces.when(
           loading: () => const LinearProgressIndicator(),
-          error: (_, _) => const Text('Could not load provinces.'),
+          error: (_, _) => _inlineLoadError(
+            'Could not load provinces.',
+            () => ref.invalidate(provincesProvider),
+          ),
           data: (items) => DropdownButtonFormField<int>(
             initialValue: _provinceId,
             decoration: const InputDecoration(labelText: 'Province'),
@@ -428,7 +441,10 @@ class _PostPropertyWizardScreenState extends ConsumerState<PostPropertyWizardScr
         if (districts != null)
           districts.when(
             loading: () => const LinearProgressIndicator(),
-            error: (_, _) => const Text('Could not load districts.'),
+            error: (_, _) => _inlineLoadError(
+              'Could not load districts.',
+              () => ref.invalidate(districtsProvider(_provinceId!)),
+            ),
             data: (items) => DropdownButtonFormField<int>(
               initialValue: _districtId,
               decoration: const InputDecoration(labelText: 'District'),
@@ -445,7 +461,10 @@ class _PostPropertyWizardScreenState extends ConsumerState<PostPropertyWizardScr
         if (municipalities != null)
           municipalities.when(
             loading: () => const LinearProgressIndicator(),
-            error: (_, _) => const Text('Could not load municipalities.'),
+            error: (_, _) => _inlineLoadError(
+              'Could not load municipalities.',
+              () => ref.invalidate(municipalitiesForDistrictProvider(_districtId!)),
+            ),
             data: (items) => DropdownButtonFormField<int>(
               initialValue: _municipalityId,
               decoration: const InputDecoration(labelText: 'Municipality'),
@@ -461,7 +480,10 @@ class _PostPropertyWizardScreenState extends ConsumerState<PostPropertyWizardScr
         if (wards != null)
           wards.when(
             loading: () => const LinearProgressIndicator(),
-            error: (_, _) => const Text('Could not load wards.'),
+            error: (_, _) => _inlineLoadError(
+              'Could not load wards.',
+              () => ref.invalidate(wardsProvider(_municipalityId!)),
+            ),
             data: (items) => DropdownButtonFormField<int>(
               initialValue: _wardId,
               decoration: const InputDecoration(labelText: 'Ward'),
@@ -476,7 +498,10 @@ class _PostPropertyWizardScreenState extends ConsumerState<PostPropertyWizardScr
         if (neighborhoods != null)
           neighborhoods.when(
             loading: () => const LinearProgressIndicator(),
-            error: (_, _) => const Text('Could not load neighborhoods.'),
+            error: (_, _) => _inlineLoadError(
+              'Could not load neighborhoods.',
+              () => ref.invalidate(neighborhoodsProvider(_wardId!)),
+            ),
             data: (items) => DropdownButtonFormField<int?>(
               initialValue: _neighborhoodId,
               decoration: const InputDecoration(labelText: 'Neighborhood (optional)'),
@@ -496,6 +521,19 @@ class _PostPropertyWizardScreenState extends ConsumerState<PostPropertyWizardScr
         TextField(
           controller: _landmarkController,
           decoration: const InputDecoration(labelText: 'Nearby landmark (optional)'),
+        ),
+        const SizedBox(height: 16),
+        Text('Pin location on map (optional)', style: Theme.of(context).textTheme.titleMedium),
+        const SizedBox(height: 4),
+        const Text('Tap the map to drop a pin at the property\'s exact location.'),
+        const SizedBox(height: 8),
+        WorkLocationPicker(
+          initialLat: _lat,
+          initialLng: _lng,
+          onChanged: (lat, lng) => setState(() {
+            _lat = lat;
+            _lng = lng;
+          }),
         ),
       ],
     );
@@ -710,6 +748,22 @@ class _PostPropertyWizardScreenState extends ConsumerState<PostPropertyWizardScr
     );
   }
 
+  /// Compact inline retry row for a failed dropdown/picker fetch — these are
+  /// plain (non-autoDispose) FutureProviders, so without a manual `invalidate`
+  /// call a failure would otherwise be cached forever with no way to retry.
+  Widget _inlineLoadError(String message, VoidCallback onRetry) {
+    return Row(
+      children: [
+        const Icon(Icons.error_outline, size: 18, color: AppColors.danger600),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(message, style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppColors.ink700)),
+        ),
+        TextButton(onPressed: onRetry, child: const Text('Retry')),
+      ],
+    );
+  }
+
   Widget _enumDropdown(String label, String value, Map<String, String> options, ValueChanged<String> onChanged) {
     return DropdownButtonFormField<String>(
       initialValue: value,
@@ -748,12 +802,16 @@ class _PostPropertyWizardScreenState extends ConsumerState<PostPropertyWizardScr
                   Positioned(
                     top: 2,
                     right: 2,
-                    child: GestureDetector(
-                      onTap: _busy ? null : () => _deletePhoto(media),
-                      child: const CircleAvatar(
-                        radius: 12,
-                        backgroundColor: Colors.black54,
-                        child: Icon(Icons.close, size: 14, color: Colors.white),
+                    child: Semantics(
+                      button: true,
+                      label: 'Remove photo',
+                      child: GestureDetector(
+                        onTap: _busy ? null : () => _deletePhoto(media),
+                        child: const CircleAvatar(
+                          radius: 22,
+                          backgroundColor: Colors.black54,
+                          child: Icon(Icons.close, size: 20, color: Colors.white),
+                        ),
                       ),
                     ),
                   ),
@@ -832,7 +890,13 @@ class _PostPropertyWizardScreenState extends ConsumerState<PostPropertyWizardScr
           ),
         ),
         const SizedBox(height: 16),
-        TextField(controller: _titleController, decoration: const InputDecoration(labelText: 'Title')),
+        TextField(
+          controller: _titleController,
+          decoration: InputDecoration(labelText: 'Title', errorText: _titleError),
+          onChanged: (_) {
+            if (_titleError != null) setState(() => _titleError = null);
+          },
+        ),
         const SizedBox(height: 12),
         TextField(
           controller: _descriptionController,
@@ -847,7 +911,10 @@ class _PostPropertyWizardScreenState extends ConsumerState<PostPropertyWizardScr
             final amenities = ref.watch(amenitiesProvider);
             return amenities.when(
               loading: () => const Center(child: CircularProgressIndicator()),
-              error: (_, _) => const Text('Could not load amenities.'),
+              error: (_, _) => _inlineLoadError(
+                'Could not load amenities.',
+                () => ref.invalidate(amenitiesProvider),
+              ),
               data: (items) => Wrap(
                 spacing: 8,
                 runSpacing: 8,

@@ -2,9 +2,11 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/formatters/npr_formatter.dart';
+import '../../../core/network/api_config.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../features/auth/application/auth_controller.dart';
 import '../../../features/messaging/presentation/start_conversation_sheet.dart';
@@ -19,11 +21,14 @@ import '../application/listings_providers.dart';
 import '../data/models/land_profile.dart';
 import '../data/models/listing_detail.dart';
 import '../data/models/property.dart';
+import 'ratings_section.dart';
+import 'report_listing_sheet.dart';
 
 /// Mirrors frontend/src/pages/ListingDetail.tsx: gallery, price/area (incl.
-/// Nepali land units), amenities, land due-diligence checklist, trust badge,
-/// similar listings, a WhatsApp deep link to the poster, and "Message
-/// owner"/"Request a viewing" actions (guests are sent to login first).
+/// Nepali land units), amenities, ratings & reviews, land due-diligence
+/// checklist, trust badge, similar listings, a WhatsApp deep link to the
+/// poster, share/report actions, and "Message owner"/"Request a viewing"
+/// actions (guests are sent to login first).
 class ListingDetailScreen extends ConsumerWidget {
   const ListingDetailScreen({super.key, required this.slug});
 
@@ -82,6 +87,33 @@ class _ListingDetailBody extends ConsumerWidget {
     }
   }
 
+  /// Shares a link to the *web* listing page — mirrors
+  /// frontend/src/pages/ListingDetail.tsx's `handleShare` (Web Share API
+  /// there, the OS share sheet here). Recipients almost never have this app
+  /// installed, so the shared link points at the public website, not a
+  /// deep link into the app.
+  Future<void> _share() async {
+    await SharePlus.instance.share(
+      ShareParams(
+        text: '${listing.title}\n${ApiConfig.webBaseUrl}/listings/${listing.slug}',
+        subject: listing.title,
+      ),
+    );
+  }
+
+  Future<void> _report(BuildContext context, WidgetRef ref) async {
+    if (ref.read(authControllerProvider).valueOrNull == null) {
+      context.push('/login');
+      return;
+    }
+    final reported = await ReportListingSheet.show(context, listing.id);
+    if (reported == true && context.mounted) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Thanks — our team will review this listing.')));
+    }
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final images = listing.property.images;
@@ -91,7 +123,15 @@ class _ListingDetailBody extends ConsumerWidget {
         SliverAppBar(
           expandedHeight: 260,
           pinned: true,
-          actions: [FavoriteButton(listingId: listing.id)],
+          actions: [
+            IconButton(onPressed: _share, icon: const Icon(Icons.share_outlined), tooltip: 'Share listing'),
+            FavoriteButton(listingId: listing.id),
+            IconButton(
+              onPressed: () => _report(context, ref),
+              icon: const Icon(Icons.flag_outlined),
+              tooltip: 'Report listing',
+            ),
+          ],
           flexibleSpace: FlexibleSpaceBar(
             background: images.isEmpty
                 ? Container(color: AppColors.stone200, child: const Icon(Icons.home_outlined, size: 48))
@@ -197,6 +237,8 @@ class _ListingDetailBody extends ConsumerWidget {
                   const SizedBox(height: 8),
                   Text(listing.description!, style: Theme.of(context).textTheme.bodyMedium),
                 ],
+                const SizedBox(height: 20),
+                RatingsSection(listingId: listing.id, slug: listing.slug, myRating: listing.myRating),
                 if (listing.amenities.isNotEmpty) ...[
                   const SizedBox(height: 20),
                   Text('Amenities', style: Theme.of(context).textTheme.titleMedium),

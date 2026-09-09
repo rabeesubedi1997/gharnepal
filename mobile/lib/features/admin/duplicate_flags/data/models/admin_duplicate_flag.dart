@@ -2,23 +2,24 @@ import '../../../../../core/network/json_parsing.dart';
 
 /// The abbreviated `listing`/`duplicate_of` objects nested on
 /// `DuplicateListingFlagResource`. `price` is a decimal-backed field, so it
-/// serializes as a JSON string.
+/// serializes as a JSON string. All fields are nullable — the resource reads
+/// through a null-safe `?->` and sends nulls if the listing was deleted.
 class DuplicateFlagListingRef {
-  DuplicateFlagListingRef({required this.id, required this.slug, required this.title, required this.price});
+  DuplicateFlagListingRef({this.id, this.slug, this.title, this.price});
 
   factory DuplicateFlagListingRef.fromJson(Map<String, dynamic> json) {
     return DuplicateFlagListingRef(
-      id: json['id'] as int,
-      slug: json['slug'] as String,
-      title: json['title'] as String,
-      price: asDoubleOr(json['price'], 0),
+      id: json['id'] as int?,
+      slug: json['slug'] as String?,
+      title: json['title'] as String?,
+      price: json['price'] == null ? null : asDoubleOr(json['price'], 0),
     );
   }
 
-  final int id;
-  final String slug;
-  final String title;
-  final double price;
+  final int? id;
+  final String? slug;
+  final String? title;
+  final double? price;
 }
 
 /// Mirrors `DuplicateListingFlagResource` — `GET /admin/duplicate-flags`,

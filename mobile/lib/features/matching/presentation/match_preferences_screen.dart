@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/network/api_exception.dart';
+import '../../../core/theme/app_colors.dart';
 import '../../../widgets/app_button.dart';
 import '../../../widgets/error_state.dart';
 import '../../locations/application/locations_providers.dart';
@@ -174,7 +175,17 @@ class _PreferencesFormState extends ConsumerState<_PreferencesForm> {
         const SizedBox(height: 16),
         municipalities.when(
           loading: () => const LinearProgressIndicator(),
-          error: (_, _) => const SizedBox.shrink(),
+          error: (_, _) => Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            child: Row(
+              children: [
+                const Icon(Icons.error_outline, size: 18, color: AppColors.danger600),
+                const SizedBox(width: 8),
+                const Expanded(child: Text('Could not load municipalities.')),
+                TextButton(onPressed: () => ref.invalidate(municipalitiesProvider), child: const Text('Retry')),
+              ],
+            ),
+          ),
           data: (items) => DropdownButtonFormField<int?>(
             initialValue: _municipalityId,
             decoration: const InputDecoration(labelText: 'Preferred municipality'),

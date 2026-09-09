@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../../widgets/app_badge.dart';
 import '../../../widgets/empty_state.dart';
 import '../../../widgets/error_state.dart';
 import '../application/notifications_providers.dart';
@@ -70,6 +71,11 @@ class _NotificationTile extends ConsumerWidget {
     }
     if (notification.type == 'new_message' && notification.data['conversation_id'] != null) {
       context.push('/messages/${notification.data['conversation_id']}');
+    } else if (notification.type == 'listing_rejected') {
+      // The public listing endpoint only returns published listings, so a
+      // rejected listing's page would 404 — send the owner to their
+      // dashboard instead, matching the website's NotificationBell routing.
+      context.push('/dashboard');
     } else if (notification.data['listing_slug'] != null) {
       context.push('/listings/${notification.data['listing_slug']}');
     }
@@ -83,9 +89,21 @@ class _NotificationTile extends ConsumerWidget {
         backgroundColor: notification.isUnread ? AppColors.trust100 : AppColors.stone100,
         child: Icon(_icon, color: notification.isUnread ? AppColors.trust700 : AppColors.ink700),
       ),
-      title: Text(
-        notification.message,
-        style: TextStyle(fontWeight: notification.isUnread ? FontWeight.w700 : FontWeight.w400),
+      title: Row(
+        children: [
+          Expanded(
+            child: Text(
+              notification.message,
+              style: TextStyle(
+                fontWeight: notification.isUnread ? FontWeight.w700 : FontWeight.w400,
+              ),
+            ),
+          ),
+          if (notification.isUnread) ...[
+            const SizedBox(width: 8),
+            Semantics(label: 'Unread', child: const AppBadge(label: 'New', tone: BadgeTone.trust)),
+          ],
+        ],
       ),
     );
   }
