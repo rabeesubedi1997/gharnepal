@@ -4,6 +4,9 @@
 /.env
 /.env.production
 /storage
-/public/storage
+# public/storage is real-user-upload runtime state EXCEPT the demo/ seed
+# images below, which are static content this script ships deliberately.
+/public/storage/*
+!/public/storage/demo/
 /public/hot
 /bootstrap/cache/*.php
