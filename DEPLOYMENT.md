@@ -115,6 +115,34 @@ or deletes them: `.env`, `vendor/`, `storage/` (logs, cache, sessions, and
 server-only state, created once during setup and left alone by every
 later pull.
 
+One deliberate exception: `public/storage/demo/` — the ~18 stock photos
+`DemoDataSeeder`/`BannerDemoDataSeeder` reference by filename. Real user
+uploads live everywhere else under `public/storage/` and stay untouched;
+only that one `demo/` subfolder is git-managed static content, shipped by
+`build-and-push.sh` so seeded demo listings actually have images once you
+run the seeder on the server.
+
+## Seeding demo content
+
+The seeder classes are ordinary backend code, so they're already on the
+server after any deploy — seeding itself is a one-off DB operation you run
+by hand on the server, not something a git pull triggers:
+
+```bash
+cd <TARGET_DIR>
+php artisan db:seed
+```
+
+This runs the full `DatabaseSeeder` chain — reference data (roles,
+locations, amenities), ~26 demo listings across every property
+type/purpose/MVP city, agencies, neighborhoods, homepage banners, ratings,
+and a default `superadmin@gharnepal.local` / `password` admin login plus a
+`buyer@example.com` test buyer. Every seeder in the chain is idempotent
+(safe to re-run after a later deploy without duplicating data) — see
+`backend/database/seeders/DatabaseSeeder.php` for the full chain. **Change
+or remove the default admin password before the site is genuinely
+public-facing** — it's plain-text in the repo's history.
+
 ## Frontend / backend / mobile compatibility
 
 No API contract changes here — this only changes *how files get onto the

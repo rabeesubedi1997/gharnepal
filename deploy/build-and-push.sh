@@ -44,6 +44,12 @@ echo "==> Merging built SPA into public/"
 rm -rf "$SITEROOT/public/storage"
 cp -r frontend/dist/. "$SITEROOT/public/"
 
+echo "==> Including demo seed images (public/storage/demo — DemoDataSeeder/BannerDemoDataSeeder read these by filename; everything else under public/storage is real runtime uploads and stays excluded)"
+if [ -d backend/storage/app/public/demo ]; then
+  mkdir -p "$SITEROOT/public/storage/demo"
+  cp backend/storage/app/public/demo/*.jpg "$SITEROOT/public/storage/demo/" 2>/dev/null || true
+fi
+
 echo "==> Copying server deploy script along for the ride"
 mkdir -p "$SITEROOT/deploy"
 cp deploy/server-deploy.sh "$SITEROOT/deploy/server-deploy.sh"
@@ -55,7 +61,10 @@ cat > "$SITEROOT/.gitignore" <<'EOF'
 /.env
 /.env.production
 /storage
-/public/storage
+# public/storage is real-user-upload runtime state EXCEPT the demo/ seed
+# images below, which are static content this script ships deliberately.
+/public/storage/*
+!/public/storage/demo/
 /public/hot
 /bootstrap/cache/*.php
 EOF
