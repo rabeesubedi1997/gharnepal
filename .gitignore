@@ -34,7 +34,10 @@
 .DS_Store
 Thumbs.db
 /gharnepal-deploy.zip
-/deploy/
+# deploy/ holds the tracked deploy scripts (build-and-push.sh, server-deploy.sh)
+# — its old scratch/output paths are ignored individually instead of the
+# whole folder:
+/deploy/siteroot/
 /gharnepal-production.sql
 /municipality-images.zip
 /municipality-images.sql
