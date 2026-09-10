@@ -12,14 +12,22 @@ class NotificationController extends Controller
     {
         $notifications = $request->user()->notifications()->paginate(20);
 
+        // ->through() maps the paginator's items in place and returns the
+        // paginator itself — nesting that whole object (current_page,
+        // last_page, its OWN data key, etc.) under this response's 'data'
+        // key would leave the frontend expecting a plain array one level
+        // too deep. ->items() pulls out just the (already-transformed)
+        // array of the current page.
+        $notifications->through(fn ($n) => [
+            'id' => $n->id,
+            'type' => $n->data['type'] ?? null,
+            'data' => $n->data,
+            'read_at' => $n->read_at,
+            'created_at' => $n->created_at,
+        ]);
+
         return response()->json([
-            'data' => $notifications->through(fn ($n) => [
-                'id' => $n->id,
-                'type' => $n->data['type'] ?? null,
-                'data' => $n->data,
-                'read_at' => $n->read_at,
-                'created_at' => $n->created_at,
-            ]),
+            'data' => $notifications->items(),
             'meta' => [
                 'current_page' => $notifications->currentPage(),
                 'last_page' => $notifications->lastPage(),
