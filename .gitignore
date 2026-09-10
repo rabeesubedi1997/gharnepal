@@ -1,0 +1,9 @@
+# Server-side state that composer/artisan create at runtime — never
+# tracked on the deploy branch, so `git pull`/`git reset` never touches it.
+/vendor
+/.env
+/.env.production
+/storage
+/public/storage
+/public/hot
+/bootstrap/cache/*.php
