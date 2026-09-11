@@ -1,41 +1,31 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
-import { z } from 'zod'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useRegister } from '../../lib/api/auth'
 import { applyServerErrors, getErrorMessage } from '../../lib/api/errors'
+import { registerSchema, type RegisterValues } from '../../lib/auth/schemas'
 import { Input } from '../../components/ui/Input'
 import { Button } from '../../components/ui/Button'
 import { Card } from '../../components/ui/Card'
 
-const schema = z
-  .object({
-    name: z.string().min(2, 'Enter your full name'),
-    email: z.string().email('Enter a valid email address'),
-    password: z.string().min(8, 'At least 8 characters'),
-    password_confirmation: z.string(),
-  })
-  .refine((data) => data.password === data.password_confirmation, {
-    message: 'Passwords do not match',
-    path: ['password_confirmation'],
-  })
-
-type FormValues = z.infer<typeof schema>
-
 export function Register() {
   const registerUser = useRegister()
   const navigate = useNavigate()
+  const location = useLocation()
+  // Same redirect-back Login already does — a guest who lands here via a
+  // gated action (rather than the inline AuthModal) doesn't lose it.
+  const from = (location.state as { from?: Location })?.from?.pathname ?? '/dashboard'
 
   const {
     register,
     handleSubmit,
     setError,
     formState: { errors },
-  } = useForm<FormValues>({ resolver: zodResolver(schema) })
+  } = useForm<RegisterValues>({ resolver: zodResolver(registerSchema) })
 
   const onSubmit = handleSubmit((values) => {
     registerUser.mutate(values, {
-      onSuccess: () => navigate('/dashboard', { replace: true }),
+      onSuccess: () => navigate(from, { replace: true }),
       onError: (error) => {
         if (!applyServerErrors(error, setError)) {
           setError('email', { type: 'server', message: getErrorMessage(error) })

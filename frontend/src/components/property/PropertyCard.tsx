@@ -1,10 +1,14 @@
 import { Link } from 'react-router-dom'
-import { BedDouble, Eye, Home, MapPin, Ruler, ShowerHead, Sparkles } from 'lucide-react'
+import { BedDouble, Eye, Heart, Home, MapPin, Ruler, ShowerHead, Sparkles } from 'lucide-react'
+import { clsx } from 'clsx'
 import { Card } from '../ui/Card'
 import { TrustScoreChip } from '../trust/TrustBadge'
 import { RatingStars } from './RatingStars'
 import { formatCompactCount, formatNprCompact } from '../../design-system/tokens'
 import type { ListingSummary } from '../../lib/api/listings'
+import { useAddFavorite, useFavorites, useRemoveFavorite } from '../../lib/api/favorites'
+import { useCurrentUser } from '../../lib/api/auth'
+import { useRequireAuth } from '../auth/AuthGateProvider'
 
 const CLOSED_STATUS_LABEL: Partial<Record<ListingSummary['status'], string>> = {
   sold: 'Sold',
@@ -21,6 +25,21 @@ export function PropertyCard({ listing }: { listing: ListingSummary }) {
     .filter(Boolean)
     .join(', ')
 
+  const { data: user } = useCurrentUser()
+  const requireAuth = useRequireAuth()
+  const { data: favorites } = useFavorites(!!user)
+  const addFavorite = useAddFavorite()
+  const removeFavorite = useRemoveFavorite()
+  const isFavorited = !!favorites?.data.some((f) => f.id === listing.id)
+
+  const toggleFavorite = (e: React.MouseEvent) => {
+    // Quick action right from the grid — don't let it also trigger the
+    // card's own <Link> navigation into the listing detail page.
+    e.preventDefault()
+    e.stopPropagation()
+    requireAuth(() => (isFavorited ? removeFavorite.mutate(listing.id) : addFavorite.mutate(listing.id)))
+  }
+
   return (
     <Link to={`/listings/${listing.slug}`} className="block">
       <Card className="flex h-full flex-col overflow-hidden transition-shadow hover:shadow-md">
@@ -36,6 +55,14 @@ export function PropertyCard({ listing }: { listing: ListingSummary }) {
               </span>
             )
           )}
+          <button
+            type="button"
+            onClick={toggleFavorite}
+            aria-label={isFavorited ? 'Remove from saved' : 'Save property'}
+            className="absolute right-2 top-2 z-10 rounded-full bg-white/90 p-1.5 shadow-sm hover:bg-white"
+          >
+            <Heart className={clsx('h-4 w-4', isFavorited ? 'fill-accent-600 text-accent-600' : 'text-ink-700')} />
+          </button>
           {listing.cover_image_url ? (
             <img
               src={listing.cover_image_url}

@@ -3,8 +3,9 @@ import { useLocation, useSearchParams } from 'react-router-dom'
 import { Bookmark, List, Map as MapIcon, SlidersHorizontal } from 'lucide-react'
 import { useListingSearch, type SearchFilters } from '../../lib/api/listings'
 import { useCreateSavedSearch } from '../../lib/api/savedSearches'
-import { useCurrentUser } from '../../lib/api/auth'
 import { useStaticPageSeo } from '../../lib/api/seo'
+import { useRequireAuth } from '../../components/auth/AuthGateProvider'
+import { useToast } from '../../components/ui/Toast'
 import { SeoHead } from '../../components/seo/SeoHead'
 import { filtersFromSearchParams, filtersToSearchParams } from '../../lib/searchParams'
 import { PropertyCard } from '../../components/property/PropertyCard'
@@ -55,7 +56,7 @@ export function Search() {
   const [filtersOpen, setFiltersOpen] = useState(false)
   const [saveOpen, setSaveOpen] = useState(false)
 
-  const { data: user } = useCurrentUser()
+  const requireAuth = useRequireAuth()
   const { data, isPending, isError, refetch, isFetching } = useListingSearch(filters)
   const { data: seo } = useStaticPageSeo(SEO_KEYS[location.pathname] ?? null)
 
@@ -73,11 +74,9 @@ export function Search() {
           {TITLES[location.pathname] ?? 'Search results'}
         </h1>
         <div className="flex flex-wrap items-center gap-2">
-          {user && (
-            <Button variant="outline" size="sm" onClick={() => setSaveOpen(true)}>
-              <Bookmark className="h-4 w-4" /> Save search
-            </Button>
-          )}
+          <Button variant="outline" size="sm" onClick={() => requireAuth(() => setSaveOpen(true))}>
+            <Bookmark className="h-4 w-4" /> Save search
+          </Button>
           <Button variant="outline" size="sm" className="lg:hidden" onClick={() => setFiltersOpen(true)}>
             <SlidersHorizontal className="h-4 w-4" /> Filters
           </Button>
@@ -176,42 +175,44 @@ export function Search() {
 
 function SaveSearchModal({ open, onClose, filters }: { open: boolean; onClose: () => void; filters: SearchFilters }) {
   const [name, setName] = useState('')
-  const [saved, setSaved] = useState(false)
   const create = useCreateSavedSearch()
+  const toast = useToast()
 
   const handleClose = () => {
     setName('')
-    setSaved(false)
     onClose()
   }
 
   return (
     <Modal open={open} onClose={handleClose} title="Save this search">
-      {saved ? (
-        <div className="flex flex-col items-center gap-3 py-4 text-center">
-          <p className="text-sm text-ink-900">Saved! We'll use this to power alerts soon.</p>
-          <Button size="sm" onClick={handleClose}>Done</Button>
-        </div>
-      ) : (
-        <div className="flex flex-col gap-3">
-          <label className="flex flex-col gap-1.5">
-            <span className="text-sm font-medium text-ink-900">Name this search</span>
-            <input
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="e.g. 2BHK rentals in Kathmandu under 30k"
-              className="h-10 rounded-lg border border-stone-200 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-trust-700"
-            />
-          </label>
-          <Button
-            isLoading={create.isPending}
-            disabled={!name.trim()}
-            onClick={() => create.mutate({ name: name.trim(), filters }, { onSuccess: () => setSaved(true) })}
-          >
-            Save search
-          </Button>
-        </div>
-      )}
+      <div className="flex flex-col gap-3">
+        <label className="flex flex-col gap-1.5">
+          <span className="text-sm font-medium text-ink-900">Name this search</span>
+          <input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="e.g. 2BHK rentals in Kathmandu under 30k"
+            className="h-10 rounded-lg border border-stone-200 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-trust-700"
+          />
+        </label>
+        <Button
+          isLoading={create.isPending}
+          disabled={!name.trim()}
+          onClick={() =>
+            create.mutate(
+              { name: name.trim(), filters },
+              {
+                onSuccess: () => {
+                  toast.success("Saved! We'll use this to power alerts soon.")
+                  handleClose()
+                },
+              },
+            )
+          }
+        >
+          Save search
+        </Button>
+      </div>
     </Modal>
   )
 }

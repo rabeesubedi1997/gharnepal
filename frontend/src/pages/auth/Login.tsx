@@ -1,19 +1,12 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
-import { z } from 'zod'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useLogin } from '../../lib/api/auth'
 import { applyServerErrors, getErrorMessage } from '../../lib/api/errors'
+import { loginSchema, type LoginValues } from '../../lib/auth/schemas'
 import { Input } from '../../components/ui/Input'
 import { Button } from '../../components/ui/Button'
 import { Card } from '../../components/ui/Card'
-
-const schema = z.object({
-  email: z.string().email('Enter a valid email address'),
-  password: z.string().min(1, 'Password is required'),
-})
-
-type FormValues = z.infer<typeof schema>
 
 export function Login() {
   const login = useLogin()
@@ -26,7 +19,7 @@ export function Login() {
     handleSubmit,
     setError,
     formState: { errors },
-  } = useForm<FormValues>({ resolver: zodResolver(schema) })
+  } = useForm<LoginValues>({ resolver: zodResolver(loginSchema) })
 
   const onSubmit = handleSubmit((values) => {
     login.mutate(values, {

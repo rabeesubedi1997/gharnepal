@@ -8,11 +8,13 @@ import { useAddFavorite, useFavorites, useRemoveFavorite } from '../lib/api/favo
 import { useStartConversation } from '../lib/api/messaging'
 import { useRequestViewing } from '../lib/api/viewingRequests'
 import { useSubmitReport, type ReportReason } from '../lib/api/reports'
-import { useCurrentUser, type AuthUser } from '../lib/api/auth'
+import { useCurrentUser } from '../lib/api/auth'
 import { getErrorMessage } from '../lib/api/errors'
+import { useRequireAuth } from '../components/auth/AuthGateProvider'
+import { useToast } from '../components/ui/Toast'
 import { formatCompactCount, formatNpr } from '../design-system/tokens'
 import { Card } from '../components/ui/Card'
-import { ButtonLink, Button } from '../components/ui/Button'
+import { Button } from '../components/ui/Button'
 import { Badge } from '../components/ui/Badge'
 import { Modal } from '../components/ui/Modal'
 import { ErrorState } from '../components/ui/ErrorState'
@@ -43,7 +45,7 @@ export function ListingDetail() {
   const { slug } = useParams<{ slug: string }>()
   const { data: listing, isPending, isError, refetch } = useListingDetail(slug)
   const { data: user } = useCurrentUser()
-  const navigate = useNavigate()
+  const requireAuth = useRequireAuth()
   const [copied, setCopied] = useState(false)
   const [messageOpen, setMessageOpen] = useState(false)
   const [viewingOpen, setViewingOpen] = useState(false)
@@ -53,14 +55,6 @@ export function ListingDetail() {
   const addFavorite = useAddFavorite()
   const removeFavorite = useRemoveFavorite()
   const isFavorited = !!favorites?.data.some((f) => f.id === listing?.id)
-
-  const requireAuth = (action: () => void) => {
-    if (!user) {
-      navigate('/login', { state: { from: window.location } })
-      return
-    }
-    action()
-  }
 
   const handleShare = async () => {
     const url = window.location.href
@@ -218,7 +212,7 @@ export function ListingDetail() {
             </div>
           )}
 
-          <RatingsSection listingId={listing.id} myRating={listing.my_rating} user={user} requireAuth={requireAuth} />
+          <RatingsSection listingId={listing.id} myRating={listing.my_rating} requireAuth={requireAuth} />
 
           {listing.amenities.length > 0 && (
             <div>
@@ -329,61 +323,59 @@ function ReportModal({ open, onClose, listingId }: { open: boolean; onClose: () 
   const [reason, setReason] = useState<ReportReason>('misleading')
   const [details, setDetails] = useState('')
   const [error, setError] = useState<string | null>(null)
-  const [success, setSuccess] = useState(false)
   const submit = useSubmitReport()
+  const toast = useToast()
 
   const handleClose = () => {
     setDetails('')
     setError(null)
-    setSuccess(false)
     onClose()
   }
 
   return (
     <Modal open={open} onClose={handleClose} title="Report this listing">
-      {success ? (
-        <div className="flex flex-col items-center gap-3 py-4 text-center">
-          <p className="text-sm text-ink-900">Thanks — our team will review this listing.</p>
-          <Button size="sm" onClick={handleClose}>Done</Button>
-        </div>
-      ) : (
-        <div className="flex flex-col gap-3">
-          <label className="flex flex-col gap-1.5">
-            <span className="text-sm font-medium text-ink-900">Reason</span>
-            <select
-              value={reason}
-              onChange={(e) => setReason(e.target.value as ReportReason)}
-              className="h-10 rounded-lg border border-stone-200 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-trust-700"
-            >
-              <option value="fraud">Fraud / scam</option>
-              <option value="duplicate">Duplicate listing</option>
-              <option value="sold_already">Already sold or rented</option>
-              <option value="misleading">Misleading information</option>
-              <option value="inappropriate">Inappropriate content</option>
-              <option value="other">Other</option>
-            </select>
-          </label>
-          <textarea
-            rows={3}
-            value={details}
-            onChange={(e) => setDetails(e.target.value)}
-            placeholder="Any details that would help our team (optional)"
-            className="rounded-lg border border-stone-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-trust-700"
-          />
-          {error && <p className="text-sm text-danger-600">{error}</p>}
-          <Button
-            isLoading={submit.isPending}
-            onClick={() =>
-              submit.mutate(
-                { listingId, reason, details: details || undefined },
-                { onSuccess: () => setSuccess(true), onError: (e) => setError(getErrorMessage(e)) },
-              )
-            }
+      <div className="flex flex-col gap-3">
+        <label className="flex flex-col gap-1.5">
+          <span className="text-sm font-medium text-ink-900">Reason</span>
+          <select
+            value={reason}
+            onChange={(e) => setReason(e.target.value as ReportReason)}
+            className="h-10 rounded-lg border border-stone-200 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-trust-700"
           >
-            Submit report
-          </Button>
-        </div>
-      )}
+            <option value="fraud">Fraud / scam</option>
+            <option value="duplicate">Duplicate listing</option>
+            <option value="sold_already">Already sold or rented</option>
+            <option value="misleading">Misleading information</option>
+            <option value="inappropriate">Inappropriate content</option>
+            <option value="other">Other</option>
+          </select>
+        </label>
+        <textarea
+          rows={3}
+          value={details}
+          onChange={(e) => setDetails(e.target.value)}
+          placeholder="Any details that would help our team (optional)"
+          className="rounded-lg border border-stone-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-trust-700"
+        />
+        {error && <p className="text-sm text-danger-600">{error}</p>}
+        <Button
+          isLoading={submit.isPending}
+          onClick={() =>
+            submit.mutate(
+              { listingId, reason, details: details || undefined },
+              {
+                onSuccess: () => {
+                  toast.success('Thanks — our team will review this listing.')
+                  handleClose()
+                },
+                onError: (e) => setError(getErrorMessage(e)),
+              },
+            )
+          }
+        >
+          Submit report
+        </Button>
+      </div>
     </Modal>
   )
 }
@@ -393,6 +385,7 @@ function MessageModal({ open, onClose, listingId }: { open: boolean; onClose: ()
   const [error, setError] = useState<string | null>(null)
   const start = useStartConversation()
   const navigate = useNavigate()
+  const toast = useToast()
 
   return (
     <Modal open={open} onClose={onClose} title="Message the owner">
@@ -412,7 +405,11 @@ function MessageModal({ open, onClose, listingId }: { open: boolean; onClose: ()
             start.mutate(
               { listingId, message: message.trim() },
               {
-                onSuccess: (conversation) => navigate(`/messages/${conversation.id}`),
+                onSuccess: (conversation) => {
+                  toast.success('Message sent.')
+                  onClose()
+                  navigate(`/messages/${conversation.id}`)
+                },
                 onError: (e) => setError(getErrorMessage(e)),
               },
             )
@@ -429,11 +426,10 @@ function ViewingModal({ open, onClose, listingId }: { open: boolean; onClose: ()
   const [datetime, setDatetime] = useState('')
   const [notes, setNotes] = useState('')
   const [error, setError] = useState<string | null>(null)
-  const [success, setSuccess] = useState(false)
   const request = useRequestViewing()
+  const toast = useToast()
 
   const handleClose = () => {
-    setSuccess(false)
     setDatetime('')
     setNotes('')
     setError(null)
@@ -442,45 +438,44 @@ function ViewingModal({ open, onClose, listingId }: { open: boolean; onClose: ()
 
   return (
     <Modal open={open} onClose={handleClose} title="Request a viewing">
-      {success ? (
-        <div className="flex flex-col items-center gap-3 py-4 text-center">
-          <p className="text-sm text-ink-900">Your request has been sent to the owner.</p>
-          <ButtonLink to="/account/viewing-requests" size="sm">View your requests</ButtonLink>
-        </div>
-      ) : (
-        <div className="flex flex-col gap-3">
-          <label className="flex flex-col gap-1.5">
-            <span className="text-sm font-medium text-ink-900">Preferred date & time</span>
-            <input
-              type="datetime-local"
-              value={datetime}
-              min={new Date(Date.now() + 60 * 60 * 1000).toISOString().slice(0, 16)}
-              onChange={(e) => setDatetime(e.target.value)}
-              className="h-10 rounded-lg border border-stone-200 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-trust-700"
-            />
-          </label>
-          <textarea
-            rows={3}
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            placeholder="Anything the owner should know (optional)"
-            className="rounded-lg border border-stone-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-trust-700"
+      <div className="flex flex-col gap-3">
+        <label className="flex flex-col gap-1.5">
+          <span className="text-sm font-medium text-ink-900">Preferred date & time</span>
+          <input
+            type="datetime-local"
+            value={datetime}
+            min={new Date(Date.now() + 60 * 60 * 1000).toISOString().slice(0, 16)}
+            onChange={(e) => setDatetime(e.target.value)}
+            className="h-10 rounded-lg border border-stone-200 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-trust-700"
           />
-          {error && <p className="text-sm text-danger-600">{error}</p>}
-          <Button
-            isLoading={request.isPending}
-            disabled={!datetime}
-            onClick={() =>
-              request.mutate(
-                { listingId, proposedDatetime: new Date(datetime).toISOString(), notes: notes || undefined },
-                { onSuccess: () => setSuccess(true), onError: (e) => setError(getErrorMessage(e)) },
-              )
-            }
-          >
-            Send request
-          </Button>
-        </div>
-      )}
+        </label>
+        <textarea
+          rows={3}
+          value={notes}
+          onChange={(e) => setNotes(e.target.value)}
+          placeholder="Anything the owner should know (optional)"
+          className="rounded-lg border border-stone-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-trust-700"
+        />
+        {error && <p className="text-sm text-danger-600">{error}</p>}
+        <Button
+          isLoading={request.isPending}
+          disabled={!datetime}
+          onClick={() =>
+            request.mutate(
+              { listingId, proposedDatetime: new Date(datetime).toISOString(), notes: notes || undefined },
+              {
+                onSuccess: () => {
+                  toast.success('Viewing request sent to the owner.')
+                  handleClose()
+                },
+                onError: (e) => setError(getErrorMessage(e)),
+              },
+            )
+          }
+        >
+          Send request
+        </Button>
+      </div>
     </Modal>
   )
 }
@@ -488,28 +483,38 @@ function ViewingModal({ open, onClose, listingId }: { open: boolean; onClose: ()
 function RatingsSection({
   listingId,
   myRating,
-  user,
   requireAuth,
 }: {
   listingId: number
   myRating: { id: number; score: number; comment: string | null } | null
-  user: AuthUser | null | undefined
   requireAuth: (action: () => void) => void
 }) {
   const { data, isPending } = useListingRatings(listingId)
   const submit = useSubmitRating()
   const remove = useDeleteRating()
+  const toast = useToast()
   const [formOpen, setFormOpen] = useState(false)
   const [score, setScore] = useState(myRating?.score ?? 0)
   const [comment, setComment] = useState(myRating?.comment ?? '')
   const [error, setError] = useState<string | null>(null)
+
+  const handleClose = () => {
+    setFormOpen(false)
+    setError(null)
+  }
 
   const handleSubmit = () => {
     if (!score) return
     setError(null)
     submit.mutate(
       { listingId, score, comment: comment.trim() || undefined },
-      { onSuccess: () => setFormOpen(false), onError: (e) => setError(getErrorMessage(e)) },
+      {
+        onSuccess: () => {
+          toast.success(myRating ? 'Rating updated.' : 'Thanks for rating this listing.')
+          handleClose()
+        },
+        onError: (e) => setError(getErrorMessage(e)),
+      },
     )
   }
 
@@ -517,19 +522,17 @@ function RatingsSection({
     <div>
       <div className="mb-2 flex items-center justify-between">
         <h2 className="font-display text-lg font-semibold text-ink-900">Ratings & reviews</h2>
-        {!formOpen && (
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => requireAuth(() => setFormOpen(true))}
-          >
-            <Star className="h-4 w-4" /> {myRating ? 'Edit your rating' : 'Rate this listing'}
-          </Button>
-        )}
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={() => requireAuth(() => setFormOpen(true))}
+        >
+          <Star className="h-4 w-4" /> {myRating ? 'Edit your rating' : 'Rate this listing'}
+        </Button>
       </div>
 
-      {formOpen && user && (
-        <div className="mb-4 flex flex-col gap-2 rounded-card border border-stone-200 p-4">
+      <Modal open={formOpen} onClose={handleClose} title={myRating ? 'Edit your rating' : 'Rate this listing'}>
+        <div className="flex flex-col gap-3">
           <div className="flex items-center gap-1">
             {[1, 2, 3, 4, 5].map((n) => (
               <button key={n} type="button" onClick={() => setScore(n)} aria-label={`${n} star${n === 1 ? '' : 's'}`}>
@@ -558,9 +561,10 @@ function RatingsSection({
                 onClick={() =>
                   remove.mutate(listingId, {
                     onSuccess: () => {
-                      setFormOpen(false)
+                      toast.success('Rating removed.')
                       setScore(0)
                       setComment('')
+                      handleClose()
                     },
                   })
                 }
@@ -568,12 +572,12 @@ function RatingsSection({
                 <Trash2 className="h-4 w-4" /> Remove
               </Button>
             )}
-            <Button size="sm" variant="ghost" onClick={() => setFormOpen(false)}>
+            <Button size="sm" variant="ghost" onClick={handleClose}>
               Cancel
             </Button>
           </div>
         </div>
-      )}
+      </Modal>
 
       {isPending && <Skeleton className="h-20 w-full" />}
       {!isPending && data?.data.length === 0 && (

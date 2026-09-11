@@ -12,6 +12,7 @@ import { Badge } from '../components/ui/Badge'
 import { Button } from '../components/ui/Button'
 import { Tabs } from '../components/ui/Tabs'
 import { Modal } from '../components/ui/Modal'
+import { useToast } from '../components/ui/Toast'
 import { EmptyState } from '../components/ui/EmptyState'
 import { ErrorState } from '../components/ui/ErrorState'
 import { PropertyGridSkeleton } from '../components/ui/Skeleton'
@@ -106,6 +107,7 @@ export function ViewingRequests() {
 
 function VisitVerificationModal({ viewing, onClose }: { viewing: ViewingRequest | null; onClose: () => void }) {
   const submit = useSubmitVisitVerification()
+  const toast = useToast()
   const [form, setForm] = useState({ matched_listing: true, price_accurate: true, host_attended: true, overall_comment: '' })
 
   if (!viewing) return null
@@ -128,7 +130,12 @@ function VisitVerificationModal({ viewing, onClose }: { viewing: ViewingRequest 
           onClick={() =>
             submit.mutate(
               { id: viewing.id, visited: true, ...form },
-              { onSuccess: onClose },
+              {
+                onSuccess: () => {
+                  toast.success('Thanks for the feedback.')
+                  onClose()
+                },
+              },
             )
           }
         >

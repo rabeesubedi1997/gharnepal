@@ -11,9 +11,10 @@ import {
 } from '../../lib/api/propertyRequests'
 import { useStartConversation } from '../../lib/api/messaging'
 import { useMunicipalities } from '../../lib/api/locations'
-import { useCurrentUser } from '../../lib/api/auth'
 import { useStaticPageSeo } from '../../lib/api/seo'
 import { getErrorMessage } from '../../lib/api/errors'
+import { useRequireAuth } from '../../components/auth/AuthGateProvider'
+import { useToast } from '../../components/ui/Toast'
 import { formatNprCompact } from '../../design-system/tokens'
 import { SeoHead } from '../../components/seo/SeoHead'
 import { Card } from '../../components/ui/Card'
@@ -44,21 +45,12 @@ export function PropertyRequests() {
   const [filters, setFilters] = useState<PropertyRequestFilters>({})
   const { data, isPending, isError, refetch } = usePropertyRequests(filters)
   const { data: municipalities } = useMunicipalities()
-  const { data: user } = useCurrentUser()
   const { data: seo } = useStaticPageSeo('property-requests')
-  const navigate = useNavigate()
+  const requireAuth = useRequireAuth()
 
   const [postOpen, setPostOpen] = useState(false)
   const [respondingTo, setRespondingTo] = useState<PropertyRequest | null>(null)
   const closeRequest = useClosePropertyRequest()
-
-  const requireAuth = (action: () => void) => {
-    if (!user) {
-      navigate('/login', { state: { from: window.location } })
-      return
-    }
-    action()
-  }
 
   return (
     <div className="flex flex-col gap-6">
@@ -174,8 +166,8 @@ export function PropertyRequests() {
 function PostRequestModal({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { data: municipalities } = useMunicipalities()
   const create = useCreatePropertyRequest()
+  const toast = useToast()
   const [error, setError] = useState<string | null>(null)
-  const [done, setDone] = useState(false)
 
   const [form, setForm] = useState({
     purpose: 'rent' as 'sale' | 'rent',
@@ -188,7 +180,6 @@ function PostRequestModal({ open, onClose }: { open: boolean; onClose: () => voi
   })
 
   const handleClose = () => {
-    setDone(false)
     setError(null)
     onClose()
   }
@@ -205,58 +196,54 @@ function PostRequestModal({ open, onClose }: { open: boolean; onClose: () => voi
       notes: form.notes.trim() || undefined,
     }
     create.mutate(input, {
-      onSuccess: () => setDone(true),
+      onSuccess: () => {
+        toast.success('Posted! Owners and agents with a match can now reach out to you.')
+        handleClose()
+      },
       onError: (e) => setError(getErrorMessage(e)),
     })
   }
 
   return (
     <Modal open={open} onClose={handleClose} title="Post a property request">
-      {done ? (
-        <div className="flex flex-col items-center gap-3 py-4 text-center">
-          <p className="text-sm text-ink-900">Posted! Owners and agents with a match can now reach out to you.</p>
-          <Button size="sm" onClick={handleClose}>Done</Button>
+      <div className="flex flex-col gap-3">
+        <Select label="I'm" value={form.purpose} onChange={(e) => setForm((f) => ({ ...f, purpose: e.target.value as 'sale' | 'rent' }))}>
+          <option value="rent">Renting</option>
+          <option value="sale">Buying</option>
+        </Select>
+        <Select label="Property type (optional)" value={form.property_type} onChange={(e) => setForm((f) => ({ ...f, property_type: e.target.value }))}>
+          <option value="">Any type</option>
+          {Object.entries(PROPERTY_TYPE_LABEL).map(([value, label]) => (
+            <option key={value} value={value}>{label}</option>
+          ))}
+        </Select>
+        <div className="grid grid-cols-2 gap-3">
+          <Input label="Budget min (Rs, optional)" type="number" min={0} placeholder="No minimum" value={form.budget_min} onChange={(e) => setForm((f) => ({ ...f, budget_min: e.target.value }))} />
+          <Input label="Budget max (Rs, optional)" type="number" min={0} placeholder="No maximum" value={form.budget_max} onChange={(e) => setForm((f) => ({ ...f, budget_max: e.target.value }))} />
         </div>
-      ) : (
-        <div className="flex flex-col gap-3">
-          <Select label="I'm" value={form.purpose} onChange={(e) => setForm((f) => ({ ...f, purpose: e.target.value as 'sale' | 'rent' }))}>
-            <option value="rent">Renting</option>
-            <option value="sale">Buying</option>
-          </Select>
-          <Select label="Property type (optional)" value={form.property_type} onChange={(e) => setForm((f) => ({ ...f, property_type: e.target.value }))}>
-            <option value="">Any type</option>
-            {Object.entries(PROPERTY_TYPE_LABEL).map(([value, label]) => (
-              <option key={value} value={value}>{label}</option>
-            ))}
-          </Select>
-          <div className="grid grid-cols-2 gap-3">
-            <Input label="Budget min (Rs, optional)" type="number" min={0} placeholder="No minimum" value={form.budget_min} onChange={(e) => setForm((f) => ({ ...f, budget_min: e.target.value }))} />
-            <Input label="Budget max (Rs, optional)" type="number" min={0} placeholder="No maximum" value={form.budget_max} onChange={(e) => setForm((f) => ({ ...f, budget_max: e.target.value }))} />
-          </div>
-          <Input label="Minimum bedrooms (optional)" type="number" min={0} max={20} placeholder="e.g. 2" value={form.bedrooms_min} onChange={(e) => setForm((f) => ({ ...f, bedrooms_min: e.target.value }))} />
-          <Select label="Preferred city (optional)" value={form.municipality_id} onChange={(e) => setForm((f) => ({ ...f, municipality_id: e.target.value }))}>
-            <option value="">Any city</option>
-            {municipalities?.map((m) => (
-              <option key={m.id} value={m.id}>{m.name}</option>
-            ))}
-          </Select>
-          <label className="flex flex-col gap-1.5">
-            <span className="text-sm font-medium text-ink-900">Additional details (optional)</span>
-            <textarea
-              rows={3}
-              maxLength={1000}
-              value={form.notes}
-              onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))}
-              placeholder="e.g. near a school, ground floor preferred, 2 parking spaces"
-              className="rounded-lg border border-stone-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-trust-700"
-            />
-          </label>
-          {error && <p className="text-sm text-danger-600">{error}</p>}
-          <Button isLoading={create.isPending} onClick={handleSubmit}>
-            Post request
-          </Button>
-        </div>
-      )}
+        <Input label="Minimum bedrooms (optional)" type="number" min={0} max={20} placeholder="e.g. 2" value={form.bedrooms_min} onChange={(e) => setForm((f) => ({ ...f, bedrooms_min: e.target.value }))} />
+        <Select label="Preferred city (optional)" value={form.municipality_id} onChange={(e) => setForm((f) => ({ ...f, municipality_id: e.target.value }))}>
+          <option value="">Any city</option>
+          {municipalities?.map((m) => (
+            <option key={m.id} value={m.id}>{m.name}</option>
+          ))}
+        </Select>
+        <label className="flex flex-col gap-1.5">
+          <span className="text-sm font-medium text-ink-900">Additional details (optional)</span>
+          <textarea
+            rows={3}
+            maxLength={1000}
+            value={form.notes}
+            onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))}
+            placeholder="e.g. near a school, ground floor preferred, 2 parking spaces"
+            className="rounded-lg border border-stone-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-trust-700"
+          />
+        </label>
+        {error && <p className="text-sm text-danger-600">{error}</p>}
+        <Button isLoading={create.isPending} onClick={handleSubmit}>
+          Post request
+        </Button>
+      </div>
     </Modal>
   )
 }
@@ -266,6 +253,7 @@ function RespondModal({ request, onClose }: { request: PropertyRequest | null; o
   const [error, setError] = useState<string | null>(null)
   const start = useStartConversation()
   const navigate = useNavigate()
+  const toast = useToast()
 
   const handleClose = () => {
     setMessage('')
@@ -292,7 +280,11 @@ function RespondModal({ request, onClose }: { request: PropertyRequest | null; o
             start.mutate(
               { propertyRequestId: request.id, message: message.trim() },
               {
-                onSuccess: (conversation) => navigate(`/messages/${conversation.id}`),
+                onSuccess: (conversation) => {
+                  toast.success('Message sent.')
+                  handleClose()
+                  navigate(`/messages/${conversation.id}`)
+                },
                 onError: (e) => setError(getErrorMessage(e)),
               },
             )
