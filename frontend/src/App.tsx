@@ -1,5 +1,6 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
 import { AppLayout } from './components/layout/AppLayout'
+import { ScrollToTop } from './components/layout/ScrollToTop'
 import { Home } from './pages/Home'
 import { ComingSoon } from './pages/ComingSoon'
 import { Search } from './pages/Search'
@@ -52,161 +53,164 @@ import { RequireAuth } from './components/auth/RequireAuth'
 
 export default function App() {
   return (
-    <Routes>
-      <Route element={<AppLayout />}>
-        <Route index element={<Home />} />
-        <Route path="buy" element={<Search />} />
-        <Route path="rent" element={<Search />} />
-        <Route path="rooms" element={<Search />} />
-        <Route path="land" element={<Search />} />
-        <Route path="commercial" element={<Search />} />
-        <Route path="search" element={<Search />} />
-        <Route path="listings/:slug" element={<ListingDetail />} />
-        <Route path="neighborhoods" element={<NeighborhoodDirectory />} />
-        <Route path="neighborhoods/:id" element={<NeighborhoodProfile />} />
-        <Route path="agents" element={<AgentDirectory />} />
-        <Route path="agents/:slug" element={<AgencyProfile />} />
-        <Route path="property-requests" element={<PropertyRequests />} />
-        <Route path="blog" element={<BlogList />} />
-        <Route path="blog/:slug" element={<BlogPostDetail />} />
-        <Route path="calculators/rental" element={<RentalCalculator />} />
-        <Route path="calculators/purchase" element={<PurchaseCalculator />} />
+    <>
+      <ScrollToTop />
+      <Routes>
+        <Route element={<AppLayout />}>
+          <Route index element={<Home />} />
+          <Route path="buy" element={<Search />} />
+          <Route path="rent" element={<Search />} />
+          <Route path="rooms" element={<Search />} />
+          <Route path="land" element={<Search />} />
+          <Route path="commercial" element={<Search />} />
+          <Route path="search" element={<Search />} />
+          <Route path="listings/:slug" element={<ListingDetail />} />
+          <Route path="neighborhoods" element={<NeighborhoodDirectory />} />
+          <Route path="neighborhoods/:id" element={<NeighborhoodProfile />} />
+          <Route path="agents" element={<AgentDirectory />} />
+          <Route path="agents/:slug" element={<AgencyProfile />} />
+          <Route path="property-requests" element={<PropertyRequests />} />
+          <Route path="blog" element={<BlogList />} />
+          <Route path="blog/:slug" element={<BlogPostDetail />} />
+          <Route path="calculators/rental" element={<RentalCalculator />} />
+          <Route path="calculators/purchase" element={<PurchaseCalculator />} />
 
-        <Route path="login" element={<Login />} />
-        <Route path="register" element={<Register />} />
+          <Route path="login" element={<Login />} />
+          <Route path="register" element={<Register />} />
 
-        <Route
-          path="saved"
-          element={
-            <RequireAuth>
-              <Saved />
-            </RequireAuth>
-          }
-        />
-        <Route
-          path="messages"
-          element={
-            <RequireAuth>
-              <Messages />
-            </RequireAuth>
-          }
-        />
-        <Route
-          path="messages/:id"
-          element={
-            <RequireAuth>
-              <Messages />
-            </RequireAuth>
-          }
-        />
-        <Route
-          path="account/settings"
-          element={
-            <RequireAuth>
-              <Settings />
-            </RequireAuth>
-          }
-        />
-        <Route
-          path="account/viewing-requests"
-          element={
-            <RequireAuth>
-              <ViewingRequests />
-            </RequireAuth>
-          }
-        />
-        <Route
-          path="account/verification"
-          element={
-            <RequireAuth>
-              <VerificationCenter />
-            </RequireAuth>
-          }
-        />
-        <Route
-          path="account/match-preferences"
-          element={
-            <RequireAuth>
-              <MatchPreferences />
-            </RequireAuth>
-          }
-        />
-        <Route
-          path="account/match-results"
-          element={
-            <RequireAuth>
-              <MatchResults />
-            </RequireAuth>
-          }
-        />
-        <Route
-          path="account/payments"
-          element={
-            <RequireAuth>
-              <PaymentHistory />
-            </RequireAuth>
-          }
-        />
-        <Route
-          path="dashboard"
-          element={
-            <RequireAuth>
-              <Dashboard />
-            </RequireAuth>
-          }
-        />
-        <Route
-          path="dashboard/listings/:id/edit"
-          element={
-            <RequireAuth>
-              <EditListing />
-            </RequireAuth>
-          }
-        />
-        <Route
-          path="post-property"
-          element={
-            <RequireAuth>
-              <PostPropertyWizard />
-            </RequireAuth>
-          }
-        />
+          <Route
+            path="saved"
+            element={
+              <RequireAuth>
+                <Saved />
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="messages"
+            element={
+              <RequireAuth>
+                <Messages />
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="messages/:id"
+            element={
+              <RequireAuth>
+                <Messages />
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="account/settings"
+            element={
+              <RequireAuth>
+                <Settings />
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="account/viewing-requests"
+            element={
+              <RequireAuth>
+                <ViewingRequests />
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="account/verification"
+            element={
+              <RequireAuth>
+                <VerificationCenter />
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="account/match-preferences"
+            element={
+              <RequireAuth>
+                <MatchPreferences />
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="account/match-results"
+            element={
+              <RequireAuth>
+                <MatchResults />
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="account/payments"
+            element={
+              <RequireAuth>
+                <PaymentHistory />
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="dashboard"
+            element={
+              <RequireAuth>
+                <Dashboard />
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="dashboard/listings/:id/edit"
+            element={
+              <RequireAuth>
+                <EditListing />
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="post-property"
+            element={
+              <RequireAuth>
+                <PostPropertyWizard />
+              </RequireAuth>
+            }
+          />
 
-        <Route path="*" element={<ComingSoon title="Page not found" />} />
-      </Route>
+          <Route path="*" element={<ComingSoon title="Page not found" />} />
+        </Route>
 
-      {/* Admin console has its own dedicated layout — no public header/footer. */}
-      <Route
-        path="admin"
-        element={
-          <RequireAuth adminOnly>
-            <AdminLayout />
-          </RequireAuth>
-        }
-      >
-        <Route index element={<Navigate to="dashboard" replace />} />
-        <Route path="dashboard" element={<AdminDashboard />} />
-        <Route path="banners" element={<AdminBanners />} />
-        <Route path="advertisements" element={<AdminAdvertisements />} />
-        <Route path="blog" element={<AdminBlog />} />
-        <Route path="blog/:id" element={<AdminBlogEditor />} />
-        <Route path="users" element={<AdminUsers />} />
-        <Route path="agencies" element={<AdminAgencies />} />
-        <Route path="listings/pending" element={<PendingListings />} />
-        <Route path="reports" element={<Reports />} />
-        <Route path="duplicate-flags" element={<DuplicateFlags />} />
-        <Route path="verifications" element={<Verifications />} />
-        <Route path="locations" element={<Locations />} />
-        <Route path="neighborhoods" element={<NeighborhoodScores />} />
-        <Route path="amenities" element={<AdminAmenities />} />
-        <Route path="community-notes" element={<CommunityNotesModeration />} />
-        <Route path="ratings" element={<AdminRatings />} />
-        <Route path="trust-factors" element={<AdminTrustFactors />} />
-        <Route path="messages" element={<AdminMessages />} />
-        <Route path="payments" element={<AdminPayments />} />
-        <Route path="seo" element={<AdminSeo />} />
-        <Route path="seo/:key" element={<AdminSeoPageEditor />} />
-      </Route>
-    </Routes>
+        {/* Admin console has its own dedicated layout — no public header/footer. */}
+        <Route
+          path="admin"
+          element={
+            <RequireAuth adminOnly>
+              <AdminLayout />
+            </RequireAuth>
+          }
+        >
+          <Route index element={<Navigate to="dashboard" replace />} />
+          <Route path="dashboard" element={<AdminDashboard />} />
+          <Route path="banners" element={<AdminBanners />} />
+          <Route path="advertisements" element={<AdminAdvertisements />} />
+          <Route path="blog" element={<AdminBlog />} />
+          <Route path="blog/:id" element={<AdminBlogEditor />} />
+          <Route path="users" element={<AdminUsers />} />
+          <Route path="agencies" element={<AdminAgencies />} />
+          <Route path="listings/pending" element={<PendingListings />} />
+          <Route path="reports" element={<Reports />} />
+          <Route path="duplicate-flags" element={<DuplicateFlags />} />
+          <Route path="verifications" element={<Verifications />} />
+          <Route path="locations" element={<Locations />} />
+          <Route path="neighborhoods" element={<NeighborhoodScores />} />
+          <Route path="amenities" element={<AdminAmenities />} />
+          <Route path="community-notes" element={<CommunityNotesModeration />} />
+          <Route path="ratings" element={<AdminRatings />} />
+          <Route path="trust-factors" element={<AdminTrustFactors />} />
+          <Route path="messages" element={<AdminMessages />} />
+          <Route path="payments" element={<AdminPayments />} />
+          <Route path="seo" element={<AdminSeo />} />
+          <Route path="seo/:key" element={<AdminSeoPageEditor />} />
+        </Route>
+      </Routes>
+    </>
   )
 }
