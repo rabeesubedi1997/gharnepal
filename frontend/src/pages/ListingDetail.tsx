@@ -1,6 +1,6 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { BedDouble, Calculator, Calendar, CalendarPlus, Car, Eye, FileText, Flag, Heart, Layers, MapPin, MessageCircle, Phone, Ruler, Share2, ShowerHead, Sparkles, Star, Trash2 } from 'lucide-react'
+import { BedDouble, Calculator, Calendar, CalendarPlus, Car, ChevronRight, Eye, FileText, Flag, Heart, Layers, MapPin, MessageCircle, Navigation, Phone, Printer, Ruler, Share2, ShowerHead, Sparkles, Star, Trash2 } from 'lucide-react'
 import { useListingDetail, type ListingDetail as ListingDetailType } from '../lib/api/listings'
 import { useDeleteRating, useListingRatings, useSubmitRating } from '../lib/api/ratings'
 import { RatingStars } from '../components/property/RatingStars'
@@ -28,7 +28,26 @@ import { LandDueDiligenceChecklist } from '../components/property/LandDueDiligen
 import { useVerifyLandProfile, type LandProfile } from '../lib/api/landProfile'
 import { TrustBadge } from '../components/trust/TrustBadge'
 import { useClearTrustOverride, useSetTrustOverride, type TrustScore } from '../lib/api/trust'
+import { useCalculatePurchase } from '../lib/api/calculators'
+import { useNeighborhoodProfile, type NeighborhoodPoi } from '../lib/api/neighborhoods'
 import { SeoHead } from '../components/seo/SeoHead'
+
+/** Real great-circle distance in meters — used to honestly show "X m away"
+ * for a neighborhood's own recorded points of interest, rather than a
+ * placeholder/estimated figure. */
+function distanceMeters(lat1: number, lng1: number, lat2: number, lng2: number): number {
+  const R = 6371000
+  const toRad = (d: number) => (d * Math.PI) / 180
+  const dLat = toRad(lat2 - lat1)
+  const dLng = toRad(lng2 - lng1)
+  const a =
+    Math.sin(dLat / 2) ** 2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+}
+
+function formatDistance(meters: number): string {
+  return meters >= 1000 ? `${(meters / 1000).toFixed(1)} km` : `${Math.round(meters)} m`
+}
 
 const PARKING_TYPE_LABEL: Record<string, string> = {
   car: 'Car',
@@ -96,6 +115,27 @@ export function ListingDetail() {
   return (
     <div className="flex flex-col gap-6">
       <SeoHead seo={listing.seo} />
+
+      <nav aria-label="Breadcrumb" className="flex flex-wrap items-center gap-1 text-xs text-ink-700/60">
+        <Link to="/" className="hover:text-trust-700">Home</Link>
+        {property.address?.municipality && (
+          <>
+            <ChevronRight className="h-3 w-3" aria-hidden="true" />
+            <Link to={`/search?municipality_id=${property.address.municipality.id}`} className="hover:text-trust-700">
+              {property.address.municipality.name}
+            </Link>
+          </>
+        )}
+        {neighborhood && (
+          <>
+            <ChevronRight className="h-3 w-3" aria-hidden="true" />
+            <Link to={`/neighborhoods/${neighborhood.id}`} className="hover:text-trust-700">{neighborhood.name}</Link>
+          </>
+        )}
+        <ChevronRight className="h-3 w-3" aria-hidden="true" />
+        <span className="text-ink-700/50">{listing.reference_code}</span>
+      </nav>
+
       <PropertyGallery images={images} title={listing.title} />
 
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1fr_320px]">
@@ -146,9 +186,12 @@ export function ListingDetail() {
                   <AdminTrustOverridePanel listingId={listing.id} trust={listing.trust} />
                 )}
               </div>
-              <div className="flex gap-1">
+              <div className="flex gap-1 print:hidden">
                 <IconButton label="Share listing" onClick={handleShare}>
                   <Share2 className="h-4 w-4" />
+                </IconButton>
+                <IconButton label="Print flyer" onClick={() => window.print()}>
+                  <Printer className="h-4 w-4" />
                 </IconButton>
                 <Button
                   variant="ghost"
@@ -195,11 +238,12 @@ export function ListingDetail() {
             )}
             <Link
               to={listing.purpose === 'rent' ? '/calculators/rental' : '/calculators/purchase'}
-              className="mt-2 inline-flex w-fit items-center gap-1 text-xs font-medium text-trust-700 hover:underline"
+              className="mt-2 inline-flex w-fit items-center gap-1 text-xs font-medium text-trust-700 hover:underline print:hidden"
             >
               <Calculator className="h-3.5 w-3.5" aria-hidden="true" />
               Estimate your {listing.purpose === 'rent' ? 'monthly rental' : 'purchase'} costs
             </Link>
+            {listing.purpose === 'sale' && <MortgageEstimate price={listing.price} />}
           </div>
 
           <div className="grid grid-cols-2 gap-4 rounded-card border border-stone-200 p-4 sm:grid-cols-4">
@@ -287,9 +331,15 @@ export function ListingDetail() {
             </div>
           )}
 
+          {neighborhood && property.address?.lat && property.address?.lng && (
+            <NeighborhoodAccessibility neighborhoodId={neighborhood.id} lat={property.address.lat} lng={property.address.lng} />
+          )}
+
           {property.address?.lat && property.address?.lng && (
             <div>
-              <h2 className="mb-2 font-display text-lg font-semibold text-ink-900">Location</h2>
+              <h2 className="mb-2 font-display text-lg font-semibold text-ink-900">
+                {neighborhood ? 'Map' : 'Location'}
+              </h2>
               <MapView
                 listings={[
                   {
@@ -350,13 +400,47 @@ export function ListingDetail() {
               </a>
             )}
           </Card>
+
+          {property.property_type === 'land' && property.land_profile && (
+            <Card className="flex flex-col gap-2 p-4">
+              <p className="text-sm font-medium text-ink-900">Lal Purja &amp; Legal Title</p>
+              <Badge
+                tone={
+                  property.land_profile.document_verification_status === 'verified'
+                    ? 'success'
+                    : property.land_profile.document_verification_status === 'partial'
+                      ? 'warning'
+                      : 'neutral'
+                }
+              >
+                {property.land_profile.document_verification_status === 'verified'
+                  ? 'Fully verified by Ghar Nepal'
+                  : property.land_profile.document_verification_status === 'partial'
+                    ? 'Partially reviewed'
+                    : 'Not yet reviewed'}
+              </Badge>
+              {property.land_profile.lalpurja_document_url && (
+                <a
+                  href={property.land_profile.lalpurja_document_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex w-fit items-center gap-1.5 text-xs font-medium text-trust-700 hover:underline"
+                >
+                  <FileText className="h-3.5 w-3.5" aria-hidden="true" /> View Lal Purja document
+                </a>
+              )}
+            </Card>
+          )}
+
           <AdSlot placement="listing_detail_sidebar" aspectClassName="aspect-square" />
         </div>
       </div>
 
       {listing.similar_listings.length > 0 && (
         <div>
-          <h2 className="mb-3 font-display text-lg font-semibold text-ink-900">Similar nearby listings</h2>
+          <h2 className="mb-3 font-display text-lg font-semibold text-ink-900">
+            More Properties in {neighborhood?.name ?? property.address?.municipality?.name ?? 'the Area'}
+          </h2>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {listing.similar_listings.map((s) => (
               <PropertyCard key={s.id} listing={s} />
@@ -656,6 +740,73 @@ function RatingsSection({
           ))}
         </ul>
       )}
+    </div>
+  )
+}
+
+/** Inline EMI estimate using the same real /calculators/purchase endpoint
+ * (default assumptions: 20% down, 10%/yr, 20-year tenure) — the full
+ * calculator page linked just above lets a buyer change any of these; this
+ * is a quick, honest ballpark right where they're already looking. */
+function MortgageEstimate({ price }: { price: number }) {
+  const calculate = useCalculatePurchase()
+
+  useEffect(() => {
+    calculate.mutate({ property_price: price })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [price])
+
+  if (!calculate.data) return null
+
+  return (
+    <p className="mt-1 flex items-center gap-1.5 text-xs text-ink-700/60 print:hidden">
+      <Calculator className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+      Bank EMI starting at ~{formatNpr(calculate.data.result.monthly_repayment_estimate)}/month
+      <span className="text-ink-700/40">(20% down, 10%/yr, 20 yrs)</span>
+    </p>
+  )
+}
+
+/** Real neighborhood livability score (admin-curated, not a fabricated
+ * "walk score") plus the nearest actually-recorded points of interest, with
+ * a genuine haversine distance from this listing's own coordinates — not
+ * estimated or invented. Only renders once real data exists; a neighborhood
+ * with no score/POIs yet renders nothing rather than an empty shell. */
+function NeighborhoodAccessibility({ neighborhoodId, lat, lng }: { neighborhoodId: number; lat: number; lng: number }) {
+  const { data: profile } = useNeighborhoodProfile(neighborhoodId)
+  const pois = (profile?.pois ?? []).filter((p): p is NeighborhoodPoi & { lat: number; lng: number } => p.lat != null && p.lng != null)
+
+  if (!profile?.score && pois.length === 0) return null
+
+  const nearest = [...pois]
+    .map((poi) => ({ poi, distance: distanceMeters(lat, lng, poi.lat, poi.lng) }))
+    .sort((a, b) => a.distance - b.distance)
+    .slice(0, 4)
+
+  return (
+    <div>
+      <div className="mb-2 flex items-center justify-between gap-3">
+        <h2 className="font-display text-lg font-semibold text-ink-900">Neighborhood &amp; Accessibility</h2>
+        {profile?.score && (
+          <span className="flex items-center gap-1.5 rounded-full bg-trust-100 px-3 py-1 text-xs font-semibold text-trust-700">
+            <Navigation className="h-3.5 w-3.5" aria-hidden="true" /> {profile.score.overall_score}/100 neighborhood score
+          </span>
+        )}
+      </div>
+      {nearest.length > 0 && (
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          {nearest.map(({ poi, distance }) => (
+            <div key={poi.id} className="rounded-card border border-stone-200 p-3 text-center">
+              <p className="text-xs uppercase tracking-wide text-ink-700/50">{poi.poi_type.replace('_', ' ')}</p>
+              <p className="mt-0.5 text-sm font-semibold text-ink-900">{formatDistance(distance)}</p>
+              <p className="truncate text-xs text-ink-700/60" title={poi.name}>{poi.name}</p>
+            </div>
+          ))}
+        </div>
+      )}
+      <Link to={`/neighborhoods/${neighborhoodId}`} className="mt-2 inline-block text-xs font-medium text-trust-700 hover:underline">
+        View full neighborhood profile →
+      </Link>
     </div>
   )
 }
