@@ -55,6 +55,7 @@ use App\Http\Controllers\Api\V1\Public\AmenityController;
 use App\Http\Controllers\Api\V1\Public\BannerController;
 use App\Http\Controllers\Api\V1\Public\BlogController;
 use App\Http\Controllers\Api\V1\Public\ListingController;
+use App\Http\Controllers\Api\V1\Public\PlatformStatsController;
 use App\Http\Controllers\Api\V1\Public\LocationController;
 use App\Http\Controllers\Api\V1\Public\NeighborhoodController;
 use App\Http\Controllers\Api\V1\Public\PushConfigController;
@@ -132,6 +133,7 @@ Route::prefix('v1')->group(function () {
     Route::get('listings', [ListingController::class, 'index']);
     Route::get('listings/{slug}', [ListingController::class, 'show']);
     Route::get('amenities', [AmenityController::class, 'index']);
+    Route::get('platform-stats', [PlatformStatsController::class, 'index']);
 
     // Shared favorite collections — public, unguessable-token read access, no auth.
     Route::get('collections/{token}', [PublicFavoriteCollectionController::class, 'show']);
