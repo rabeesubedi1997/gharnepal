@@ -1,4 +1,5 @@
 import { useMunicipalities } from '../../lib/api/locations'
+import { useAmenities } from '../../lib/api/amenities'
 import { Input, Select } from '../../components/ui/Input'
 import type { SearchFilters } from '../../lib/api/listings'
 
@@ -9,6 +10,13 @@ interface Props {
 
 export function FilterPanel({ filters, onChange }: Props) {
   const { data: municipalities } = useMunicipalities()
+  const { data: amenities } = useAmenities()
+
+  function toggleAmenity(id: number) {
+    const current = filters.amenity_ids ?? []
+    const next = current.includes(id) ? current.filter((a) => a !== id) : [...current, id]
+    onChange({ ...filters, amenity_ids: next.length ? next : undefined })
+  }
 
   return (
     <div className="flex flex-col gap-4">
@@ -75,6 +83,36 @@ export function FilterPanel({ filters, onChange }: Props) {
           <option key={n} value={n}>{n}+</option>
         ))}
       </Select>
+
+      <Select
+        label="Parking"
+        value={filters.parking_type ?? ''}
+        onChange={(e) => onChange({ ...filters, parking_type: (e.target.value || undefined) as SearchFilters['parking_type'] })}
+      >
+        <option value="">Any</option>
+        <option value="car">Car parking</option>
+        <option value="bike">Bike parking</option>
+        <option value="both">Car + bike parking</option>
+      </Select>
+
+      {amenities && amenities.length > 0 && (
+        <div className="flex flex-col gap-2">
+          <p className="text-sm font-medium text-ink-900">Amenities</p>
+          <div className="flex flex-wrap gap-x-4 gap-y-2">
+            {amenities.map((amenity) => (
+              <label key={amenity.id} className="flex items-center gap-2 text-sm text-ink-900">
+                <input
+                  type="checkbox"
+                  checked={filters.amenity_ids?.includes(amenity.id) ?? false}
+                  onChange={() => toggleAmenity(amenity.id)}
+                  className="h-4 w-4 rounded border-stone-200 text-trust-700 focus:ring-trust-700"
+                />
+                {amenity.name}
+              </label>
+            ))}
+          </div>
+        </div>
+      )}
 
       <Select
         label="Sort by"

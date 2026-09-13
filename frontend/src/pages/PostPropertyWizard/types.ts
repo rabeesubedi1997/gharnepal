@@ -52,6 +52,7 @@ export interface PricingState {
   title: string
   description: string
   amenity_ids: number[]
+  video_url: string
 }
 
 export const initialPricing: PricingState = {
@@ -63,4 +64,5 @@ export const initialPricing: PricingState = {
   title: '',
   description: '',
   amenity_ids: [],
+  video_url: '',
 }

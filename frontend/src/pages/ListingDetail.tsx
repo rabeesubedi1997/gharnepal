@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { BedDouble, Calendar, CalendarPlus, Car, Eye, Flag, Heart, Layers, MapPin, MessageCircle, Phone, Ruler, Share2, ShowerHead, Sparkles, Star, Trash2 } from 'lucide-react'
+import { BedDouble, Calculator, Calendar, CalendarPlus, Car, Eye, FileText, Flag, Heart, Layers, MapPin, MessageCircle, Phone, Ruler, Share2, ShowerHead, Sparkles, Star, Trash2 } from 'lucide-react'
 import { useListingDetail, type ListingDetail as ListingDetailType } from '../lib/api/listings'
 import { useDeleteRating, useListingRatings, useSubmitRating } from '../lib/api/ratings'
 import { RatingStars } from '../components/property/RatingStars'
@@ -87,11 +87,9 @@ export function ListingDetail() {
 
   const { property } = listing
   const images = property.media.filter((m) => m.type === 'image')
-  const locationLabel = [
-    property.address?.neighborhood?.name,
-    property.address?.municipality?.name,
-    property.address?.district?.name,
-  ]
+  const floorPlan = property.media.find((m) => m.type === 'floor_plan')
+  const neighborhood = property.address?.neighborhood
+  const restLocationLabel = [property.address?.municipality?.name, property.address?.district?.name]
     .filter(Boolean)
     .join(', ')
 
@@ -107,9 +105,18 @@ export function ListingDetail() {
               <div>
                 <h1 className="font-display text-2xl font-semibold text-ink-900">{listing.title}</h1>
                 <p className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-ink-700/70">
-                  {locationLabel && (
+                  {(neighborhood || restLocationLabel) && (
                     <span className="flex items-center gap-1">
-                      <MapPin className="h-4 w-4" aria-hidden="true" /> {locationLabel}
+                      <MapPin className="h-4 w-4" aria-hidden="true" />
+                      {neighborhood && (
+                        <>
+                          <Link to={`/neighborhoods/${neighborhood.id}`} className="underline decoration-dotted underline-offset-2 hover:text-trust-700">
+                            {neighborhood.name}
+                          </Link>
+                          {restLocationLabel && ', '}
+                        </>
+                      )}
+                      {restLocationLabel}
                     </span>
                   )}
                   {listing.views_count > 0 && (
@@ -186,6 +193,13 @@ export function ListingDetail() {
             {listing.price_history.length > 1 && (
               <PriceHistoryLine history={listing.price_history} />
             )}
+            <Link
+              to={listing.purpose === 'rent' ? '/calculators/rental' : '/calculators/purchase'}
+              className="mt-2 inline-flex w-fit items-center gap-1 text-xs font-medium text-trust-700 hover:underline"
+            >
+              <Calculator className="h-3.5 w-3.5" aria-hidden="true" />
+              Estimate your {listing.purpose === 'rent' ? 'monthly rental' : 'purchase'} costs
+            </Link>
           </div>
 
           <div className="grid grid-cols-2 gap-4 rounded-card border border-stone-200 p-4 sm:grid-cols-4">
@@ -205,6 +219,21 @@ export function ListingDetail() {
             )}
           </div>
 
+          {listing.video_tour?.embed_url && (
+            <div>
+              <h2 className="mb-2 font-display text-lg font-semibold text-ink-900">Video tour</h2>
+              <div className="aspect-video w-full overflow-hidden rounded-card border border-stone-200">
+                <iframe
+                  src={listing.video_tour.embed_url}
+                  title="Video tour"
+                  className="h-full w-full"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                />
+              </div>
+            </div>
+          )}
+
           {listing.description && (
             <div>
               <h2 className="mb-2 font-display text-lg font-semibold text-ink-900">Description</h2>
@@ -222,6 +251,30 @@ export function ListingDetail() {
                   <Badge key={a.id} tone="neutral">{a.name}</Badge>
                 ))}
               </div>
+            </div>
+          )}
+
+          {floorPlan && (
+            <div>
+              <h2 className="mb-2 font-display text-lg font-semibold text-ink-900">Floor plan</h2>
+              {floorPlan.mime_type === 'application/pdf' ? (
+                <a
+                  href={floorPlan.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 rounded-card border border-stone-200 px-4 py-3 text-sm font-medium text-trust-700 hover:bg-stone-100"
+                >
+                  <FileText className="h-4 w-4" aria-hidden="true" /> View floor plan (PDF)
+                </a>
+              ) : (
+                <a href={floorPlan.url} target="_blank" rel="noopener noreferrer" className="block w-fit">
+                  <img
+                    src={floorPlan.url}
+                    alt="Floor plan"
+                    className="max-w-full rounded-card border border-stone-200 sm:max-w-sm"
+                  />
+                </a>
+              )}
             </div>
           )}
 

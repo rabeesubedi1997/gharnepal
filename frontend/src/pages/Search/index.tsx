@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
 import { useLocation, useSearchParams } from 'react-router-dom'
-import { Bookmark, List, Map as MapIcon, SlidersHorizontal } from 'lucide-react'
+import { Bookmark, LassoSelect, List, Map as MapIcon, SlidersHorizontal } from 'lucide-react'
 import { useListingSearch, type SearchFilters } from '../../lib/api/listings'
-import { useCreateSavedSearch } from '../../lib/api/savedSearches'
+import { useCreateSavedSearch, type SavedSearch } from '../../lib/api/savedSearches'
 import { useStaticPageSeo } from '../../lib/api/seo'
 import { useRequireAuth } from '../../components/auth/AuthGateProvider'
 import { useToast } from '../../components/ui/Toast'
@@ -66,13 +66,42 @@ export function Search() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filters])
 
+  // filters.polygon is the shareable "lat,lng|lat,lng|..." string (see
+  // MapView's draw tool); parsed back into points only for rendering.
+  const polygonPoints = filters.polygon
+    ? (filters.polygon.split('|').map((pair) => pair.split(',').map(Number)) as [number, number][])
+    : undefined
+
+  const handleSearchArea = (drawnPoints: [number, number][]) => {
+    const polygon = drawnPoints.map(([lat, lng]) => `${lat},${lng}`).join('|')
+    setFilters((f) => ({ ...f, polygon, page: undefined }))
+  }
+
+  const handleClearArea = () => {
+    setFilters((f) => {
+      const { polygon: _polygon, ...rest } = f
+      return rest
+    })
+  }
+
   return (
     <div className="flex flex-col gap-4">
       <SeoHead seo={seo} />
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <h1 className="font-display text-2xl font-semibold text-ink-900">
-          {TITLES[location.pathname] ?? 'Search results'}
-        </h1>
+        <div className="flex flex-wrap items-center gap-2">
+          <h1 className="font-display text-2xl font-semibold text-ink-900">
+            {TITLES[location.pathname] ?? 'Search results'}
+          </h1>
+          {filters.polygon && (
+            <button
+              type="button"
+              onClick={handleClearArea}
+              className="inline-flex items-center gap-1 rounded-full bg-trust-100 px-2.5 py-1 text-xs font-medium text-trust-700 hover:bg-trust-100/70"
+            >
+              <LassoSelect className="h-3 w-3" aria-hidden="true" /> Drawn area · clear
+            </button>
+          )}
+        </div>
         <div className="flex flex-wrap items-center gap-2">
           <Button variant="outline" size="sm" onClick={() => requireAuth(() => setSaveOpen(true))}>
             <Bookmark className="h-4 w-4" /> Save search
@@ -137,7 +166,13 @@ export function Search() {
                   ))}
                 </div>
               ) : (
-                <MapView listings={data.data} />
+                <MapView
+                  listings={data.data}
+                  drawEnabled
+                  polygon={polygonPoints}
+                  onSearchArea={handleSearchArea}
+                  onClearArea={handleClearArea}
+                />
               )}
 
               {data.meta.last_page > 1 && (
@@ -173,13 +208,22 @@ export function Search() {
   )
 }
 
+const ALERT_FREQUENCY_OPTIONS: { value: SavedSearch['alert_frequency']; label: string }[] = [
+  { value: 'instant', label: 'The moment a new match appears' },
+  { value: 'daily', label: 'Once a day' },
+  { value: 'weekly', label: 'Once a week' },
+  { value: 'off', label: "Don't email me — just save it" },
+]
+
 function SaveSearchModal({ open, onClose, filters }: { open: boolean; onClose: () => void; filters: SearchFilters }) {
   const [name, setName] = useState('')
+  const [alertFrequency, setAlertFrequency] = useState<SavedSearch['alert_frequency']>('instant')
   const create = useCreateSavedSearch()
   const toast = useToast()
 
   const handleClose = () => {
     setName('')
+    setAlertFrequency('instant')
     onClose()
   }
 
@@ -195,15 +239,31 @@ function SaveSearchModal({ open, onClose, filters }: { open: boolean; onClose: (
             className="h-10 rounded-lg border border-stone-200 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-trust-700"
           />
         </label>
+        <label className="flex flex-col gap-1.5">
+          <span className="text-sm font-medium text-ink-900">Email me about new matches</span>
+          <select
+            value={alertFrequency}
+            onChange={(e) => setAlertFrequency(e.target.value as SavedSearch['alert_frequency'])}
+            className="h-10 rounded-lg border border-stone-200 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-trust-700"
+          >
+            {ALERT_FREQUENCY_OPTIONS.map((opt) => (
+              <option key={opt.value} value={opt.value}>{opt.label}</option>
+            ))}
+          </select>
+        </label>
         <Button
           isLoading={create.isPending}
           disabled={!name.trim()}
           onClick={() =>
             create.mutate(
-              { name: name.trim(), filters },
+              { name: name.trim(), filters, alert_frequency: alertFrequency },
               {
                 onSuccess: () => {
-                  toast.success("Saved! We'll use this to power alerts soon.")
+                  toast.success(
+                    alertFrequency === 'off'
+                      ? 'Search saved.'
+                      : "Search saved — we'll email you when new listings match.",
+                  )
                   handleClose()
                 },
               },

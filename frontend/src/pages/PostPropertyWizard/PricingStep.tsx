@@ -96,6 +96,17 @@ export function PricingStep({ value, onChange, errors, onNext, onBack, isSubmitt
         />
       </div>
 
+      <Input
+        label="Virtual tour link (optional)"
+        placeholder="https://youtube.com/watch?v=... or https://vimeo.com/..."
+        value={value.video_url}
+        error={errors.video_url}
+        onChange={(e) => onChange({ ...value, video_url: e.target.value })}
+      />
+      <p className="-mt-3 text-xs text-ink-700/60">
+        A YouTube or Vimeo link — listings with a video walkthrough get noticeably more enquiries.
+      </p>
+
       <div>
         <p className="mb-2 text-sm font-medium text-ink-900">Amenities</p>
         {isPending ? (

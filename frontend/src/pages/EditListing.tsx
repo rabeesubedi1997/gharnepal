@@ -24,6 +24,7 @@ export function EditListing() {
   const [negotiable, setNegotiable] = useState(false)
   const [availabilityDate, setAvailabilityDate] = useState('')
   const [amenityIds, setAmenityIds] = useState<number[]>([])
+  const [videoUrl, setVideoUrl] = useState('')
   const [saved, setSaved] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -38,6 +39,7 @@ export function EditListing() {
     setNegotiable(listing.negotiable)
     setAvailabilityDate(listing.availability_date ?? '')
     setAmenityIds(listing.amenities.map((a) => a.id))
+    setVideoUrl(listing.video_url ?? '')
   }, [listing])
 
   const toggleAmenity = (amenityId: number) => {
@@ -59,6 +61,7 @@ export function EditListing() {
           negotiable,
           availability_date: availabilityDate || undefined,
           amenity_ids: amenityIds,
+          video_url: videoUrl.trim() || undefined,
         },
       },
       {
@@ -132,6 +135,13 @@ export function EditListing() {
             className="rounded-lg border border-stone-200 bg-white px-3 py-2 text-sm text-ink-900 focus:outline-none focus:ring-2 focus:ring-trust-700"
           />
         </div>
+
+        <Input
+          label="Virtual tour link (optional)"
+          placeholder="https://youtube.com/watch?v=... or https://vimeo.com/..."
+          value={videoUrl}
+          onChange={(e) => setVideoUrl(e.target.value)}
+        />
 
         <div>
           <p className="mb-2 text-sm font-medium text-ink-900">Amenities</p>

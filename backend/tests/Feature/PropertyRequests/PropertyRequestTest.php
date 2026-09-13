@@ -52,6 +52,19 @@ class PropertyRequestTest extends TestCase
         ])->assertUnprocessable();
     }
 
+    public function test_budget_max_alone_with_no_minimum_is_accepted(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user, 'sanctum')->postJson('/api/v1/property-requests', [
+            'purpose' => 'sale',
+            'budget_max' => 5000000,
+        ])
+            ->assertCreated()
+            ->assertJsonPath('data.budget_max', 5000000)
+            ->assertJsonPath('data.budget_min', null);
+    }
+
     public function test_guests_cannot_post_a_request(): void
     {
         $this->postJson('/api/v1/property-requests', ['purpose' => 'rent'])->assertUnauthorized();

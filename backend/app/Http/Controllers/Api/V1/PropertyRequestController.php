@@ -61,7 +61,14 @@ class PropertyRequestController extends Controller
             'purpose' => ['required', Rule::in(['sale', 'rent'])],
             'property_type' => ['nullable', Rule::in(['room', 'apartment', 'house', 'land', 'commercial'])],
             'budget_min' => ['nullable', 'integer', 'min:0'],
-            'budget_max' => ['nullable', 'integer', 'min:0', 'gte:budget_min'],
+            // 'gte:budget_min' only makes sense to enforce when a minimum was
+            // actually given — "up to Rs 50 lakh" with no minimum is a
+            // perfectly normal request and shouldn't fail validation just
+            // because it's being compared against a field that's absent.
+            'budget_max' => [
+                'nullable', 'integer', 'min:0',
+                Rule::when($request->filled('budget_min'), ['gte:budget_min']),
+            ],
             'bedrooms_min' => ['nullable', 'integer', 'min:0', 'max:20'],
             'municipality_id' => ['nullable', 'integer', 'exists:municipalities,id'],
             'notes' => ['nullable', 'string', 'max:1000'],

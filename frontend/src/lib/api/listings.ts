@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { apiClient, ensureCsrfCookie } from './client'
-import type { Property, PropertyType } from './properties'
+import type { ParkingType, Property, PropertyType } from './properties'
 import type { Amenity } from './amenities'
 import type { TrustScore } from './trust'
 import type { EffectiveSeo } from './seo'
@@ -9,6 +9,7 @@ export interface MediaItem {
   id: number
   type: 'image' | 'video' | 'floor_plan' | 'document'
   url: string
+  mime_type: string | null
   sort_order: number
 }
 
@@ -60,6 +61,8 @@ export interface ListingDetail {
   reference_code: string
   title: string
   description: string | null
+  video_url: string | null
+  video_tour: { url: string; embed_url: string | null } | null
   purpose: ListingPurpose
   price: number
   price_period: 'total' | 'monthly' | null
@@ -96,6 +99,10 @@ export interface SearchFilters {
   sort?: 'newest' | 'price_asc' | 'price_desc'
   lalpurja_available?: 'yes' | 'no' | 'in_process' | 'unknown'
   road_access?: boolean
+  parking_type?: ParkingType
+  amenity_ids?: number[]
+  /** "lat,lng|lat,lng|..." — a hand-drawn map search area (see MapView's draw tool). */
+  polygon?: string
   page?: number
 }
 
@@ -137,6 +144,7 @@ export interface CreateListingInput {
   title: string
   description?: string
   amenity_ids?: number[]
+  video_url?: string
 }
 
 export function useCreateListing() {
@@ -182,6 +190,7 @@ export interface UpdateListingInput {
   negotiable?: boolean
   availability_date?: string
   amenity_ids?: number[]
+  video_url?: string
 }
 
 export function useUpdateListing() {

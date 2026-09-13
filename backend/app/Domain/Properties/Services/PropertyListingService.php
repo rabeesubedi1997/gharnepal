@@ -2,6 +2,7 @@
 
 namespace App\Domain\Properties\Services;
 
+use App\Domain\Engagement\Services\SavedSearchAlertService;
 use App\Domain\Trust\Services\TrustScoreCalculator;
 use App\Models\Property;
 use App\Models\PropertyListing;
@@ -14,6 +15,7 @@ class PropertyListingService
     public function __construct(
         private readonly DuplicateListingDetector $duplicateDetector,
         private readonly TrustScoreCalculator $trustScoreCalculator,
+        private readonly SavedSearchAlertService $savedSearchAlerts,
     ) {}
 
     /** Transitions an owner/agent can trigger themselves, without admin involvement. */
@@ -38,6 +40,7 @@ class PropertyListingService
             'title' => $data['title'],
             'slug' => $this->uniqueSlug($data['title']),
             'description' => $data['description'] ?? null,
+            'video_url' => $data['video_url'] ?? null,
             'status' => PropertyListing::STATUS_DRAFT,
             'created_by' => $user->id,
         ]);
@@ -59,14 +62,24 @@ class PropertyListingService
     {
         $priceChanged = isset($data['price']) && bccomp((string) $data['price'], (string) $listing->price, 2) !== 0;
 
-        $listing->update(array_filter([
+        $changes = array_filter([
             'price' => $data['price'] ?? null,
             'price_period' => $data['price_period'] ?? null,
             'negotiable' => $data['negotiable'] ?? null,
             'availability_date' => $data['availability_date'] ?? null,
             'title' => $data['title'] ?? null,
             'description' => $data['description'] ?? null,
-        ], fn ($v) => $v !== null));
+        ], fn ($v) => $v !== null);
+
+        // video_url is deliberately clearable (an owner removing a broken
+        // link) via an explicit empty string, so it's kept out of the
+        // array_filter above — that would drop a null/empty value instead of
+        // persisting it — and set directly whenever the key is present at all.
+        if (array_key_exists('video_url', $data)) {
+            $changes['video_url'] = $data['video_url'] ?: null;
+        }
+
+        $listing->update($changes);
 
         if (isset($data['amenity_ids'])) {
             $listing->amenities()->sync($data['amenity_ids']);
@@ -135,6 +148,7 @@ class PropertyListingService
         $listing = $listing->fresh(['property.owner']);
         $listing->property?->owner?->notify(new \App\Notifications\ListingApprovedNotification($listing));
         $this->trustScoreCalculator->recompute($listing);
+        $this->savedSearchAlerts->notifyInstantMatches($listing);
 
         return $listing;
     }

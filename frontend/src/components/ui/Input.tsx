@@ -1,4 +1,4 @@
-import { type InputHTMLAttributes, type SelectHTMLAttributes, forwardRef } from 'react'
+import { type InputHTMLAttributes, type SelectHTMLAttributes, forwardRef, useId } from 'react'
 import { clsx } from 'clsx'
 
 interface FieldWrapperProps {
@@ -38,11 +38,22 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
   { label, error, hint, id, className, ...props },
   ref,
 ) {
+  // A label's `htmlFor` only associates with a control that has a matching
+  // `id` — with no id passed, the label rendered next to every field in the
+  // app (auth, wizard, filters, calculators, admin — ~98 call sites) was
+  // visually adjacent but not actually linked to its input, so a screen
+  // reader never announced it and clicking the label text did nothing.
+  // useId() gives every field a stable id automatically unless a caller
+  // passes its own (kept, so an explicit id — e.g. one referenced elsewhere
+  // in the DOM — still wins).
+  const autoId = useId()
+  const fieldId = id ?? autoId
+
   return (
-    <FieldChrome label={label} error={error} hint={hint} id={id}>
+    <FieldChrome label={label} error={error} hint={hint} id={fieldId}>
       <input
         ref={ref}
-        id={id}
+        id={fieldId}
         aria-invalid={!!error}
         className={clsx(
           'h-10 rounded-lg border bg-white px-3 text-sm text-ink-900 placeholder:text-ink-700/50',
@@ -64,11 +75,14 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(function Select
   { label, error, hint, id, className, children, ...props },
   ref,
 ) {
+  const autoId = useId()
+  const fieldId = id ?? autoId
+
   return (
-    <FieldChrome label={label} error={error} hint={hint} id={id}>
+    <FieldChrome label={label} error={error} hint={hint} id={fieldId}>
       <select
         ref={ref}
-        id={id}
+        id={fieldId}
         aria-invalid={!!error}
         className={clsx(
           'h-10 rounded-lg border bg-white px-3 text-sm text-ink-900',
