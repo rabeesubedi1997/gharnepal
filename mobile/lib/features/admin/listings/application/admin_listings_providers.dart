@@ -10,6 +10,7 @@ final adminListingsRepositoryProvider = Provider<AdminListingsRepository>((ref) 
 });
 
 final adminListingsStatusFilterProvider = StateProvider.autoDispose<String>((ref) => 'pending_review');
+final adminListingsFeaturedFilterProvider = StateProvider.autoDispose<bool>((ref) => false);
 final adminListingsPageProvider = StateProvider.autoDispose<int>((ref) => 1);
 
 /// There is no single-listing GET on this admin controller, so the detail
@@ -33,8 +34,9 @@ final adminListingsCacheProvider = NotifierProvider<AdminListingsCache, Map<int,
 
 final adminListingsProvider = FutureProvider.autoDispose<PaginatedResult<ListingDetail>>((ref) async {
   final status = ref.watch(adminListingsStatusFilterProvider);
+  final featured = ref.watch(adminListingsFeaturedFilterProvider);
   final page = ref.watch(adminListingsPageProvider);
-  final result = await ref.read(adminListingsRepositoryProvider).list(status: status, page: page);
+  final result = await ref.read(adminListingsRepositoryProvider).list(status: status, featured: featured, page: page);
   ref.read(adminListingsCacheProvider.notifier).putAll(result.items);
   return result;
 });

@@ -10,6 +10,7 @@ import '../../../../widgets/app_badge.dart';
 import '../../../../widgets/empty_state.dart';
 import '../../../../widgets/error_state.dart';
 import '../../../../widgets/skeleton.dart';
+import '../../../auth/application/auth_controller.dart';
 import '../application/admin_payments_providers.dart';
 import '../data/models/admin_payment_transaction.dart';
 
@@ -60,6 +61,7 @@ class AdminPaymentsScreen extends ConsumerWidget {
     final status = ref.watch(adminPaymentsStatusFilterProvider);
     final page = ref.watch(adminPaymentsPageProvider);
     final result = ref.watch(adminPaymentsListProvider);
+    final isSuperAdmin = ref.watch(authControllerProvider).valueOrNull?.isSuperAdmin ?? false;
 
     return Scaffold(
       appBar: AppBar(title: const Text('Payments')),
@@ -116,7 +118,7 @@ class AdminPaymentsScreen extends ConsumerWidget {
                           transaction: data.items[index],
                           tone: _statusTone(data.items[index].status),
                           dateFormat: _dateFormat,
-                          onRefund: () => _refund(context, ref, data.items[index]),
+                          onRefund: isSuperAdmin ? () => _refund(context, ref, data.items[index]) : null,
                         ),
                       ),
                     ),
@@ -168,13 +170,15 @@ class _PaymentCard extends StatelessWidget {
     required this.transaction,
     required this.tone,
     required this.dateFormat,
-    required this.onRefund,
+    this.onRefund,
   });
 
   final AdminPaymentTransaction transaction;
   final BadgeTone tone;
   final DateFormat dateFormat;
-  final VoidCallback onRefund;
+  /// Null (not just disabled) for anyone who isn't a super admin — refunding
+  /// real money is reserved to that tier, see AdminPaymentsScreen.
+  final VoidCallback? onRefund;
 
   @override
   Widget build(BuildContext context) {
@@ -233,7 +237,7 @@ class _PaymentCard extends StatelessWidget {
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppColors.ink700),
               ),
             ],
-            if (transaction.status == 'completed') ...[
+            if (transaction.status == 'completed' && onRefund != null) ...[
               const SizedBox(height: 10),
               Align(
                 alignment: Alignment.centerRight,

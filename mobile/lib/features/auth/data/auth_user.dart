@@ -38,5 +38,10 @@ class AuthUser {
 
   bool hasRole(String role) => roles.contains(role);
 
-  bool get isAdmin => hasRole('admin');
+  /// A super admin has every admin permission plus a few reserved to it
+  /// alone (granting/revoking admin access, payment refunds) — see
+  /// AdminUsersScreen and AdminPaymentsScreen.
+  bool get isAdmin => hasRole('admin') || hasRole('super_admin');
+
+  bool get isSuperAdmin => hasRole('super_admin');
 }
