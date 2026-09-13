@@ -1,53 +1,50 @@
 @import "tailwindcss";
 
 /*
- * Design tokens — third pass. The first pass (cream bg + serif headings +
- * earthy accent) read as a generic "AI product" template. The second pass
- * (Zillow's literal palette: stark white + flat saturated blue hero blocks)
- * read as cheap/templated for a different reason — a solid-color rectangle
- * with centered white text has no depth, and blue-as-primary next to an
- * orange CTA is two competing "loud" hues fighting each other.
+ * Design tokens — fourth pass: "Alpine Sanctuary", adopted at the user's
+ * explicit request from a supplied palette/component reference (Primary
+ * #0F4C3A, Secondary #0F172A, Tertiary #10B981, Neutral #334155, Plus
+ * Jakarta Sans throughout). The base hexes below are exact matches to that
+ * reference; the surrounding tint/shade ramp (600/100 variants, stone/link)
+ * is computed from them to fit this codebase's existing token shape.
  *
- * This pass is a deliberately original identity, not a copy of either
- * reference site: a warm (not stark, not cream) neutral background, a single
- * deep pine-green as the one confident brand color (evokes Nepal's hills
- * without leaning on a literal earth-tone/serif "handmade" cliché), and a
- * terracotta accent used ONLY for small highlights (Featured badges) — never
- * as a second competing button color next to the brand green. Depth comes
- * from shadow/elevation and a soft, slightly larger card radius rather than
- * flat color blocks.
+ * This deliberately supersedes the third pass's own reasoning (a warm,
+ * intentionally-not-generic palette) — noted here only so a future pass
+ * doesn't "fix" this back without knowing it was a deliberate, requested
+ * change, not a regression.
  *
  * Keep in sync with `src/design-system/tokens.ts` (used anywhere JS needs a raw
- * color value, e.g. map markers or chart series, outside of Tailwind classes).
+ * color value, e.g. map markers or chart series, outside of Tailwind classes)
+ * and `mobile/lib/core/theme/app_colors.dart` (the Flutter app's own copy).
  */
 @theme {
   --font-display: "Plus Jakarta Sans", "Noto Sans Devanagari", ui-sans-serif, system-ui, sans-serif;
-  --font-sans: "Inter", "Noto Sans Devanagari", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Plus Jakarta Sans", "Noto Sans Devanagari", ui-sans-serif, system-ui, sans-serif;
 
-  /* Background / surface — warm off-white, not stark white and not cream */
-  --color-stone-50: #faf9f6;
-  --color-stone-100: #f0eee8;
-  --color-stone-200: #e2ded4;
+  /* Background / surface — cool light slate, not warm/cream */
+  --color-stone-50: #f8fafc;
+  --color-stone-100: #f1f5f9;
+  --color-stone-200: #e2e8f0;
 
-  /* Ink — warm near-black, no blue/slate tint */
-  --color-ink-900: #211f1a;
-  --color-ink-700: #59564d;
+  /* Ink — Alpine Sanctuary's "Secondary"/"Neutral", a cool slate scale */
+  --color-ink-900: #0f172a;
+  --color-ink-700: #334155;
 
-  /* Trust / primary brand — deep pine green, one confident color used sparingly */
-  --color-trust-700: #1f4b3f;
-  --color-trust-600: #2c6753;
-  --color-trust-100: #e4ede8;
+  /* Trust / primary brand — Alpine Sanctuary's "Primary" */
+  --color-trust-700: #0f4c3a;
+  --color-trust-600: #3f7061;
+  --color-trust-100: #e7edeb;
 
-  /* Accent — warm terracotta, reserved for small highlights only (Featured
-     badges) — deliberately NOT used for a second competing button color */
-  --color-accent-600: #bf5f2c;
-  --color-accent-500: #d67c40;
-  --color-accent-100: #f8e6d8;
+  /* Accent — Alpine Sanctuary's "Tertiary" emerald, replacing the old
+     terracotta as the site's one accent/pop color */
+  --color-accent-600: #059669;
+  --color-accent-500: #10b981;
+  --color-accent-100: #d1fae5;
 
   /* Links — same green system as trust, not a separate hue */
-  --color-link-600: #1f4b3f;
-  --color-link-700: #163829;
-  --color-link-100: #e4ede8;
+  --color-link-600: #0f4c3a;
+  --color-link-700: #0d4131;
+  --color-link-100: #e7edeb;
 
   /* Status */
   --color-danger-600: #dc2626;
@@ -75,4 +72,17 @@ body {
 
 h1, h2, h3, h4 {
   font-family: var(--font-display);
+}
+
+/* "Print flyer" (ListingDetail) and any other page — strip chrome that
+   means nothing on paper (nav, footer, the PWA install prompt, sidebar
+   action buttons already marked print:hidden inline) and let the content
+   itself set the page's print appearance. */
+@media print {
+  header, footer, nav[aria-label='Admin sections'] {
+    display: none !important;
+  }
+  body {
+    background: white;
+  }
 }

@@ -4,8 +4,9 @@ import 'package:google_fonts/google_fonts.dart';
 import 'app_colors.dart';
 
 /// App-wide theme, mirroring the website's design system: Plus Jakarta Sans
-/// for headings, Inter for body text, both falling back to Noto Sans
-/// Devanagari for Nepali text — matching
+/// for both headings and body text (Alpine Sanctuary uses one family
+/// throughout, unlike the previous Plus Jakarta Sans + Inter pairing),
+/// falling back to Noto Sans Devanagari for Nepali text — matching
 /// frontend/index.html's Google Fonts stack exactly (same weights, same
 /// families), so text mixing English and Nepali renders consistently with
 /// the website.
@@ -24,7 +25,7 @@ class AppTheme {
       );
 
   static TextStyle _body(TextStyle base) =>
-      GoogleFonts.inter(textStyle: base).copyWith(
+      GoogleFonts.plusJakartaSans(textStyle: base).copyWith(
         fontFamilyFallback: _devanagariFallback,
       );
 

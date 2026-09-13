@@ -21,8 +21,8 @@ const markerIcon = new L.Icon({
 // Kathmandu Valley — sensible default center when no listing has coordinates yet.
 const DEFAULT_CENTER: [number, number] = [27.7172, 85.324]
 
-const DRAWN_AREA_STYLE = { color: '#1f4b3f', weight: 2, fillOpacity: 0.1 }
-const DRAFT_AREA_STYLE = { color: '#1f4b3f', weight: 2, dashArray: '6', fillOpacity: 0.05 }
+const DRAWN_AREA_STYLE = { color: '#0f4c3a', weight: 2, fillOpacity: 0.1 }
+const DRAFT_AREA_STYLE = { color: '#0f4c3a', weight: 2, dashArray: '6', fillOpacity: 0.05 }
 
 interface MapViewProps {
   listings: ListingSummary[]

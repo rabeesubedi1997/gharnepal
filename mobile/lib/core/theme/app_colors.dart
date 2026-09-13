@@ -3,32 +3,32 @@ import 'package:flutter/material.dart';
 /// Color tokens ported from the website's design system
 /// (frontend/src/design-system/tokens.ts, frontend/src/index.css).
 ///
-/// The palette is warm, not cold-blue: stone off-white backgrounds, a deep
-/// pine-green "trust" color as the single primary brand color, and a
-/// terracotta accent deliberately reserved for "Featured" highlights only
-/// (never a second button color).
+/// "Alpine Sanctuary" — adopted at the user's explicit request from a
+/// supplied palette (Primary #0F4C3A, Secondary #0F172A, Tertiary #10B981,
+/// Neutral #334155). A cool slate/emerald system, replacing the previous
+/// warm stone/terracotta identity — see the web tokens file for the full
+/// rationale and the tint/shade ramp this was derived from.
 class AppColors {
   AppColors._();
 
-  // Stone (backgrounds)
-  static const stone50 = Color(0xFFFAF9F6);
-  static const stone100 = Color(0xFFF0EEE8);
-  static const stone200 = Color(0xFFE2DED4);
+  // Stone (backgrounds) — cool light slate, not warm/cream
+  static const stone50 = Color(0xFFF8FAFC);
+  static const stone100 = Color(0xFFF1F5F9);
+  static const stone200 = Color(0xFFE2E8F0);
 
-  // Ink (text)
-  static const ink900 = Color(0xFF211F1A);
-  static const ink700 = Color(0xFF59564D);
+  // Ink (text) — Alpine Sanctuary's Secondary/Neutral
+  static const ink900 = Color(0xFF0F172A);
+  static const ink700 = Color(0xFF334155);
 
-  // Trust green (primary brand color) — trust700 (#1f4b3f) is the primary;
-  // trust600 is a lighter tint used for some link/hover states.
-  static const trust700 = Color(0xFF1F4B3F);
-  static const trust600 = Color(0xFF2C6753);
-  static const trust100 = Color(0xFFE4EDE8);
+  // Trust green (primary brand color) — Alpine Sanctuary's Primary.
+  static const trust700 = Color(0xFF0F4C3A);
+  static const trust600 = Color(0xFF3F7061);
+  static const trust100 = Color(0xFFE7EDEB);
 
-  // Terracotta accent — "Featured" tags only, not a general accent color.
-  static const accent600 = Color(0xFFBF5F2C);
-  static const accent500 = Color(0xFFD67C40);
-  static const accent100 = Color(0xFFF8E6D8);
+  // Emerald accent — Alpine Sanctuary's Tertiary, the site's one accent/pop color.
+  static const accent600 = Color(0xFF059669);
+  static const accent500 = Color(0xFF10B981);
+  static const accent100 = Color(0xFFD1FAE5);
 
   // Status colors
   static const danger600 = Color(0xFFDC2626);
@@ -40,5 +40,5 @@ class AppColors {
 
   // Links reuse the deep trust green rather than a separate hue.
   static const link600 = trust700;
-  static const link700 = Color(0xFF163829);
+  static const link700 = Color(0xFF0D4131);
 }
