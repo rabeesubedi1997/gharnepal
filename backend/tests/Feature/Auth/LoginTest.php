@@ -119,4 +119,27 @@ class LoginTest extends TestCase
     {
         $this->getJson('/api/v1/auth/me')->assertUnauthorized();
     }
+
+    public function test_repeated_login_attempts_are_rate_limited(): void
+    {
+        User::factory()->create([
+            'email' => 'ram@example.com',
+            'password' => Hash::make('correct-password'),
+        ]);
+
+        // The 'auth' limiter allows 10/minute per IP (see AppServiceProvider).
+        for ($i = 0; $i < 10; $i++) {
+            $this->postJson('/api/v1/auth/login', [
+                'email' => 'ram@example.com',
+                'password' => 'wrong-password',
+            ])->assertUnprocessable();
+        }
+
+        // The 11th attempt within the same minute is throttled, regardless
+        // of whether the credentials would otherwise have been correct.
+        $this->postJson('/api/v1/auth/login', [
+            'email' => 'ram@example.com',
+            'password' => 'correct-password',
+        ])->assertStatus(429);
+    }
 }

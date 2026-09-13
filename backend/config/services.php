@@ -35,4 +35,20 @@ return [
         ],
     ],
 
+    'web_push' => [
+        // Self-generated VAPID keypair — no external account needed (unlike
+        // mobile FCM push). Generate with `php artisan tinker` →
+        // `Minishlink\WebPush\VAPID::createVapidKeys()`, or see DEPLOYMENT.md.
+        'vapid_public_key' => env('VAPID_PUBLIC_KEY'),
+        'vapid_private_key' => env('VAPID_PRIVATE_KEY'),
+    ],
+
+    'payments' => [
+        // No real gateway (eSewa/Khalti) is wired in yet — PaymentGateway
+        // binds to SandboxPaymentGateway (buyer-self-attested, no real
+        // money) everywhere except production, where it refuses to boot
+        // unless this is explicitly true. See AppServiceProvider::register().
+        'allow_sandbox_in_production' => env('PAYMENT_GATEWAY_ALLOW_SANDBOX_IN_PRODUCTION', false),
+    ],
+
 ];

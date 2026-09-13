@@ -103,6 +103,26 @@ export function useUpdatePassword() {
   })
 }
 
+export function useForgotPassword() {
+  return useMutation({
+    mutationFn: async (email: string) => {
+      await ensureCsrfCookie()
+      const { data } = await apiClient.post<{ message: string }>('/auth/password/forgot', { email })
+      return data.message
+    },
+  })
+}
+
+export function useResetPassword() {
+  return useMutation({
+    mutationFn: async (input: { token: string; email: string; password: string; password_confirmation: string }) => {
+      await ensureCsrfCookie()
+      const { data } = await apiClient.post<{ message: string }>('/auth/password/reset', input)
+      return data.message
+    },
+  })
+}
+
 export function useRequestPhoneOtp() {
   return useMutation({
     mutationFn: async (phone: string) => {

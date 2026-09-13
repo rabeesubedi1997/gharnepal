@@ -143,6 +143,37 @@ and a default `superadmin@gharnepal.local` / `password` admin login plus a
 or remove the default admin password before the site is genuinely
 public-facing** — it's plain-text in the repo's history.
 
+## New as of 2026-09-13: cron for scheduled tasks, VAPID keys for push
+
+Two things a deploy alone doesn't set up — both one-time server tasks:
+
+**Cron, for the saved-search email digest (daily/weekly cadences).** Instant
+alerts fire inline (no cron needed), but the daily/weekly ones need Laravel's
+scheduler actually run. Add this once via cPanel's **Cron Jobs**, or `crontab -e`:
+
+```
+* * * * * cd <TARGET_DIR> && php artisan schedule:run >> /dev/null 2>&1
+```
+
+Without this, `alert_frequency: daily`/`weekly` saved searches will simply
+never send — nothing errors, they just silently never fire.
+
+**VAPID keys, for web push.** Generate once (either machine, doesn't need to
+be the server): `npx web-push generate-vapid-keys` (or
+`php artisan tinker --execute="print_r(Minishlink\WebPush\VAPID::createVapidKeys());"`
+if PHP's OpenSSL supports EC keys on that machine — it didn't in dev, on
+Windows, hence the npm alternative). Add both to the server's `.env`:
+
+```
+VAPID_PUBLIC_KEY=...
+VAPID_PRIVATE_KEY=...
+```
+
+No Firebase/Google account needed — these are self-generated and used
+directly with each browser's own push service. Without them, `/push/vapid-public-key`
+returns `null` and the frontend's "Enable browser notifications" control
+shows an error instead of subscribing; nothing else breaks.
+
 ## Frontend / backend / mobile compatibility
 
 No API contract changes here — this only changes *how files get onto the
