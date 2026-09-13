@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Domain\Calculators\Services\AreaUnitConverter;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -12,6 +13,7 @@ class PropertyListingSummaryResource extends JsonResource
         $property = $this->property;
         $address = $property?->address;
         $cover = $property?->media->first();
+        $areaSqm = $property?->total_area_sqm;
 
         return [
             'id' => $this->id,
@@ -27,7 +29,16 @@ class PropertyListingSummaryResource extends JsonResource
             'property_type' => $property?->property_type,
             'bedrooms' => $property?->bedrooms,
             'bathrooms' => $property?->bathrooms,
-            'area_sqm' => $property?->total_area_sqm,
+            'area_sqm' => $areaSqm,
+            // Same real conversion used on the listing-detail page — lets
+            // card display honor the site-wide Aana/Ropani vs. Sq.Ft
+            // preference instead of always showing square meters, which
+            // nobody in this market actually thinks in.
+            'area_display' => $areaSqm !== null ? [
+                'sqft' => AreaUnitConverter::fromSqm((float) $areaSqm, 'sqft'),
+                'aana' => AreaUnitConverter::fromSqm((float) $areaSqm, 'aana'),
+                'ropani' => AreaUnitConverter::fromSqm((float) $areaSqm, 'ropani'),
+            ] : null,
             'cover_image_url' => $cover?->url(),
             'location' => $address ? [
                 'municipality' => $address->municipality?->name,

@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers\Api\V1\Public;
 
+use App\Domain\Calculators\Services\AreaUnitConverter;
 use App\Http\Controllers\Controller;
 use App\Models\Agency;
 use App\Models\Property;
 use App\Models\PropertyListing;
+use App\Models\SavedSearch;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Cache;
 
@@ -51,9 +53,58 @@ class PlatformStatsController extends Controller
                     })
                     ->distinct('addresses.municipality_id')
                     ->count('addresses.municipality_id'),
+                // Backs the homepage alert-signup banner's subscriber count —
+                // every saved search with alerts actually turned on, not a
+                // marketing placeholder like "14,200 active subscribers".
+                'active_alert_subscriptions' => SavedSearch::where('alert_frequency', '!=', 'off')->count(),
+                // A live per-city median, not a fabricated multi-year
+                // "index" — this platform has no years of transaction
+                // history to trend, so the honest equivalent of the
+                // mockup's price-index chart is today's real snapshot.
+                'land_price_per_aana_by_city' => $this->landPricePerAanaByCity(),
             ];
         });
 
         return response()->json(['data' => $stats]);
+    }
+
+    /** @return array<int, array{municipality: string, median_price_per_aana: int, listing_count: int}> */
+    private function landPricePerAanaByCity(): array
+    {
+        $rows = PropertyListing::query()
+            ->where('status', PropertyListing::STATUS_PUBLISHED)
+            ->whereHas('property', fn ($q) => $q->where('property_type', 'land')->whereNotNull('total_area_sqm'))
+            ->with('property.address.municipality')
+            ->get()
+            ->filter(fn ($listing) => $listing->property?->address?->municipality !== null)
+            ->groupBy(fn ($listing) => $listing->property->address->municipality->name)
+            ->map(function ($listings, $municipality) {
+                $pricesPerAana = $listings->map(function ($listing) {
+                    $aana = AreaUnitConverter::fromSqm((float) $listing->property->total_area_sqm, 'aana');
+
+                    return $aana > 0 ? $listing->price / $aana : null;
+                })->filter()->sort()->values();
+
+                if ($pricesPerAana->isEmpty()) {
+                    return null;
+                }
+
+                $mid = intdiv($pricesPerAana->count(), 2);
+                $median = $pricesPerAana->count() % 2 === 0
+                    ? ($pricesPerAana[$mid - 1] + $pricesPerAana[$mid]) / 2
+                    : $pricesPerAana[$mid];
+
+                return [
+                    'municipality' => $municipality,
+                    'median_price_per_aana' => (int) round($median),
+                    'listing_count' => $pricesPerAana->count(),
+                ];
+            })
+            ->filter()
+            ->sortByDesc('listing_count')
+            ->take(5)
+            ->values();
+
+        return $rows->all();
     }
 }

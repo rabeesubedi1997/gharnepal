@@ -2,24 +2,26 @@ import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import {
   Building2,
-  Calculator,
   Download,
   MapPin,
   Search,
   ShieldCheck,
   Smartphone,
-  Sparkles,
   Users,
 } from 'lucide-react'
 import { useMunicipalities } from '../lib/api/locations'
 import { useListingSearch } from '../lib/api/listings'
+import { useNeighborhoodList } from '../lib/api/neighborhoods'
 import { usePlatformStats } from '../lib/api/platformStats'
 import { useStaticPageSeo } from '../lib/api/seo'
 import { useInstallPrompt } from '../lib/useInstallPrompt'
+import { useUnitSystem } from '../lib/useUnitSystem'
 import { filtersToSearchParams } from '../lib/searchParams'
+import { formatCompactCount, formatNprCompact } from '../design-system/tokens'
 import { SeoHead } from '../components/seo/SeoHead'
 import { BannerCarousel } from '../components/home/BannerCarousel'
 import { HeroBackdrop } from '../components/home/HeroBackdrop'
+import { AlertSignupBanner } from '../components/home/AlertSignupBanner'
 import { PropertyCard } from '../components/property/PropertyCard'
 import { AdSlot } from '../components/marketing/AdSlot'
 import { Card } from '../components/ui/Card'
@@ -31,11 +33,20 @@ import { ErrorState } from '../components/ui/ErrorState'
 
 type HeroTab = 'buy' | 'rent' | 'commercial' | 'land'
 
-const HERO_TABS: { key: HeroTab; label: string }[] = [
-  { key: 'buy', label: 'For Sale' },
-  { key: 'rent', label: 'For Rent' },
-  { key: 'commercial', label: 'Commercial' },
-  { key: 'land', label: 'Land / Plots' },
+const HERO_TABS: { key: HeroTab; label: string; label_ne: string }[] = [
+  { key: 'buy', label: 'For Sale', label_ne: 'बिक्री' },
+  { key: 'rent', label: 'For Rent', label_ne: 'भाडा' },
+  { key: 'commercial', label: 'Commercial', label_ne: 'व्यापारिक' },
+  { key: 'land', label: 'Land / Plots', label_ne: 'जग्गा' },
+]
+
+const PROPERTY_SUBTYPES: { value: string; label: string }[] = [
+  { value: '', label: 'Any subtype' },
+  { value: 'house', label: 'House / Bungalow' },
+  { value: 'apartment', label: 'Apartment' },
+  { value: 'room', label: 'Room' },
+  { value: 'land', label: 'Land / Plot' },
+  { value: 'commercial', label: 'Commercial' },
 ]
 
 // (min_price, max_price) in plain NPR — matches formatNprCompact's own
@@ -48,20 +59,27 @@ const BUDGET_BANDS: { label: string; min?: number; max?: number }[] = [
   { label: 'Rs 2 Crore+', min: 20_000_000 },
 ]
 
-const FEATURE_CHIPS = [
-  { to: '/search', icon: ShieldCheck, label: 'Explainable trust scores' },
-  { to: '/calculators/rental', icon: Calculator, label: 'True cost calculator' },
-  { to: '/neighborhoods', icon: Sparkles, label: 'Neighborhood insights' },
-]
 
 export function Home() {
   const { data: municipalities, isPending, isError, refetch } = useMunicipalities()
+  const { data: neighborhoods } = useNeighborhoodList()
+  const { data: platformStats } = usePlatformStats()
   const { data: seo } = useStaticPageSeo('home')
+  const { unitSystem, setUnitSystem } = useUnitSystem()
   const navigate = useNavigate()
 
   const [heroTab, setHeroTab] = useState<HeroTab>('buy')
   const [cityId, setCityId] = useState('')
+  const [subtype, setSubtype] = useState('')
   const [budgetIndex, setBudgetIndex] = useState(0)
+
+  // Real top-listing-count neighborhoods, not invented "hotspot" copy —
+  // renders nothing until there's at least one neighborhood with a
+  // published listing, rather than padding the row with empty places.
+  const hotspots = [...(neighborhoods ?? [])]
+    .filter((n) => n.active_listings_count > 0)
+    .sort((a, b) => b.active_listings_count - a.active_listings_count)
+    .slice(0, 5)
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
@@ -69,8 +87,9 @@ export function Home() {
     const params = filtersToSearchParams({
       ...(heroTab === 'buy' && { purpose: 'sale' }),
       ...(heroTab === 'rent' && { purpose: 'rent' }),
-      ...(heroTab === 'commercial' && { property_type: 'commercial' }),
-      ...(heroTab === 'land' && { property_type: 'land' }),
+      ...(!subtype && heroTab === 'commercial' && { property_type: 'commercial' }),
+      ...(!subtype && heroTab === 'land' && { property_type: 'land' }),
+      ...(subtype && { property_type: subtype as 'house' | 'apartment' | 'room' | 'land' | 'commercial' }),
       ...(cityId && { municipality_id: Number(cityId) }),
       ...(band.min && { min_price: band.min }),
       ...(band.max && { max_price: band.max }),
@@ -87,14 +106,17 @@ export function Home() {
         <HeroBackdrop />
         <div className="relative mx-auto flex max-w-3xl flex-col items-center gap-6 text-center">
           <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-white backdrop-blur-sm">
-            Nepal's verified property marketplace
+            Official Nepal Real Estate MLS
           </span>
           <h1 className="font-display text-3xl font-extrabold leading-tight text-white sm:text-5xl">
-            Find your sanctuary <span className="text-accent-500">in Nepal</span>
+            Find Your Sanctuary in Nepal
           </h1>
+          <p lang="ne" className="max-w-xl font-display text-lg text-white/90">
+            नेपालमा तपाईंको सपनाको घर खोज्नुहोस्
+          </p>
           <p className="max-w-xl text-base text-white/80">
-            Browse verified listings across Kathmandu Valley, Pokhara, Chitwan and Biratnagar —
-            with trust scores, land due-diligence, and true cost calculators built in.
+            Discover vetted freehold residences, agricultural parcels, and prime commercial
+            developments with verified Lalpurja (land title) records.
           </p>
 
           <form
@@ -102,45 +124,79 @@ export function Home() {
             className="w-full max-w-2xl rounded-2xl bg-white/95 p-3 shadow-xl shadow-black/20 backdrop-blur"
             onSubmit={handleSearch}
           >
-            <div className="mb-3 flex flex-wrap gap-1.5">
-              {HERO_TABS.map((tab) => (
+            <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+              <div className="flex flex-wrap gap-1.5">
+                {HERO_TABS.map((tab) => (
+                  <button
+                    key={tab.key}
+                    type="button"
+                    onClick={() => setHeroTab(tab.key)}
+                    className={
+                      heroTab === tab.key
+                        ? 'rounded-lg bg-trust-700 px-3 py-1.5 text-xs font-semibold text-white'
+                        : 'rounded-lg px-3 py-1.5 text-xs font-medium text-ink-700 hover:bg-stone-100'
+                    }
+                  >
+                    {tab.label} <span lang="ne" className="opacity-70">({tab.label_ne})</span>
+                  </button>
+                ))}
+              </div>
+              <div className="flex items-center gap-1 rounded-lg bg-stone-100 p-0.5 text-[11px] font-semibold">
                 <button
-                  key={tab.key}
                   type="button"
-                  onClick={() => setHeroTab(tab.key)}
-                  className={
-                    heroTab === tab.key
-                      ? 'rounded-lg bg-trust-700 px-3 py-1.5 text-xs font-semibold text-white'
-                      : 'rounded-lg px-3 py-1.5 text-xs font-medium text-ink-700 hover:bg-stone-100'
-                  }
+                  onClick={() => setUnitSystem('traditional')}
+                  className={unitSystem === 'traditional' ? 'rounded-md bg-white px-2 py-1 text-trust-700 shadow-sm' : 'px-2 py-1 text-ink-700/60'}
                 >
-                  {tab.label}
+                  Aana / Ropani
                 </button>
-              ))}
-            </div>
-            <div className="flex flex-col gap-2 sm:flex-row">
-              <div className="flex flex-1 items-center gap-2 rounded-lg border border-stone-200 px-3">
-                <MapPin className="h-4 w-4 shrink-0 text-ink-700/50" aria-hidden="true" />
-                <select
-                  aria-label="City or neighborhood"
-                  value={cityId}
-                  onChange={(e) => setCityId(e.target.value)}
-                  className="h-11 w-full min-w-0 bg-transparent text-sm text-ink-900 focus:outline-none"
+                <button
+                  type="button"
+                  onClick={() => setUnitSystem('metric')}
+                  className={unitSystem === 'metric' ? 'rounded-md bg-white px-2 py-1 text-trust-700 shadow-sm' : 'px-2 py-1 text-ink-700/60'}
                 >
-                  <option value="">Kathmandu Valley (All)</option>
-                  {municipalities?.map((m) => (
-                    <option key={m.id} value={m.id}>
-                      {m.name}
+                  Sq. Ft
+                </button>
+              </div>
+            </div>
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+              <label className="flex flex-col gap-0.5 rounded-lg border border-stone-200 px-3 py-1">
+                <span className="text-[10px] font-semibold uppercase tracking-wide text-ink-700/50">City or neighborhood</span>
+                <span className="flex items-center gap-1.5">
+                  <MapPin className="h-3.5 w-3.5 shrink-0 text-ink-700/50" aria-hidden="true" />
+                  <select
+                    value={cityId}
+                    onChange={(e) => setCityId(e.target.value)}
+                    className="h-7 w-full min-w-0 bg-transparent text-sm text-ink-900 focus:outline-none"
+                  >
+                    <option value="">Kathmandu Valley (All)</option>
+                    {municipalities?.map((m) => (
+                      <option key={m.id} value={m.id}>
+                        {m.name}
+                      </option>
+                    ))}
+                  </select>
+                </span>
+              </label>
+              <label className="flex flex-col gap-0.5 rounded-lg border border-stone-200 px-3 py-1">
+                <span className="text-[10px] font-semibold uppercase tracking-wide text-ink-700/50">Subtype &amp; structure</span>
+                <select
+                  value={subtype}
+                  onChange={(e) => setSubtype(e.target.value)}
+                  className="h-7 w-full min-w-0 bg-transparent text-sm text-ink-900 focus:outline-none"
+                >
+                  {PROPERTY_SUBTYPES.map((s) => (
+                    <option key={s.value} value={s.value}>
+                      {s.label}
                     </option>
                   ))}
                 </select>
-              </div>
-              <div className="flex flex-1 items-center gap-2 rounded-lg border border-stone-200 px-3">
+              </label>
+              <label className="flex flex-col gap-0.5 rounded-lg border border-stone-200 px-3 py-1">
+                <span className="text-[10px] font-semibold uppercase tracking-wide text-ink-700/50">Budget threshold</span>
                 <select
-                  aria-label="Budget"
                   value={budgetIndex}
                   onChange={(e) => setBudgetIndex(Number(e.target.value))}
-                  className="h-11 w-full min-w-0 bg-transparent text-sm text-ink-900 focus:outline-none"
+                  className="h-7 w-full min-w-0 bg-transparent text-sm text-ink-900 focus:outline-none"
                 >
                   {BUDGET_BANDS.map((band, i) => (
                     <option key={band.label} value={i}>
@@ -148,26 +204,32 @@ export function Home() {
                     </option>
                   ))}
                 </select>
-              </div>
-              <Button type="submit" size="lg" className="sm:w-auto">
-                <Search className="h-4 w-4" /> Search Properties
-              </Button>
+              </label>
             </div>
+            <Button type="submit" size="lg" className="mt-2 w-full">
+              <Search className="h-4 w-4" />
+              Search {platformStats ? `${formatCompactCount(platformStats.published_listings)}+ ` : ''}Properties
+            </Button>
           </form>
 
-          <div className="flex flex-wrap items-center justify-center gap-2">
-            {FEATURE_CHIPS.map(({ to, icon: Icon, label }) => (
-              <Link
-                key={to}
-                to={to}
-                className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-xs font-medium text-white backdrop-blur-sm transition-colors hover:bg-white/20"
-              >
-                <Icon className="h-3.5 w-3.5" aria-hidden="true" /> {label}
-              </Link>
-            ))}
-          </div>
+          {hotspots.length > 0 && (
+            <div className="flex flex-wrap items-center justify-center gap-2 text-xs text-white/70">
+              <span className="font-medium text-white/50">Popular hotspots:</span>
+              {hotspots.map((n) => (
+                <Link
+                  key={n.id}
+                  to={`/neighborhoods/${n.id}`}
+                  className="rounded-full border border-white/20 bg-white/10 px-3 py-1 font-medium text-white backdrop-blur-sm transition-colors hover:bg-white/20"
+                >
+                  {n.name}
+                </Link>
+              ))}
+            </div>
+          )}
         </div>
       </section>
+
+      <AlertSignupBanner />
 
       <BannerCarousel />
 
@@ -287,25 +349,75 @@ function TrustStrip() {
   ]
 
   return (
-    <section className="rounded-card border border-stone-200 bg-white p-6 sm:p-8">
-      <div className="mb-6 max-w-2xl">
-        <h2 className="font-display text-2xl font-semibold text-ink-900">Built for Transparency</h2>
+    <section className="grid grid-cols-1 gap-6 rounded-card border border-stone-200 bg-white p-6 sm:p-8 lg:grid-cols-2">
+      <div>
+        <span className="text-xs font-semibold uppercase tracking-wide text-trust-700">
+          Nepal's benchmark real estate registry
+        </span>
+        <h2 className="mt-1 font-display text-2xl font-semibold text-ink-900">Built for Transparency</h2>
         <p className="mt-1 text-sm text-ink-700/70">
           Every figure below is a live count from listings and accounts on this platform right now — not a marketing estimate.
         </p>
+        <div className="mt-6 grid grid-cols-2 gap-6 sm:grid-cols-4 lg:grid-cols-2">
+          {tiles.map(({ icon: Icon, label, value }) => (
+            <div key={label} className="flex flex-col gap-2">
+              <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-trust-100 text-trust-700">
+                <Icon className="h-4 w-4" aria-hidden="true" />
+              </span>
+              <span className="font-display text-2xl font-bold text-ink-900">{value ?? <Skeleton className="h-7 w-12" />}</span>
+              <span className="text-xs text-ink-700/60">{label}</span>
+            </div>
+          ))}
+        </div>
       </div>
-      <div className="grid grid-cols-2 gap-6 sm:grid-cols-4">
-        {tiles.map(({ icon: Icon, label, value }) => (
-          <div key={label} className="flex flex-col gap-2">
-            <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-trust-100 text-trust-700">
-              <Icon className="h-4 w-4" aria-hidden="true" />
-            </span>
-            <span className="font-display text-2xl font-bold text-ink-900">{value ?? <Skeleton className="h-7 w-12" />}</span>
-            <span className="text-xs text-ink-700/60">{label}</span>
-          </div>
-        ))}
-      </div>
+      <LandPriceChart data={stats?.land_price_per_aana_by_city} />
     </section>
+  )
+}
+
+/** Median NPR/Aana for currently published land listings, by city — a real
+ * live snapshot, deliberately not framed as a multi-year "index": the
+ * platform has no years of transaction history to trend against. */
+function LandPriceChart({ data }: { data?: { municipality: string; median_price_per_aana: number; listing_count: number }[] }) {
+  if (data && data.length === 0) return null
+
+  const rows = data ?? []
+  const max = Math.max(1, ...rows.map((r) => r.median_price_per_aana))
+
+  return (
+    <div className="rounded-card border border-stone-200 bg-stone-50 p-4">
+      <p className="text-xs font-semibold uppercase tracking-wide text-ink-700/50">Live snapshot</p>
+      <h3 className="font-display text-sm font-semibold text-ink-900">Median Land Price by City (NPR / Aana)</h3>
+      {!data ? (
+        <div className="mt-4 flex flex-col gap-3">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Skeleton key={i} className="h-6 w-full" />
+          ))}
+        </div>
+      ) : (
+        <div className="mt-4 flex flex-col gap-3">
+          {rows.map((row) => (
+            <div key={row.municipality} className="flex items-center gap-3">
+              <span className="w-28 shrink-0 truncate text-xs text-ink-700/70" title={row.municipality}>
+                {row.municipality}
+              </span>
+              <div className="h-4 flex-1 overflow-hidden rounded-full bg-stone-200">
+                <div
+                  className="h-full rounded-full bg-accent-500"
+                  style={{ width: `${Math.max(6, (row.median_price_per_aana / max) * 100)}%` }}
+                />
+              </div>
+              <span className="w-24 shrink-0 text-right text-xs font-semibold text-ink-900">
+                {formatNprCompact(row.median_price_per_aana)}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+      <p className="mt-3 text-[11px] text-ink-700/50">
+        Median asking price ÷ area across currently published land listings on Ghar Nepal — a live snapshot, not a historical index.
+      </p>
+    </div>
   )
 }
 
@@ -317,7 +429,7 @@ function InstallAppSection() {
       <span className="flex h-12 w-12 items-center justify-center rounded-full bg-white/15 text-white">
         <Smartphone className="h-6 w-6" aria-hidden="true" />
       </span>
-      <h2 className="max-w-md font-display text-2xl font-bold text-white sm:text-3xl">
+      <h2 className="max-w-lg text-balance font-display text-2xl font-bold text-white sm:text-3xl">
         Take Ghar Nepal wherever you go
       </h2>
       <p className="max-w-md text-sm text-white/80">

@@ -357,6 +357,9 @@ export function ListingDetail() {
                     bedrooms: property.bedrooms,
                     bathrooms: property.bathrooms,
                     area_sqm: property.area.sqm,
+                    area_display: property.area.display
+                      ? { sqft: property.area.display.sqft, aana: property.area.display.aana, ropani: property.area.display.ropani }
+                      : null,
                     cover_image_url: images[0]?.url ?? null,
                     location: { municipality: null, ward_number: null, neighborhood: null, lat: property.address.lat as unknown as number, lng: property.address.lng as unknown as number },
                     published_at: listing.published_at,

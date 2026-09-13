@@ -107,6 +107,7 @@ export interface NeighborhoodSummary {
   name: string
   name_ne: string | null
   is_curated: boolean
+  active_listings_count: number
   ward: { id: number; ward_number: number; municipality: string | null } | null
   score: NeighborhoodScore | null
 }

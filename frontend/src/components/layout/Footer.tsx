@@ -1,68 +1,100 @@
 import { Link } from 'react-router-dom'
+import { useMunicipalities } from '../../lib/api/locations'
+import { useInstallPrompt } from '../../lib/useInstallPrompt'
 
-const columns = [
-  {
-    title: 'Explore',
-    links: [
-      { to: '/buy', label: 'Buy' },
-      { to: '/rent', label: 'Rent' },
-      { to: '/rooms', label: 'Rooms' },
-      { to: '/land', label: 'Land' },
-      { to: '/commercial', label: 'Commercial' },
-    ],
-  },
-  {
-    title: 'Tools',
-    links: [
-      { to: '/calculators/rental', label: 'Rental cost calculator' },
-      { to: '/calculators/purchase', label: 'Purchase cost calculator' },
-      { to: '/neighborhoods', label: 'Neighborhood explorer' },
-      { to: '/agents', label: 'Find an agent' },
-      { to: '/property-requests', label: 'Property requests' },
-      { to: '/blog', label: 'Blog' },
-    ],
-  },
-  {
-    title: 'Account',
-    links: [
-      { to: '/saved', label: 'Saved properties' },
-      { to: '/messages', label: 'Messages' },
-      { to: '/account/viewing-requests', label: 'Viewing requests' },
-      { to: '/account/match-results', label: 'Smart matches' },
-      { to: '/account/payments', label: 'Payment history' },
-      { to: '/dashboard', label: 'Dashboard' },
-    ],
-  },
+const PROPERTY_CLASSES = [
+  { to: '/buy?property_type=house', label: 'Houses & Bungalows' },
+  { to: '/buy?property_type=apartment', label: 'Apartments' },
+  { to: '/rooms', label: 'Rooms' },
+  { to: '/land', label: 'Land & Agricultural Plots' },
+  { to: '/commercial', label: 'Commercial Spaces' },
+]
+
+const TOOLS = [
+  { to: '/calculators/rental', label: 'Rental cost calculator' },
+  { to: '/calculators/purchase', label: 'Purchase cost calculator' },
+  { to: '/neighborhoods', label: 'Neighborhood explorer' },
+  { to: '/property-requests', label: 'Property requests' },
+  { to: '/blog', label: 'Blog' },
 ]
 
 export function Footer() {
+  // Real municipalities the platform actually covers, not a hardcoded
+  // "Top Hubs & Valleys" list that could drift from what's really seeded.
+  const { data: municipalities } = useMunicipalities()
+  const { canInstall, promptInstall } = useInstallPrompt()
+  const topHubs = [...(municipalities ?? [])].slice(0, 6)
+
   return (
     <footer className="border-t border-stone-200 bg-white">
       <div className="mx-auto grid max-w-[1440px] grid-cols-2 gap-8 px-4 py-10 sm:grid-cols-4 sm:px-6 lg:px-10">
         <div className="col-span-2 sm:col-span-1">
           <p className="font-display text-lg font-semibold text-trust-700">Ghar Nepal</p>
           <p className="mt-2 text-sm text-ink-700/70">
-            A verified Nepal property marketplace that helps people discover, compare, verify,
-            and confidently act on property decisions.
+            Nepal's benchmark real estate ecosystem — streamlining transparent freehold and
+            rental transactions across the country's major valleys.
           </p>
         </div>
-        {columns.map((col) => (
-          <div key={col.title}>
-            <p className="text-sm font-semibold text-ink-900">{col.title}</p>
-            <ul className="mt-3 flex flex-col gap-2">
-              {col.links.map((link) => (
-                <li key={link.to}>
-                  <Link to={link.to} className="text-sm text-ink-700/80 hover:text-trust-700">
-                    {link.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-        ))}
+
+        <div>
+          <p className="text-sm font-semibold text-ink-900">Top Hubs &amp; Valleys</p>
+          <ul className="mt-3 flex flex-col gap-2">
+            {topHubs.map((m) => (
+              <li key={m.id}>
+                <Link to={`/search?municipality_id=${m.id}`} className="text-sm text-ink-700/80 hover:text-trust-700">
+                  {m.name}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <div>
+          <p className="text-sm font-semibold text-ink-900">Property Classes</p>
+          <ul className="mt-3 flex flex-col gap-2">
+            {PROPERTY_CLASSES.map((link) => (
+              <li key={link.to}>
+                <Link to={link.to} className="text-sm text-ink-700/80 hover:text-trust-700">
+                  {link.label}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <div>
+          <p className="text-sm font-semibold text-ink-900">Mobile &amp; Support</p>
+          <p className="mt-3 text-sm text-ink-700/70">
+            Install Ghar Nepal like an app for real-time listing alerts and offline browsing —
+            no app store required.
+          </p>
+          {canInstall && (
+            <button
+              type="button"
+              onClick={() => promptInstall()}
+              className="mt-2 inline-flex items-center rounded-md border border-trust-700 px-3 py-1.5 text-xs font-semibold text-trust-700 hover:bg-trust-100"
+            >
+              Install the app
+            </button>
+          )}
+          <ul className="mt-3 flex flex-col gap-2">
+            {TOOLS.map((link) => (
+              <li key={link.to}>
+                <Link to={link.to} className="text-sm text-ink-700/80 hover:text-trust-700">
+                  {link.label}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
       </div>
-      <div className="border-t border-stone-200 px-4 py-4 text-center text-xs text-ink-700/60">
-        &copy; {new Date().getFullYear()} Ghar Nepal. All rights reserved.
+
+      <div className="mx-auto flex max-w-[1440px] flex-wrap items-center justify-center gap-x-4 gap-y-2 border-t border-stone-200 px-4 py-4 text-xs text-ink-700/60 sm:justify-between sm:px-6 lg:px-10">
+        <span>&copy; {new Date().getFullYear()} Ghar Nepal. All rights reserved.</span>
+        <span className="flex flex-wrap gap-2">
+          <span className="rounded-full border border-stone-200 px-2 py-0.5">Ropani · Aana · Kattha · Dhur native</span>
+          <span className="rounded-full border border-stone-200 px-2 py-0.5">NPR Lakhs &amp; Crores</span>
+        </span>
       </div>
     </footer>
   )

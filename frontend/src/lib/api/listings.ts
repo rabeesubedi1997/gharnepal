@@ -39,6 +39,7 @@ export interface ListingSummary {
   bedrooms: number | null
   bathrooms: number | null
   area_sqm: number | null
+  area_display: { sqft: number; aana: number; ropani: number } | null
   cover_image_url: string | null
   location: {
     municipality: string | null

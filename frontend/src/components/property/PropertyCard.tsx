@@ -9,10 +9,24 @@ import type { ListingSummary } from '../../lib/api/listings'
 import { useAddFavorite, useFavorites, useRemoveFavorite } from '../../lib/api/favorites'
 import { useCurrentUser } from '../../lib/api/auth'
 import { useRequireAuth } from '../auth/AuthGateProvider'
+import { useUnitSystem } from '../../lib/useUnitSystem'
 
 const CLOSED_STATUS_LABEL: Partial<Record<ListingSummary['status'], string>> = {
   sold: 'Sold',
   rented: 'Rented',
+}
+
+/** Traditional mode shows Aana below ~16 Aana (roughly a Ropani) and Ropani
+ * above that, since a house plot quoted in Ropani or a hill parcel quoted
+ * in tiny Aana fractions both read oddly to a real Nepali buyer. Falls back
+ * to square meters only when the listing has no traditional conversion at
+ * all (area_display is only ever null alongside a null area_sqm). */
+function formatArea(listing: ListingSummary, unitSystem: 'traditional' | 'metric'): string {
+  if (unitSystem === 'metric' || !listing.area_display) {
+    return `${Math.round(listing.area_sqm ?? 0)} m²`
+  }
+  const { aana, ropani } = listing.area_display
+  return aana >= 16 ? `${ropani.toFixed(2)} Ropani` : `${aana.toFixed(1)} Aana`
 }
 
 export function PropertyCard({ listing }: { listing: ListingSummary }) {
@@ -25,6 +39,7 @@ export function PropertyCard({ listing }: { listing: ListingSummary }) {
     .filter(Boolean)
     .join(', ')
 
+  const { unitSystem } = useUnitSystem()
   const { data: user } = useCurrentUser()
   const requireAuth = useRequireAuth()
   const { data: favorites } = useFavorites(!!user)
@@ -106,7 +121,7 @@ export function PropertyCard({ listing }: { listing: ListingSummary }) {
             )}
             {listing.area_sqm != null && (
               <span className="flex items-center gap-1">
-                <Ruler className="h-3.5 w-3.5" aria-hidden="true" /> {Math.round(listing.area_sqm)} m²
+                <Ruler className="h-3.5 w-3.5" aria-hidden="true" /> {formatArea(listing, unitSystem)}
               </span>
             )}
             {listing.views_count > 0 && (
