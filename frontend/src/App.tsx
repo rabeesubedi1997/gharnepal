@@ -28,6 +28,7 @@ import { BlogEditor as AdminBlogEditor } from './pages/admin/BlogEditor'
 import { Seo as AdminSeo } from './pages/admin/Seo'
 import { SeoPageEditor as AdminSeoPageEditor } from './pages/admin/SeoPageEditor'
 import { PendingListings } from './pages/admin/PendingListings'
+import { AllListings } from './pages/admin/AllListings'
 import { Reports } from './pages/admin/Reports'
 import { DuplicateFlags } from './pages/admin/DuplicateFlags'
 import { Verifications } from './pages/admin/Verifications'
@@ -201,6 +202,7 @@ export default function App() {
           <Route path="blog/:id" element={<AdminBlogEditor />} />
           <Route path="users" element={<AdminUsers />} />
           <Route path="agencies" element={<AdminAgencies />} />
+          <Route path="listings" element={<AllListings />} />
           <Route path="listings/pending" element={<PendingListings />} />
           <Route path="reports" element={<Reports />} />
           <Route path="duplicate-flags" element={<DuplicateFlags />} />

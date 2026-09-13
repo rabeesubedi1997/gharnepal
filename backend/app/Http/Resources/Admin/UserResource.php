@@ -18,6 +18,7 @@ class UserResource extends JsonResource
             'email_verified' => $this->email_verified_at !== null,
             'phone_verified' => $this->phone_verified_at !== null,
             'roles' => $this->whenLoaded('roles', fn () => $this->roles->pluck('key')),
+            'is_super_admin' => $this->isSuperAdmin(),
             'agencies' => $this->whenLoaded('agencies', fn () => $this->agencies->pluck('name')),
             'created_at' => $this->created_at,
         ];

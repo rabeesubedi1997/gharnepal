@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { Receipt } from 'lucide-react'
 import { useAdminPayments, type PaymentStatus } from '../../lib/api/payments'
 import { useRefundPayment } from '../../lib/api/admin'
+import { useCurrentUser } from '../../lib/api/auth'
 import { formatNpr } from '../../design-system/tokens'
 import { AdminPageHeader } from '../../components/admin/AdminPageHeader'
 import { Card } from '../../components/ui/Card'
@@ -24,6 +25,7 @@ export function Payments() {
   const [status, setStatus] = useState<PaymentStatus | ''>('')
   const { data, isPending, isError, refetch } = useAdminPayments(status || undefined)
   const refund = useRefundPayment()
+  const { data: me } = useCurrentUser()
 
   return (
     <div className="flex flex-col gap-4">
@@ -31,7 +33,11 @@ export function Payments() {
         icon={Receipt}
         tone="success"
         title="Payments"
-        description="Every featured-listing purchase. The only action available is a refund on a completed payment — nothing here is ever hand-edited."
+        description={
+          me?.is_super_admin
+            ? 'Every featured-listing purchase. The only action available is a refund on a completed payment — nothing here is ever hand-edited.'
+            : 'Every featured-listing purchase. Refunding a payment is reserved to a super admin.'
+        }
         action={
           <Select value={status} onChange={(e) => setStatus(e.target.value as PaymentStatus | '')} className="w-44">
             <option value="">All statuses</option>
@@ -68,7 +74,7 @@ export function Payments() {
           <div className="flex items-center gap-2">
             <span className="font-semibold text-ink-900">{formatNpr(tx.amount)}</span>
             <Badge tone={STATUS_TONE[tx.status]}>{tx.status}</Badge>
-            {tx.status === 'completed' && (
+            {tx.status === 'completed' && me?.is_super_admin && (
               <Button
                 size="sm"
                 variant="outline"

@@ -243,7 +243,24 @@ class FeaturedListingPurchaseTest extends TestCase
             ->assertJsonPath('data.0.status', 'completed');
     }
 
-    public function test_admin_can_refund_a_completed_payment(): void
+    public function test_super_admin_can_refund_a_completed_payment(): void
+    {
+        [$listing, $owner] = $this->publishedListing();
+        $create = $this->actingAs($owner, 'sanctum')->postJson("/api/v1/listings/{$listing->id}/feature", ['plan_key' => 'boost_7']);
+        $transactionId = $create->json('data.id');
+        $this->actingAs($owner, 'sanctum')->postJson("/api/v1/account/payments/{$transactionId}/confirm", ['outcome' => 'success']);
+
+        $superAdmin = User::factory()->create();
+        $superAdmin->roles()->attach(Role::firstOrCreate(['key' => Role::SUPER_ADMIN], ['name' => 'Super Admin']));
+
+        $this->actingAs($superAdmin, 'sanctum')->patchJson("/api/v1/admin/payments/{$transactionId}/refund")
+            ->assertOk()
+            ->assertJsonPath('data.status', 'refunded');
+
+        $this->assertDatabaseHas('payment_transactions', ['id' => $transactionId, 'status' => 'refunded']);
+    }
+
+    public function test_a_regular_admin_cannot_refund_a_payment_only_a_super_admin_can(): void
     {
         [$listing, $owner] = $this->publishedListing();
         $create = $this->actingAs($owner, 'sanctum')->postJson("/api/v1/listings/{$listing->id}/feature", ['plan_key' => 'boost_7']);
@@ -254,10 +271,7 @@ class FeaturedListingPurchaseTest extends TestCase
         $admin->roles()->attach(Role::firstOrCreate(['key' => Role::ADMIN], ['name' => 'Administrator']));
 
         $this->actingAs($admin, 'sanctum')->patchJson("/api/v1/admin/payments/{$transactionId}/refund")
-            ->assertOk()
-            ->assertJsonPath('data.status', 'refunded');
-
-        $this->assertDatabaseHas('payment_transactions', ['id' => $transactionId, 'status' => 'refunded']);
+            ->assertForbidden();
     }
 
     public function test_a_pending_payment_cannot_be_refunded(): void
@@ -266,10 +280,10 @@ class FeaturedListingPurchaseTest extends TestCase
         $create = $this->actingAs($owner, 'sanctum')->postJson("/api/v1/listings/{$listing->id}/feature", ['plan_key' => 'boost_7']);
         $transactionId = $create->json('data.id');
 
-        $admin = User::factory()->create();
-        $admin->roles()->attach(Role::firstOrCreate(['key' => Role::ADMIN], ['name' => 'Administrator']));
+        $superAdmin = User::factory()->create();
+        $superAdmin->roles()->attach(Role::firstOrCreate(['key' => Role::SUPER_ADMIN], ['name' => 'Super Admin']));
 
-        $this->actingAs($admin, 'sanctum')->patchJson("/api/v1/admin/payments/{$transactionId}/refund")
+        $this->actingAs($superAdmin, 'sanctum')->patchJson("/api/v1/admin/payments/{$transactionId}/refund")
             ->assertUnprocessable();
     }
 

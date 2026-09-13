@@ -128,6 +128,15 @@ class User extends Authenticatable
 
     public function isAdmin(): bool
     {
-        return $this->hasRole(Role::ADMIN);
+        return $this->hasRole(Role::ADMIN) || $this->hasRole(Role::SUPER_ADMIN);
+    }
+
+    /** A small set of actions (granting/revoking admin access, payment refunds)
+     * are reserved to super admins even though a regular admin can see and
+     * do everything else under /admin — see Admin\UserController and
+     * Admin\PaymentController. */
+    public function isSuperAdmin(): bool
+    {
+        return $this->hasRole(Role::SUPER_ADMIN);
     }
 }

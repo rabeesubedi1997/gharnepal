@@ -175,6 +175,52 @@ class AdminConsoleTest extends TestCase
         $this->actingAs($user, 'sanctum')->patchJson("/api/v1/admin/users/{$target->id}/status", ['status' => 'suspended'])->assertForbidden();
     }
 
+    // --- Listing browse (general, not just the moderation queue) ---
+
+    public function test_admin_can_browse_all_listings_regardless_of_status(): void
+    {
+        $admin = $this->admin();
+        $owner = User::factory()->create();
+        $property = \App\Models\Property::create(['owner_user_id' => $owner->id, 'created_by' => $owner->id, 'property_type' => 'apartment']);
+        $published = $property->listings()->create([
+            'purpose' => 'rent', 'price' => 10000, 'title' => 'Published one', 'slug' => 'published-one-'.uniqid(),
+            'status' => 'published', 'published_at' => now(), 'created_by' => $owner->id,
+        ]);
+        $draft = $property->listings()->create([
+            'purpose' => 'rent', 'price' => 10000, 'title' => 'Draft one', 'slug' => 'draft-one-'.uniqid(),
+            'status' => 'draft', 'created_by' => $owner->id,
+        ]);
+
+        $response = $this->actingAs($admin, 'sanctum')->getJson('/api/v1/admin/listings?status=all');
+
+        $response->assertOk();
+        $ids = collect($response->json('data'))->pluck('id');
+        $this->assertTrue($ids->contains($published->id));
+        $this->assertTrue($ids->contains($draft->id));
+    }
+
+    public function test_admin_can_filter_listings_by_featured(): void
+    {
+        $admin = $this->admin();
+        $owner = User::factory()->create();
+        $property = \App\Models\Property::create(['owner_user_id' => $owner->id, 'created_by' => $owner->id, 'property_type' => 'apartment']);
+        $featured = $property->listings()->create([
+            'purpose' => 'rent', 'price' => 10000, 'title' => 'Featured one', 'slug' => 'featured-one-'.uniqid(),
+            'status' => 'published', 'published_at' => now(), 'featured_until' => now()->addDays(3), 'created_by' => $owner->id,
+        ]);
+        $notFeatured = $property->listings()->create([
+            'purpose' => 'rent', 'price' => 10000, 'title' => 'Not featured', 'slug' => 'not-featured-'.uniqid(),
+            'status' => 'published', 'published_at' => now(), 'created_by' => $owner->id,
+        ]);
+
+        $response = $this->actingAs($admin, 'sanctum')->getJson('/api/v1/admin/listings?status=all&featured=1');
+
+        $response->assertOk();
+        $ids = collect($response->json('data'))->pluck('id');
+        $this->assertTrue($ids->contains($featured->id));
+        $this->assertFalse($ids->contains($notFeatured->id));
+    }
+
     // --- Agency verification ---
 
     public function test_admin_can_view_all_agencies_regardless_of_status(): void
