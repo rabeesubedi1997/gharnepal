@@ -12,6 +12,16 @@ trait CreatesListings
 {
     private function publishedListing(User $owner): PropertyListing
     {
+        return $this->makeListing($owner, PropertyListing::STATUS_PUBLISHED);
+    }
+
+    private function draftListing(User $owner): PropertyListing
+    {
+        return $this->makeListing($owner, PropertyListing::STATUS_DRAFT);
+    }
+
+    private function makeListing(User $owner, string $status): PropertyListing
+    {
         $municipality = Municipality::where('code', 'M-KTM')->firstOrFail();
         $ward = Ward::where('municipality_id', $municipality->id)->first();
 
@@ -38,8 +48,8 @@ trait CreatesListings
             'price_period' => 'monthly',
             'title' => 'Test listing ' . uniqid(),
             'slug' => 'test-listing-' . uniqid(),
-            'status' => PropertyListing::STATUS_PUBLISHED,
-            'published_at' => now(),
+            'status' => $status,
+            'published_at' => $status === PropertyListing::STATUS_PUBLISHED ? now() : null,
             'created_by' => $owner->id,
         ]);
     }

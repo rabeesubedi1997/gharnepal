@@ -7,13 +7,14 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Favorite extends Model
 {
-    protected $fillable = ['user_id', 'property_listing_id'];
+    protected $fillable = ['user_id', 'property_listing_id', 'favorite_collection_id'];
 
     protected function casts(): array
     {
         return [
             'user_id' => 'integer',
             'property_listing_id' => 'integer',
+            'favorite_collection_id' => 'integer',
         ];
     }
 
@@ -25,5 +26,10 @@ class Favorite extends Model
     public function listing(): BelongsTo
     {
         return $this->belongsTo(PropertyListing::class, 'property_listing_id');
+    }
+
+    public function collection(): BelongsTo
+    {
+        return $this->belongsTo(FavoriteCollection::class, 'favorite_collection_id');
     }
 }

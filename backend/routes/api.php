@@ -1,7 +1,9 @@
 <?php
 
 use App\Http\Controllers\Api\V1\Account\CalculatorScenarioController;
+use App\Http\Controllers\Api\V1\Account\FavoriteCollectionController;
 use App\Http\Controllers\Api\V1\Account\FavoriteController;
+use App\Http\Controllers\Api\V1\Public\FavoriteCollectionController as PublicFavoriteCollectionController;
 use App\Http\Controllers\Api\V1\Account\MatchPreferenceController;
 use App\Http\Controllers\Api\V1\Account\MatchResultController;
 use App\Http\Controllers\Api\V1\Account\PhoneVerificationController;
@@ -27,7 +29,9 @@ use App\Http\Controllers\Api\V1\Admin\TrustOverrideController;
 use App\Http\Controllers\Api\V1\Admin\TrustScoreFactorController;
 use App\Http\Controllers\Api\V1\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Api\V1\Admin\VerificationModerationController;
+use App\Http\Controllers\Api\V1\Account\PushSubscriptionController;
 use App\Http\Controllers\Api\V1\Auth\AuthController;
+use App\Http\Controllers\Api\V1\Auth\PasswordResetController;
 use App\Http\Controllers\Api\V1\CommunityNoteController;
 use App\Http\Controllers\Api\V1\CostCalculatorController;
 use App\Http\Controllers\Api\V1\ListingReportController;
@@ -53,6 +57,7 @@ use App\Http\Controllers\Api\V1\Public\BlogController;
 use App\Http\Controllers\Api\V1\Public\ListingController;
 use App\Http\Controllers\Api\V1\Public\LocationController;
 use App\Http\Controllers\Api\V1\Public\NeighborhoodController;
+use App\Http\Controllers\Api\V1\Public\PushConfigController;
 use App\Http\Controllers\Api\V1\Public\SeoController;
 use App\Http\Controllers\Api\V1\ViewingRequestController;
 use App\Http\Controllers\Api\V1\VisitVerificationController;
@@ -68,8 +73,12 @@ Route::prefix('v1')->group(function () {
     });
 
     Route::prefix('auth')->group(function () {
-        Route::post('register', [AuthController::class, 'register']);
-        Route::post('login', [AuthController::class, 'login']);
+        Route::middleware('throttle:auth')->group(function () {
+            Route::post('register', [AuthController::class, 'register']);
+            Route::post('login', [AuthController::class, 'login']);
+            Route::post('password/forgot', [PasswordResetController::class, 'sendResetLink']);
+            Route::post('password/reset', [PasswordResetController::class, 'reset']);
+        });
 
         Route::middleware('auth:sanctum')->group(function () {
             Route::post('logout', [AuthController::class, 'logout']);
@@ -81,12 +90,18 @@ Route::prefix('v1')->group(function () {
         Route::put('profile', [ProfileController::class, 'update']);
         Route::put('password', [ProfileController::class, 'updatePassword']);
 
-        Route::post('phone/request-otp', [PhoneVerificationController::class, 'requestOtp']);
-        Route::post('phone/verify-otp', [PhoneVerificationController::class, 'verifyOtp']);
+        Route::post('phone/request-otp', [PhoneVerificationController::class, 'requestOtp'])->middleware('throttle:otp-request');
+        Route::post('phone/verify-otp', [PhoneVerificationController::class, 'verifyOtp'])->middleware('throttle:otp-verify');
 
         Route::get('favorites', [FavoriteController::class, 'index']);
         Route::post('favorites', [FavoriteController::class, 'store']);
+        Route::put('favorites/{listing}', [FavoriteController::class, 'move']);
         Route::delete('favorites/{listing}', [FavoriteController::class, 'destroy']);
+
+        Route::get('favorite-collections', [FavoriteCollectionController::class, 'index']);
+        Route::post('favorite-collections', [FavoriteCollectionController::class, 'store']);
+        Route::put('favorite-collections/{collection}', [FavoriteCollectionController::class, 'update']);
+        Route::delete('favorite-collections/{collection}', [FavoriteCollectionController::class, 'destroy']);
 
         Route::get('saved-searches', [SavedSearchController::class, 'index']);
         Route::post('saved-searches', [SavedSearchController::class, 'store']);
@@ -105,10 +120,21 @@ Route::prefix('v1')->group(function () {
         Route::post('match-results/refresh', [MatchResultController::class, 'refresh']);
     });
 
+    // Web push — public key so the frontend can build a subscription;
+    // subscribe/unsubscribe are per-account.
+    Route::get('push/vapid-public-key', [PushConfigController::class, 'vapidPublicKey']);
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::post('account/push-subscriptions', [PushSubscriptionController::class, 'store']);
+        Route::delete('account/push-subscriptions', [PushSubscriptionController::class, 'destroy']);
+    });
+
     // Public listing search & detail
     Route::get('listings', [ListingController::class, 'index']);
     Route::get('listings/{slug}', [ListingController::class, 'show']);
     Route::get('amenities', [AmenityController::class, 'index']);
+
+    // Shared favorite collections — public, unguessable-token read access, no auth.
+    Route::get('collections/{token}', [PublicFavoriteCollectionController::class, 'show']);
 
     // Ratings — reading is public, submitting/removing is authenticated
     Route::get('listings/{listing}/ratings', [RatingController::class, 'index']);

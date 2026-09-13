@@ -38,10 +38,13 @@ class LandProfileController extends Controller
 
         $request->validate(['file' => ['required', 'file', 'max:10240', 'mimes:jpg,jpeg,png,pdf']]);
 
-        $path = $request->file('file')->store("properties/{$property->id}/land-documents", 'public');
+        // Land-title (Lalpurja) documents carry real ownership PII — private
+        // disk, not world-readable public storage (see Media::url()).
+        $path = $request->file('file')->store("properties/{$property->id}/land-documents", 'local');
         $media = $property->media()->create([
             'type' => 'document',
             'disk_path' => $path,
+            'disk' => 'local',
             'mime_type' => $request->file('file')->getMimeType(),
             'size_bytes' => $request->file('file')->getSize(),
             'uploaded_by' => $request->user()->id,

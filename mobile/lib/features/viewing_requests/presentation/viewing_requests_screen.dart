@@ -15,12 +15,18 @@ import 'visit_verification_sheet.dart';
 /// "Requests for my listings" view, since the same account can be both a
 /// requester on one listing and a host on another.
 class ViewingRequestsScreen extends StatelessWidget {
-  const ViewingRequestsScreen({super.key});
+  const ViewingRequestsScreen({super.key, this.initialTabIndex = 0});
+
+  /// 1 opens straight to "For my listings" — used when a notification about
+  /// a request on the user's own listing deep-links here (mirrors the
+  /// website's ViewingRequests.tsx reading `?as=host` from the URL).
+  final int initialTabIndex;
 
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
       length: 2,
+      initialIndex: initialTabIndex,
       child: Scaffold(
         appBar: AppBar(
           title: const Text('Viewing requests'),

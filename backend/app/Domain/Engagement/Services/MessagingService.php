@@ -13,7 +13,10 @@ use Illuminate\Validation\ValidationException;
 
 class MessagingService
 {
-    public function __construct(private readonly TrustScoreCalculator $trustScoreCalculator) {}
+    public function __construct(
+        private readonly TrustScoreCalculator $trustScoreCalculator,
+        private readonly LeadRoutingService $leadRouting,
+    ) {}
 
     /** Starts a conversation with the listing's owner, or returns the existing one. */
     public function startFromListing(PropertyListing $listing, User $buyer, string $firstMessage): Conversation
@@ -28,8 +31,20 @@ class MessagingService
             ['property_listing_id' => $listing->id, 'buyer_user_id' => $buyer->id],
             ['owner_user_id' => $ownerId, 'status' => 'open'],
         );
+        $isNewLead = $conversation->wasRecentlyCreated;
 
-        $this->send($conversation, $buyer, $firstMessage);
+        $message = $this->send($conversation, $buyer, $firstMessage);
+
+        // A brand-new conversation is a fresh lead: route it to the whole
+        // agency if the owner belongs to one (see LeadRoutingService).
+        // send() above already notified the conversation's own owner_user_id
+        // directly, so this only reaches that owner's *other* teammates —
+        // never a double notification to the same person.
+        if ($isNewLead && ($owner = $conversation->owner)) {
+            $this->leadRouting->recipientsFor($owner)
+                ->reject(fn (User $u) => $u->id === $owner->id)
+                ->each(fn (User $teammate) => $teammate->notify(new NewMessageNotification($message)));
+        }
 
         return $conversation->fresh(['listing.property.media', 'messages']);
     }

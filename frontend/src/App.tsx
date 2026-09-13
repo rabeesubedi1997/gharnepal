@@ -10,6 +10,8 @@ import { EditListing } from './pages/EditListing'
 import { Settings } from './pages/Settings'
 import { Login } from './pages/auth/Login'
 import { Register } from './pages/auth/Register'
+import { ForgotPassword } from './pages/auth/ForgotPassword'
+import { ResetPassword } from './pages/auth/ResetPassword'
 import { PostPropertyWizard } from './pages/PostPropertyWizard'
 import { AdminLayout } from './pages/admin/AdminLayout'
 import { Dashboard as AdminDashboard } from './pages/admin/Dashboard'
@@ -33,6 +35,7 @@ import { Locations } from './pages/admin/Locations'
 import { NeighborhoodScores } from './pages/admin/NeighborhoodScores'
 import { CommunityNotesModeration } from './pages/admin/CommunityNotes'
 import { Saved } from './pages/Saved'
+import { SharedCollection } from './pages/SharedCollection'
 import { Messages } from './pages/Messages'
 import { ViewingRequests } from './pages/ViewingRequests'
 import { VerificationCenter } from './pages/VerificationCenter'
@@ -74,9 +77,12 @@ export default function App() {
           <Route path="blog/:slug" element={<BlogPostDetail />} />
           <Route path="calculators/rental" element={<RentalCalculator />} />
           <Route path="calculators/purchase" element={<PurchaseCalculator />} />
+          <Route path="collections/:token" element={<SharedCollection />} />
 
           <Route path="login" element={<Login />} />
           <Route path="register" element={<Register />} />
+          <Route path="forgot-password" element={<ForgotPassword />} />
+          <Route path="reset-password" element={<ResetPassword />} />
 
           <Route
             path="saved"

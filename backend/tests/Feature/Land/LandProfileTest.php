@@ -130,4 +130,52 @@ class LandProfileTest extends TestCase
             ->assertJsonPath('data.property.land_profile.kitta_number', '55/2')
             ->assertJsonPath('data.property.land_profile.road_access', true);
     }
+
+    public function test_the_lalpurja_document_url_is_hidden_from_guests_and_unrelated_users_but_visible_to_the_owner_and_admin(): void
+    {
+        $owner = User::factory()->create();
+        $property = $this->landProperty($owner);
+        $document = $property->media()->create([
+            'type' => 'document',
+            'disk_path' => 'properties/1/land-documents/deed.jpg',
+            'disk' => 'local',
+            'mime_type' => 'image/jpeg',
+            'uploaded_by' => $owner->id,
+        ]);
+        $property->landProfile()->create(['kitta_number' => '55/2', 'lalpurja_document_media_id' => $document->id]);
+
+        $listing = $property->listings()->create([
+            'purpose' => 'sale',
+            'price' => 5000000,
+            'title' => 'Land with a title document',
+            'slug' => 'land-with-a-title-document-test',
+            'status' => 'published',
+            'published_at' => now(),
+            'created_by' => $owner->id,
+        ]);
+
+        // Guest — no document URL at all.
+        $this->getJson("/api/v1/listings/{$listing->slug}")
+            ->assertOk()
+            ->assertJsonPath('data.property.land_profile.lalpurja_document_url', null);
+
+        // An unrelated logged-in buyer — still hidden.
+        $buyer = User::factory()->create();
+        $this->actingAs($buyer, 'sanctum')
+            ->getJson("/api/v1/listings/{$listing->slug}")
+            ->assertOk()
+            ->assertJsonPath('data.property.land_profile.lalpurja_document_url', null);
+
+        // The property's own owner — visible.
+        $ownerResponse = $this->actingAs($owner, 'sanctum')->getJson("/api/v1/listings/{$listing->slug}");
+        $ownerResponse->assertOk();
+        $this->assertNotNull($ownerResponse->json('data.property.land_profile.lalpurja_document_url'));
+
+        // An admin — visible.
+        $admin = User::factory()->create();
+        $admin->roles()->attach(Role::firstOrCreate(['key' => Role::ADMIN], ['name' => 'Administrator']));
+        $adminResponse = $this->actingAs($admin, 'sanctum')->getJson("/api/v1/listings/{$listing->slug}");
+        $adminResponse->assertOk();
+        $this->assertNotNull($adminResponse->json('data.property.land_profile.lalpurja_document_url'));
+    }
 }

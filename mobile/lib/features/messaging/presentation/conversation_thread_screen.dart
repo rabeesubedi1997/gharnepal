@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../widgets/error_state.dart';
@@ -168,6 +169,30 @@ class _MessageBubble extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
             decoration: BoxDecoration(color: background, borderRadius: BorderRadius.circular(14)),
             child: Text(message.body),
+          ),
+          Padding(
+            padding: const EdgeInsets.only(top: 2, left: 4, right: 4),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  DateFormat('MMM d, h:mm a').format(DateTime.parse(message.createdAt).toLocal()),
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(color: AppColors.ink700),
+                ),
+                // Read receipt — only meaningful on a message I sent to the
+                // other participant, mirroring the web app's WhatsApp-style
+                // single/double check (this product invites that comparison
+                // directly, being built around WhatsApp-first contact).
+                if (isMine && !isSupport) ...[
+                  const SizedBox(width: 4),
+                  Icon(
+                    message.readAt != null ? Icons.done_all : Icons.done,
+                    size: 13,
+                    color: message.readAt != null ? AppColors.trust700 : AppColors.ink700,
+                  ),
+                ],
+              ],
+            ),
           ),
         ],
       ),

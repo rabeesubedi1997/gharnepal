@@ -29,11 +29,17 @@ const addressSchema = z.object({
   ward_id: z.number({ message: 'Required' }),
 })
 
+const VIDEO_HOST_PATTERN = /^https?:\/\/(www\.)?(youtube\.com|youtu\.be|m\.youtube\.com|vimeo\.com)\//i
+
 const pricingSchema = z.object({
   title: z.string().min(5, 'Give your listing a descriptive title'),
   purpose: z.enum(['sale', 'rent'], { message: 'Select a purpose' }),
   price: z.coerce.number({ message: 'Enter a price' }).positive('Enter a valid price'),
   price_period: z.string().optional(),
+  video_url: z
+    .string()
+    .optional()
+    .refine((v) => !v || VIDEO_HOST_PATTERN.test(v), 'Enter a YouTube or Vimeo link'),
 })
 
 export function PostPropertyWizard() {
@@ -174,6 +180,7 @@ export function PostPropertyWizard() {
           title: pricing.title,
           description: pricing.description || undefined,
           amenity_ids: pricing.amenity_ids,
+          video_url: pricing.video_url || undefined,
         },
       },
       {

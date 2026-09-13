@@ -24,9 +24,21 @@ export function useSavedSearches() {
 export function useCreateSavedSearch() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: async (input: { name: string; filters: SearchFilters }) => {
+    mutationFn: async (input: { name: string; filters: SearchFilters; alert_frequency?: SavedSearch['alert_frequency'] }) => {
       await ensureCsrfCookie()
       const { data } = await apiClient.post<{ data: SavedSearch }>('/account/saved-searches', input)
+      return data.data
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['saved-searches'] }),
+  })
+}
+
+export function useUpdateSavedSearch() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ id, alert_frequency }: { id: number; alert_frequency: SavedSearch['alert_frequency'] }) => {
+      await ensureCsrfCookie()
+      const { data } = await apiClient.put<{ data: SavedSearch }>(`/account/saved-searches/${id}`, { alert_frequency })
       return data.data
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['saved-searches'] }),

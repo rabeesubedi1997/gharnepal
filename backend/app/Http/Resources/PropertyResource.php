@@ -5,6 +5,7 @@ namespace App\Http\Resources;
 use App\Domain\Calculators\Services\AreaUnitConverter;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Facades\Auth;
 
 class PropertyResource extends JsonResource
 {
@@ -46,7 +47,38 @@ class PropertyResource extends JsonResource
             ])),
             'land_profile' => $this->when(
                 $this->property_type === 'land',
-                fn () => $this->whenLoaded('landProfile', fn () => $this->landProfile ? new LandProfileResource($this->landProfile) : null),
+                fn () => $this->whenLoaded('landProfile', function () {
+                    if (! $this->landProfile) {
+                        return null;
+                    }
+
+                    $resource = new LandProfileResource($this->landProfile);
+
+                    // The land-title document itself is sensitive (a real
+                    // ownership document) — only the property's own
+                    // owner/creator or an admin may see the file, never a
+                    // guest or an unrelated logged-in buyer browsing the
+                    // public listing endpoint. Every other land_profile field
+                    // (kitta number, road/water/electricity access, risk
+                    // notes, etc.) stays visible to anyone — it's ordinary
+                    // buyer-facing property information, not PII.
+                    //
+                    // Auth::guard('sanctum')->user(), not $request->user():
+                    // this listing endpoint carries no `auth:sanctum`
+                    // middleware (it's public), so the default 'web' guard
+                    // never picks up a bearer-token mobile client — asking
+                    // the sanctum guard directly checks both the SPA's
+                    // session and a bearer token, same convention already
+                    // used by EnsureAccountIsActive.
+                    $user = Auth::guard('sanctum')->user();
+                    $resource->canViewDocument = (bool) $user && (
+                        $user->id === $this->owner_user_id
+                        || $user->id === $this->created_by
+                        || $user->isAdmin()
+                    );
+
+                    return $resource;
+                }),
             ),
         ];
     }
