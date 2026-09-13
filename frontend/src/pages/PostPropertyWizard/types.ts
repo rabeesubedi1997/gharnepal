@@ -1,5 +1,11 @@
-import type { AreaUnit, FurnishedStatus, ParkingType, PropertyType } from '../../lib/api/properties'
+import type { AreaUnit, FacingDirection, FurnishedStatus, ParkingType, PropertyType } from '../../lib/api/properties'
 import type { AddressValue } from '../../components/property/AddressFields'
+
+export interface FloorBreakdownRow {
+  label: string
+  area_sqft: string
+  description: string
+}
 
 export interface BasicsState {
   property_type: PropertyType | ''
@@ -12,9 +18,16 @@ export interface BasicsState {
   parking_spaces: string
   parking_type: ParkingType | ''
   is_furnished: FurnishedStatus | ''
+  facing_direction: FacingDirection | ''
+  water_tank_capacity_liters: string
+  structural_notes: string
+  floor_breakdown: FloorBreakdownRow[]
 }
 
+// A structural/architectural overview only makes sense for a building an
+// owner actually constructed — not land, and not a single rented room.
 export const RESIDENTIAL_TYPES: PropertyType[] = ['room', 'apartment', 'house']
+export const STRUCTURAL_DETAIL_TYPES: PropertyType[] = ['apartment', 'house', 'commercial']
 
 export const initialBasics: BasicsState = {
   property_type: '',
@@ -27,6 +40,10 @@ export const initialBasics: BasicsState = {
   parking_spaces: '',
   parking_type: '',
   is_furnished: '',
+  facing_direction: '',
+  water_tank_capacity_liters: '',
+  structural_notes: '',
+  floor_breakdown: [],
 }
 
 export interface AddressState extends AddressValue {

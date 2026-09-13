@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { BedDouble, Calculator, Calendar, CalendarPlus, Car, ChevronRight, Eye, FileText, Flag, Heart, Layers, MapPin, MessageCircle, Navigation, Phone, Printer, Ruler, Share2, ShowerHead, Sparkles, Star, Trash2 } from 'lucide-react'
+import { BedDouble, Calculator, Calendar, CalendarPlus, Car, ChevronRight, Compass, Droplets, Eye, FileText, Flag, Heart, Layers, MapPin, MessageCircle, Navigation, Phone, Printer, Ruler, Share2, ShowerHead, Sparkles, Star, Trash2 } from 'lucide-react'
 import { useListingDetail, type ListingDetail as ListingDetailType } from '../lib/api/listings'
 import { useDeleteRating, useListingRatings, useSubmitRating } from '../lib/api/ratings'
 import { RatingStars } from '../components/property/RatingStars'
@@ -53,6 +53,17 @@ const PARKING_TYPE_LABEL: Record<string, string> = {
   car: 'Car',
   bike: 'Bike/scooter',
   both: 'Car & bike',
+}
+
+const FACING_DIRECTION_LABEL: Record<string, string> = {
+  north: 'North',
+  south: 'South',
+  east: 'East',
+  west: 'West',
+  northeast: 'Northeast',
+  northwest: 'Northwest',
+  southeast: 'Southeast',
+  southwest: 'Southwest',
 }
 
 const CLOSED_STATUS_LABEL: Partial<Record<ListingDetailType['status'], string>> = {
@@ -251,6 +262,9 @@ export function ListingDetail() {
             {property.bathrooms != null && <Fact icon={<ShowerHead className="h-4 w-4" />} label="Bathrooms" value={property.bathrooms} />}
             {property.area.sqm != null && <Fact icon={<Ruler className="h-4 w-4" />} label="Area" value={`${Math.round(property.area.sqm)} m²`} />}
             {property.floors != null && <Fact icon={<Layers className="h-4 w-4" />} label="Floors" value={property.floors} />}
+            {property.facing_direction && (
+              <Fact icon={<Compass className="h-4 w-4" />} label="Facing" value={FACING_DIRECTION_LABEL[property.facing_direction]} />
+            )}
             {property.parking_spaces != null && property.parking_spaces > 0 && (
               <Fact
                 icon={<Car className="h-4 w-4" />}
@@ -282,6 +296,41 @@ export function ListingDetail() {
             <div>
               <h2 className="mb-2 font-display text-lg font-semibold text-ink-900">Description</h2>
               <p className="whitespace-pre-line text-sm text-ink-700/80">{listing.description}</p>
+            </div>
+          )}
+
+          {(property.structural_notes || property.water_tank_capacity_liters != null) && (
+            <div>
+              <h2 className="mb-2 font-display text-lg font-semibold text-ink-900">Architectural &amp; Structural Overview</h2>
+              {property.structural_notes && <p className="text-sm text-ink-700/80">{property.structural_notes}</p>}
+              {property.water_tank_capacity_liters != null && (
+                <p className="mt-2 flex items-center gap-1.5 text-sm text-ink-700/80">
+                  <Droplets className="h-4 w-4 text-trust-700" aria-hidden="true" />
+                  {property.water_tank_capacity_liters.toLocaleString()}L underground/overhead water tank
+                </p>
+              )}
+            </div>
+          )}
+
+          {property.floor_breakdown.length > 0 && (
+            <div>
+              <h2 className="mb-2 font-display text-lg font-semibold text-ink-900">Floor-by-Floor Breakdown</h2>
+              <div className="flex flex-col gap-2">
+                {property.floor_breakdown.map((floor) => (
+                  <div key={floor.id} className="flex items-start gap-3 rounded-card border border-stone-200 p-3">
+                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-trust-100 text-xs font-semibold text-trust-700">
+                      <Layers className="h-4 w-4" aria-hidden="true" />
+                    </span>
+                    <div>
+                      <p className="text-sm font-semibold text-ink-900">
+                        {floor.label}
+                        {floor.display && <span className="ml-1.5 font-normal text-ink-700/60">({Math.round(floor.display.sqft).toLocaleString()} Sq.Ft)</span>}
+                      </p>
+                      {floor.description && <p className="text-xs text-ink-700/70">{floor.description}</p>}
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
 

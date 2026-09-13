@@ -7,6 +7,21 @@ export type PropertyType = 'room' | 'apartment' | 'house' | 'land' | 'commercial
 export type AreaUnit = 'sqft' | 'sqm' | 'aana' | 'ropani' | 'kattha' | 'dhur'
 export type FurnishedStatus = 'unfurnished' | 'semi' | 'full'
 export type ParkingType = 'car' | 'bike' | 'both'
+export type FacingDirection = 'north' | 'south' | 'east' | 'west' | 'northeast' | 'northwest' | 'southeast' | 'southwest'
+
+export interface FloorBreakdownInput {
+  label: string
+  area_sqft?: number
+  description?: string
+}
+
+export interface FloorBreakdown {
+  id: number
+  label: string
+  area_sqm: number | null
+  display: { sqft: number } | null
+  description: string | null
+}
 
 export interface AddressInput {
   province_id: number
@@ -31,6 +46,10 @@ export interface CreatePropertyInput {
   parking_spaces?: number
   parking_type?: ParkingType
   is_furnished?: FurnishedStatus
+  facing_direction?: FacingDirection
+  water_tank_capacity_liters?: number
+  structural_notes?: string
+  floor_breakdown?: FloorBreakdownInput[]
   address: AddressInput
 }
 
@@ -50,6 +69,10 @@ export interface Property {
   parking_spaces: number | null
   parking_type: ParkingType | null
   is_furnished: FurnishedStatus | null
+  facing_direction: FacingDirection | null
+  water_tank_capacity_liters: number | null
+  structural_notes: string | null
+  floor_breakdown: FloorBreakdown[]
   address: {
     province?: { id: number; name: string }
     district?: { id: number; name: string }

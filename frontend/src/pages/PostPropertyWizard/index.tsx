@@ -117,6 +117,16 @@ export function PostPropertyWizard() {
         parking_spaces: basics.parking_spaces ? Number(basics.parking_spaces) : undefined,
         parking_type: basics.parking_type || undefined,
         is_furnished: basics.is_furnished || undefined,
+        facing_direction: basics.facing_direction || undefined,
+        water_tank_capacity_liters: basics.water_tank_capacity_liters ? Number(basics.water_tank_capacity_liters) : undefined,
+        structural_notes: basics.structural_notes || undefined,
+        floor_breakdown: basics.floor_breakdown.length > 0
+          ? basics.floor_breakdown.map((row) => ({
+              label: row.label,
+              area_sqft: row.area_sqft ? Number(row.area_sqft) : undefined,
+              description: row.description || undefined,
+            }))
+          : undefined,
         address: {
           province_id: address.province_id!,
           district_id: address.district_id!,

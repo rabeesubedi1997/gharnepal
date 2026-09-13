@@ -61,6 +61,40 @@ class PropertyCreationTest extends TestCase
         ]);
     }
 
+    public function test_a_property_can_specify_facing_water_tank_and_a_floor_breakdown(): void
+    {
+        $user = User::factory()->create();
+
+        $response = $this->actingAs($user, 'sanctum')->postJson('/api/v1/properties', [
+            'property_type' => 'house',
+            'area_value' => 3400,
+            'area_unit' => 'sqft',
+            'bedrooms' => 4,
+            'bathrooms' => 5,
+            'facing_direction' => 'east',
+            'water_tank_capacity_liters' => 15000,
+            'structural_notes' => '14x14 inch RCC columns, NBC 105:2020 seismic compliant.',
+            'floor_breakdown' => [
+                ['label' => 'Ground Level', 'area_sqft' => 1250, 'description' => 'Living hall, kitchen, garage.'],
+                ['label' => '1st Floor', 'area_sqft' => 1150, 'description' => 'Bedrooms with en-suite baths.'],
+                ['label' => '2nd Floor & Roof', 'area_sqft' => 1000, 'description' => 'Master suite, terrace.'],
+            ],
+            'address' => $this->addressPayload(),
+        ]);
+
+        $response->assertCreated()
+            ->assertJsonPath('data.facing_direction', 'east')
+            ->assertJsonPath('data.water_tank_capacity_liters', 15000)
+            ->assertJsonCount(3, 'data.floor_breakdown')
+            ->assertJsonPath('data.floor_breakdown.0.label', 'Ground Level');
+
+        $property = \App\Models\Property::where('created_by', $user->id)->firstOrFail();
+        $this->assertSame(3, $property->floorBreakdown()->count());
+        // 1250 sq ft stored as its real sqm equivalent, not the raw sq-ft
+        // number — every other area field in this app follows the same rule.
+        $this->assertEqualsWithDelta(116.13, (float) $property->floorBreakdown()->orderBy('sort_order')->first()->area_sqm, 0.5);
+    }
+
     public function test_residential_property_types_require_bedrooms(): void
     {
         $user = User::factory()->create();
