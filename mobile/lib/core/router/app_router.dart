@@ -7,6 +7,7 @@ import '../../features/agencies/presentation/agencies_screen.dart';
 import '../../features/agencies/presentation/agency_profile_screen.dart';
 import '../../features/admin/agencies/presentation/admin_agencies_screen.dart';
 import '../../features/admin/advertisements/presentation/admin_advertisements_screen.dart';
+import '../../features/admin/amenities/presentation/admin_amenities_screen.dart';
 import '../../features/admin/banners/presentation/admin_banners_screen.dart';
 import '../../features/admin/blog/presentation/admin_blog_editor_screen.dart';
 import '../../features/admin/blog/presentation/admin_blog_screen.dart';
@@ -130,7 +131,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/saved', builder: (context, state) => const SavedScreen()),
       GoRoute(path: '/account', builder: (context, state) => const AccountScreen()),
       GoRoute(path: '/property-requests', builder: (context, state) => const PropertyRequestsScreen()),
-      GoRoute(path: '/viewing-requests', builder: (context, state) => const ViewingRequestsScreen()),
+      GoRoute(
+        path: '/viewing-requests',
+        builder: (context, state) => ViewingRequestsScreen(
+          initialTabIndex: state.uri.queryParameters['as'] == 'host' ? 1 : 0,
+        ),
+      ),
       GoRoute(path: '/notifications', builder: (context, state) => const NotificationsScreen()),
       GoRoute(path: '/dashboard', builder: (context, state) => const DashboardScreen()),
       GoRoute(path: '/post-property', builder: (context, state) => const PostPropertyWizardScreen()),
@@ -193,6 +199,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/admin/neighborhood-scores',
         builder: (context, state) => const AdminNeighborhoodScoresScreen(),
       ),
+      GoRoute(path: '/admin/amenities', builder: (context, state) => const AdminAmenitiesScreen()),
       GoRoute(path: '/admin/community-notes', builder: (context, state) => const AdminCommunityNotesScreen()),
       GoRoute(path: '/admin/ratings', builder: (context, state) => const AdminRatingsScreen()),
       GoRoute(path: '/admin/payments', builder: (context, state) => const AdminPaymentsScreen()),

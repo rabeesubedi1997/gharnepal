@@ -43,6 +43,7 @@ class AdminDrawer extends StatelessWidget {
             _tile(context, Icons.shield_outlined, 'Trust score factors', '/admin/trust-factors'),
             _tile(context, Icons.map_outlined, 'Locations', '/admin/locations'),
             _tile(context, Icons.insights_outlined, 'Neighborhood scores', '/admin/neighborhood-scores'),
+            _tile(context, Icons.list_alt_outlined, 'Amenities', '/admin/amenities'),
             const _SectionHeader('Users & agencies'),
             _tile(context, Icons.people_outline, 'Users', '/admin/users'),
             _tile(context, Icons.business_outlined, 'Agencies', '/admin/agencies'),

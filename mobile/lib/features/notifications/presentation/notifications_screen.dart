@@ -61,6 +61,8 @@ class _NotificationTile extends ConsumerWidget {
     'listing_approved' => Icons.check_circle_outline,
     'listing_rejected' => Icons.cancel_outlined,
     'listing_featured' => Icons.star_outline,
+    'viewing_request_received' => Icons.calendar_month_outlined,
+    'viewing_request_updated' => Icons.event_available_outlined,
     _ => Icons.notifications_none,
   };
 
@@ -76,6 +78,12 @@ class _NotificationTile extends ConsumerWidget {
       // rejected listing's page would 404 — send the owner to their
       // dashboard instead, matching the website's NotificationBell routing.
       context.push('/dashboard');
+    } else if (notification.type == 'viewing_request_received') {
+      // A request on the user's own listing — open straight to the "For my
+      // listings" tab (mirrors the website linking to ?as=host).
+      context.push('/viewing-requests?as=host');
+    } else if (notification.type == 'viewing_request_updated') {
+      context.push('/viewing-requests');
     } else if (notification.data['listing_slug'] != null) {
       context.push('/listings/${notification.data['listing_slug']}');
     }
