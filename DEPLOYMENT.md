@@ -145,11 +145,16 @@ public-facing** — it's plain-text in the repo's history.
 
 ## New as of 2026-09-13: cron for scheduled tasks, VAPID keys for push
 
-Two things a deploy alone doesn't set up — both one-time server tasks:
+Two things a deploy alone doesn't set up — **`deploy/server-deploy.sh` now
+does both automatically** on every run (idempotent — safe to re-run, it
+skips whatever's already in place). This section is the manual fallback for
+whichever half didn't auto-succeed.
 
 **Cron, for the saved-search email digest (daily/weekly cadences).** Instant
 alerts fire inline (no cron needed), but the daily/weekly ones need Laravel's
-scheduler actually run. Add this once via cPanel's **Cron Jobs**, or `crontab -e`:
+scheduler actually run. `server-deploy.sh` adds this via `crontab` itself; if
+your host doesn't expose `crontab` from SSH, add it once via cPanel's **Cron
+Jobs** UI instead:
 
 ```
 * * * * * cd <TARGET_DIR> && php artisan schedule:run >> /dev/null 2>&1
@@ -158,11 +163,12 @@ scheduler actually run. Add this once via cPanel's **Cron Jobs**, or `crontab -e
 Without this, `alert_frequency: daily`/`weekly` saved searches will simply
 never send — nothing errors, they just silently never fire.
 
-**VAPID keys, for web push.** Generate once (either machine, doesn't need to
-be the server): `npx web-push generate-vapid-keys` (or
-`php artisan tinker --execute="print_r(Minishlink\WebPush\VAPID::createVapidKeys());"`
-if PHP's OpenSSL supports EC keys on that machine — it didn't in dev, on
-Windows, hence the npm alternative). Add both to the server's `.env`:
+**VAPID keys, for web push.** `server-deploy.sh` generates these itself via
+`Minishlink\WebPush\VAPID::createVapidKeys()` if `VAPID_PUBLIC_KEY` isn't
+already set in `.env`. If that fails (this host's PHP OpenSSL doesn't support
+EC keys — happened in dev on Windows, less common on Linux), generate them
+by hand on any machine with Node: `npx web-push generate-vapid-keys`, then
+add both to the server's `.env`:
 
 ```
 VAPID_PUBLIC_KEY=...
