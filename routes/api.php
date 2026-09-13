@@ -237,6 +237,7 @@ Route::prefix('v1')->group(function () {
         Route::get('dashboard/stats', [DashboardController::class, 'stats']);
 
         Route::get('users', [AdminUserController::class, 'index']);
+        Route::post('users', [AdminUserController::class, 'store']);
         Route::patch('users/{user}/status', [AdminUserController::class, 'updateStatus']);
         Route::put('users/{user}/roles', [AdminUserController::class, 'updateRoles']);
 
@@ -281,7 +282,9 @@ Route::prefix('v1')->group(function () {
         Route::patch('community-notes/{note}/reject', [CommunityNoteModerationController::class, 'reject']);
 
         Route::get('payments', [AdminPaymentController::class, 'index']);
-        Route::patch('payments/{transaction}/refund', [AdminPaymentController::class, 'refund']);
+        // Refunding real money is reserved to a super admin even though any
+        // admin can see the transaction list.
+        Route::patch('payments/{transaction}/refund', [AdminPaymentController::class, 'refund'])->middleware('super_admin');
 
         // SEO — "page approach": one page_key per page, override + competitor-scan history.
         // page_key contains a colon (e.g. "listing:some-slug") — Laravel's default route
