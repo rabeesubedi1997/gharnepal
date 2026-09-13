@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, NavLink, useNavigate } from 'react-router-dom'
-import { Heart, Home, LogOut, Menu, MessageCircle, Plus, Settings, X } from 'lucide-react'
+import { Building2, Heart, Home, LogOut, Menu, MessageCircle, Plus, Settings, X } from 'lucide-react'
 import { clsx } from 'clsx'
 import { ButtonLink } from '../ui/Button'
 import { useCurrentUser, useLogout } from '../../lib/api/auth'
@@ -40,12 +40,12 @@ export function Header() {
           </span>
         </Link>
 
-        <label className="hidden shrink-0 items-center rounded-md border border-stone-200 px-2.5 lg:flex">
+        <label className="hidden shrink-0 items-center rounded-md border border-stone-200 px-2 lg:flex">
           <span className="sr-only">City or valley</span>
           <select
             onChange={(e) => e.target.value && navigate(`/search?municipality_id=${e.target.value}`)}
             defaultValue=""
-            className="h-9 max-w-[9.5rem] bg-transparent text-xs font-medium text-ink-700 focus:outline-none"
+            className="h-9 max-w-[9rem] truncate bg-transparent text-xs font-medium text-ink-700 focus:outline-none"
           >
             <option value="">Kathmandu Valley (All)</option>
             {municipalities?.map((m) => (
@@ -56,14 +56,14 @@ export function Header() {
           </select>
         </label>
 
-        <nav className="hidden min-w-0 items-center gap-0.5 lg:flex" aria-label="Primary">
+        <nav className="hidden min-w-0 items-center gap-0 lg:flex" aria-label="Primary">
           {primaryNav.map((item) => (
             <NavLink
               key={item.to}
               to={item.to}
               className={({ isActive }) =>
                 clsx(
-                  'shrink-0 whitespace-nowrap rounded-md px-2.5 py-2 text-sm font-medium transition-colors',
+                  'shrink-0 whitespace-nowrap rounded-md px-1 py-2 text-[13px] font-medium transition-colors xl:px-2.5 xl:text-sm',
                   isActive ? 'text-trust-700' : 'text-ink-700 hover:text-ink-900',
                 )
               }
@@ -73,7 +73,7 @@ export function Header() {
           ))}
         </nav>
 
-        <div className="hidden shrink-0 items-center gap-2 lg:flex">
+        <div className="hidden shrink-0 items-center gap-1 lg:flex">
           <IconLink to="/saved" label="Saved" icon={<Heart className="h-5 w-5" />} />
           <IconLink to="/messages" label="Messages" icon={<MessageCircle className="h-5 w-5" />} />
           <ButtonLink to="/post-property" size="sm" variant="primary" className="shrink-0 whitespace-nowrap">
@@ -82,6 +82,9 @@ export function Header() {
           {user ? (
             <>
               <NotificationBell />
+              {user.agency && (
+                <IconLink to="/agency/dashboard" label="Agency dashboard" icon={<Building2 className="h-5 w-5" />} />
+              )}
               <Link to="/dashboard" className="text-sm font-medium text-ink-900 hover:text-trust-700">
                 {user.name.split(' ')[0]}
               </Link>
@@ -120,7 +123,13 @@ export function Header() {
               { to: '/saved', label: 'Saved' },
               { to: '/messages', label: 'Messages' },
               { to: '/post-property', label: 'Post property' },
-              ...(user ? [{ to: '/dashboard', label: 'Dashboard' }, { to: '/account/settings', label: 'Account settings' }] : [{ to: '/login', label: 'Log in' }]),
+              ...(user
+                ? [
+                    ...(user.agency ? [{ to: '/agency/dashboard', label: 'Agency dashboard' }] : []),
+                    { to: '/dashboard', label: 'Dashboard' },
+                    { to: '/account/settings', label: 'Account settings' },
+                  ]
+                : [{ to: '/login', label: 'Log in' }]),
             ].map((item) => (
               <li key={item.to}>
                 <NavLink

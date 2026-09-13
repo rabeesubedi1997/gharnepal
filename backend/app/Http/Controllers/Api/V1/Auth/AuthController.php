@@ -96,6 +96,6 @@ class AuthController extends Controller
 
     public function me(Request $request): UserResource
     {
-        return new UserResource($request->user()->load('roles'));
+        return new UserResource($request->user()->load('roles', 'agencies'));
     }
 }

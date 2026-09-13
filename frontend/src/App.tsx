@@ -6,6 +6,7 @@ import { ComingSoon } from './pages/ComingSoon'
 import { Search } from './pages/Search'
 import { ListingDetail } from './pages/ListingDetail'
 import { Dashboard } from './pages/Dashboard'
+import { AgencyDashboard } from './pages/AgencyDashboard'
 import { EditListing } from './pages/EditListing'
 import { Settings } from './pages/Settings'
 import { Login } from './pages/auth/Login'
@@ -162,6 +163,14 @@ export default function App() {
             element={
               <RequireAuth>
                 <Dashboard />
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="agency/dashboard"
+            element={
+              <RequireAuth>
+                <AgencyDashboard />
               </RequireAuth>
             }
           />

@@ -20,6 +20,10 @@ class UserResource extends JsonResource
             'roles' => $this->whenLoaded('roles', fn () => $this->roles->pluck('key')),
             'is_admin' => $this->isAdmin(),
             'is_super_admin' => $this->isSuperAdmin(),
+            // Just enough to decide whether to show the agency dashboard
+            // nav link — the dashboard endpoints themselves independently
+            // verify real membership, this is not an authorization check.
+            'agency' => $this->whenLoaded('agencies', fn () => $this->agencies->first()?->only(['id', 'name', 'slug'])),
         ];
     }
 }
