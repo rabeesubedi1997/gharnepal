@@ -55,11 +55,53 @@ if ! grep -q '^APP_KEY=base64:' .env; then
   php artisan key:generate --force
 fi
 
+echo "==> Ensuring VAPID keys exist (web push — no Firebase/Google account needed)"
+if ! grep -q '^VAPID_PUBLIC_KEY=.\+' .env 2>/dev/null; then
+  echo "    No VAPID_PUBLIC_KEY set yet — generating a fresh keypair"
+  VAPID_OUT="$(php artisan tinker --execute='
+    $k = Minishlink\WebPush\VAPID::createVapidKeys();
+    echo "VAPID_PUBLIC_KEY=".$k["publicKey"]."\nVAPID_PRIVATE_KEY=".$k["privateKey"];
+  ' 2>&1)" || true
+  if echo "$VAPID_OUT" | grep -q '^VAPID_PUBLIC_KEY='; then
+    # Drop any existing (empty) VAPID_* lines from .env.example's copy, then
+    # append the real generated pair.
+    grep -v '^VAPID_PUBLIC_KEY=\|^VAPID_PRIVATE_KEY=' .env > .env.tmp
+    mv .env.tmp .env
+    echo "$VAPID_OUT" | grep '^VAPID_PUBLIC_KEY=\|^VAPID_PRIVATE_KEY=' >> .env
+    echo "    Generated and saved to .env — web push is now live"
+  else
+    echo "    WARNING: couldn't auto-generate a VAPID keypair (this host's PHP"
+    echo "    OpenSSL may not support EC keys — a known issue on some Windows"
+    echo "    PHP builds, less common on Linux). Web push stays disabled until"
+    echo "    you add VAPID_PUBLIC_KEY/VAPID_PRIVATE_KEY to .env by hand — see"
+    echo "    DEPLOYMENT.md for the 'npx web-push generate-vapid-keys' fallback."
+    echo "    (tinker output: $VAPID_OUT)"
+  fi
+else
+  echo "    Already set"
+fi
+
 echo "==> Migrating"
 php artisan migrate --force
 
 echo "==> Optimizing"
 php artisan optimize:clear
+
+echo "==> Ensuring cron runs the scheduler (saved-search email digests)"
+CRON_CMD="cd $TARGET_DIR && php artisan schedule:run >> /dev/null 2>&1"
+if command -v crontab >/dev/null 2>&1; then
+  if crontab -l 2>/dev/null | grep -qF "$CRON_CMD"; then
+    echo "    Already scheduled"
+  else
+    (crontab -l 2>/dev/null; echo "* * * * * $CRON_CMD") | crontab -
+    echo "    Added: * * * * * $CRON_CMD"
+  fi
+else
+  echo "    WARNING: no 'crontab' command on this host — add this manually via"
+  echo "    cPanel's Cron Jobs UI, or daily/weekly saved-search alerts will"
+  echo "    silently never send (instant alerts are unaffected):"
+  echo "    * * * * * $CRON_CMD"
+fi
 
 echo ""
 echo "Deploy complete. Document root for this domain should point at:"
