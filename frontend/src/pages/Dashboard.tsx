@@ -3,7 +3,7 @@ import { BarChart3, Bookmark, Calculator, CalendarCheck, Pencil, Plus, ShieldChe
 import { FeatureListingModal } from '../components/payments/FeatureListingModal'
 import { useCurrentUser } from '../lib/api/auth'
 import { useOwnerProperties, useTransitionListing, type ListingStatus } from '../lib/api/listings'
-import { useDeleteSavedSearch, useSavedSearches } from '../lib/api/savedSearches'
+import { useDeleteSavedSearch, useSavedSearches, useUpdateSavedSearch, type SavedSearch } from '../lib/api/savedSearches'
 import { useDeleteScenario, useSavedScenarios } from '../lib/api/calculators'
 import { useListingAnalytics } from '../lib/api/analytics'
 import { filtersToSearchParams } from '../lib/searchParams'
@@ -212,9 +212,17 @@ function Stat({ label, value }: { label: string; value: number }) {
   )
 }
 
+const ALERT_FREQUENCY_LABEL: Record<SavedSearch['alert_frequency'], string> = {
+  instant: 'Instant alerts',
+  daily: 'Daily digest',
+  weekly: 'Weekly digest',
+  off: 'Alerts off',
+}
+
 function SavedSearchesSection() {
   const { data: searches, isPending } = useSavedSearches()
   const remove = useDeleteSavedSearch()
+  const update = useUpdateSavedSearch()
 
   if (isPending || !searches?.length) return null
 
@@ -225,7 +233,7 @@ function SavedSearchesSection() {
       </h2>
       <div className="flex flex-col gap-2">
         {searches.map((s) => (
-          <Card key={s.id} className="flex items-center justify-between gap-3 p-3">
+          <Card key={s.id} className="flex flex-wrap items-center justify-between gap-3 p-3">
             <ButtonLink
               to={{ pathname: '/search', search: filtersToSearchParams(s.filters).toString() }}
               variant="ghost"
@@ -234,14 +242,26 @@ function SavedSearchesSection() {
             >
               {s.name}
             </ButtonLink>
-            <button
-              type="button"
-              onClick={() => remove.mutate(s.id)}
-              aria-label="Delete saved search"
-              className="rounded-md p-1.5 text-ink-700/60 hover:bg-stone-100 hover:text-danger-600"
-            >
-              <Trash2 className="h-4 w-4" />
-            </button>
+            <div className="flex items-center gap-2">
+              <select
+                value={s.alert_frequency}
+                onChange={(e) => update.mutate({ id: s.id, alert_frequency: e.target.value as SavedSearch['alert_frequency'] })}
+                aria-label={`Alert frequency for ${s.name}`}
+                className="h-8 rounded-md border border-stone-200 bg-white px-2 text-xs text-ink-700/80 focus:outline-none focus:ring-2 focus:ring-trust-700"
+              >
+                {(Object.keys(ALERT_FREQUENCY_LABEL) as SavedSearch['alert_frequency'][]).map((freq) => (
+                  <option key={freq} value={freq}>{ALERT_FREQUENCY_LABEL[freq]}</option>
+                ))}
+              </select>
+              <button
+                type="button"
+                onClick={() => remove.mutate(s.id)}
+                aria-label="Delete saved search"
+                className="rounded-md p-1.5 text-ink-700/60 hover:bg-stone-100 hover:text-danger-600"
+              >
+                <Trash2 className="h-4 w-4" />
+              </button>
+            </div>
           </Card>
         ))}
       </div>

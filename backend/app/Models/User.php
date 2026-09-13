@@ -82,6 +82,11 @@ class User extends Authenticatable
         return $this->hasMany(Favorite::class);
     }
 
+    public function favoriteCollections(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(FavoriteCollection::class);
+    }
+
     public function verifications(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(UserVerification::class);
@@ -90,6 +95,11 @@ class User extends Authenticatable
     public function media(): \Illuminate\Database\Eloquent\Relations\MorphMany
     {
         return $this->morphMany(Media::class, 'mediable');
+    }
+
+    public function pushSubscriptions(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(PushSubscription::class);
     }
 
     public function matchPreference(): \Illuminate\Database\Eloquent\Relations\HasOne

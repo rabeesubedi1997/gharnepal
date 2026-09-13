@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { MessageCircle, Send } from 'lucide-react'
+import { Check, CheckCheck, MessageCircle, Send } from 'lucide-react'
 import { useConversation, useConversations, useSendMessage, type Conversation } from '../../lib/api/messaging'
 import { useCurrentUser } from '../../lib/api/auth'
 import { Card } from '../../components/ui/Card'
@@ -141,8 +141,25 @@ function Thread({ conversationId }: { conversationId: number }) {
                 <p className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-accent-600">Ghar Nepal support</p>
               )}
               {m.body}
-              <p className={clsx('mt-1 text-[10px]', m.is_mine && !m.is_from_support ? 'text-trust-100' : 'text-ink-700/50')}>
+              <p
+                className={clsx(
+                  'mt-1 flex items-center gap-1 text-[10px]',
+                  m.is_mine && !m.is_from_support ? 'text-trust-100' : 'text-ink-700/50',
+                )}
+              >
                 {new Date(m.created_at).toLocaleString(undefined, { hour: '2-digit', minute: '2-digit', month: 'short', day: 'numeric' })}
+                {/* Read receipt — only meaningful on a message I sent to the other participant. */}
+                {m.is_mine && !m.is_from_support && (
+                  m.read_at ? (
+                    <span className="flex items-center gap-0.5" title={`Seen ${new Date(m.read_at).toLocaleString()}`}>
+                      <CheckCheck className="h-3 w-3" aria-hidden="true" /> Seen
+                    </span>
+                  ) : (
+                    <span className="flex items-center gap-0.5" title="Sent">
+                      <Check className="h-3 w-3" aria-hidden="true" />
+                    </span>
+                  )
+                )}
               </p>
             </div>
           </div>

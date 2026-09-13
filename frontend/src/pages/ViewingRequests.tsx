@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { CalendarCheck } from 'lucide-react'
 import {
   useSubmitVisitVerification,
@@ -27,10 +28,20 @@ const STATUS_TONE: Record<ViewingStatus, 'neutral' | 'warning' | 'success' | 'da
 }
 
 export function ViewingRequests() {
-  const [as, setAs] = useState<'requester' | 'host'>('requester')
+  // A notification email/push about a request on your own listing links
+  // here with ?as=host — without reading it, that link would always land
+  // on "My requests" instead and the host would have to notice the other
+  // tab themselves.
+  const [searchParams, setSearchParams] = useSearchParams()
+  const [as, setAs] = useState<'requester' | 'host'>(searchParams.get('as') === 'host' ? 'host' : 'requester')
   const { data, isPending, isError, refetch } = useViewingRequests(as)
   const transition = useTransitionViewing()
   const [verifying, setVerifying] = useState<ViewingRequest | null>(null)
+
+  const changeTab = (tab: 'requester' | 'host') => {
+    setAs(tab)
+    setSearchParams(tab === 'host' ? { as: 'host' } : {}, { replace: true })
+  }
 
   return (
     <div className="flex flex-col gap-6">
@@ -42,7 +53,7 @@ export function ViewingRequests() {
           { key: 'host', label: 'Requests for my listings' },
         ]}
         active={as}
-        onChange={(k) => setAs(k as 'requester' | 'host')}
+        onChange={(k) => changeTab(k as 'requester' | 'host')}
       />
 
       {isPending && <PropertyGridSkeleton count={3} />}
