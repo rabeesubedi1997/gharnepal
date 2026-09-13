@@ -82,4 +82,24 @@ class MediaUploadTest extends TestCase
             'file' => UploadedFile::fake()->create('doc.pdf', 100, 'application/pdf'),
         ])->assertUnprocessable();
     }
+
+    public function test_owner_can_upload_a_floor_plan_as_an_image_or_a_pdf(): void
+    {
+        $owner = User::factory()->create();
+        $property = $this->createProperty($owner);
+
+        $imageResponse = $this->actingAs($owner, 'sanctum')->postJson("/api/v1/properties/{$property->id}/media", [
+            'type' => 'floor_plan',
+            'file' => UploadedFile::fake()->image('floor-plan.png', 1000, 1000),
+        ]);
+        $imageResponse->assertCreated()
+            ->assertJsonPath('data.type', 'floor_plan')
+            ->assertJsonPath('data.mime_type', 'image/png');
+
+        $pdfResponse = $this->actingAs($owner, 'sanctum')->postJson("/api/v1/properties/{$property->id}/media", [
+            'type' => 'floor_plan',
+            'file' => UploadedFile::fake()->create('floor-plan.pdf', 100, 'application/pdf'),
+        ]);
+        $pdfResponse->assertCreated()->assertJsonPath('data.mime_type', 'application/pdf');
+    }
 }

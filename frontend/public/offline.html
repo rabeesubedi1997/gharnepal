@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>You're offline — Ghar Nepal</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <style>
+      html, body {
+        margin: 0;
+        height: 100%;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Inter, Arial, sans-serif;
+        background: #ffffff;
+        color: #211f1a;
+      }
+      body {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 1rem;
+        padding: 2rem;
+        text-align: center;
+      }
+      img { width: 56px; height: 56px; }
+      h1 { font-size: 1.25rem; margin: 0; }
+      p { margin: 0; color: #59564d; max-width: 22rem; }
+      button {
+        margin-top: 0.5rem;
+        border: none;
+        border-radius: 0.5rem;
+        background: #1f4b3f;
+        color: white;
+        font-size: 0.9rem;
+        font-weight: 600;
+        padding: 0.6rem 1.25rem;
+        cursor: pointer;
+      }
+      button:hover { background: #163829; }
+    </style>
+  </head>
+  <body>
+    <img src="/favicon.svg" alt="" />
+    <h1>You're offline</h1>
+    <p>This page hasn't been saved for offline use yet. Reconnect to keep browsing — anything you've already
+      visited in this app stays available even without a connection.</p>
+    <button onclick="location.reload()">Try again</button>
+  </body>
+</html>
