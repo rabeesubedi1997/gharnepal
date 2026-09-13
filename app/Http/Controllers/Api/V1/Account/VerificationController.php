@@ -28,10 +28,13 @@ class VerificationController extends Controller
 
         $user = $request->user();
 
-        $path = $request->file('document')->store("verifications/{$user->id}", 'public');
+        // Identity/agent-license documents are sensitive — private disk, not
+        // world-readable public storage (see Media::url()).
+        $path = $request->file('document')->store("verifications/{$user->id}", 'local');
         $media = $user->media()->create([
             'type' => 'document',
             'disk_path' => $path,
+            'disk' => 'local',
             'mime_type' => $request->file('document')->getMimeType(),
             'size_bytes' => $request->file('document')->getSize(),
             'uploaded_by' => $user->id,

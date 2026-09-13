@@ -12,6 +12,11 @@ use Illuminate\Support\Str;
  * owner from a clearly-labeled "sandbox checkout" screen — see
  * Owner\PaymentController::confirm(). Swap the app-container binding for a
  * real gateway class implementing the same contract when one is wired up.
+ *
+ * AppServiceProvider::register() refuses to bind this in a production
+ * environment unless PAYMENT_GATEWAY_ALLOW_SANDBOX_IN_PRODUCTION=true is set
+ * explicitly — otherwise a real deploy could silently keep forging
+ * "successful" payments with real users and no real money ever moving.
  */
 class SandboxPaymentGateway implements PaymentGateway
 {

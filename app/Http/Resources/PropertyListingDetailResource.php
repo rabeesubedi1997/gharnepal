@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Domain\Properties\Support\VideoUrl;
 use App\Domain\Seo\Services\SeoService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -20,6 +21,11 @@ class PropertyListingDetailResource extends JsonResource
             'reference_code' => $this->referenceCode(),
             'title' => $this->title,
             'description' => $this->description,
+            'video_url' => $this->video_url,
+            'video_tour' => $this->video_url ? [
+                'url' => $this->video_url,
+                'embed_url' => VideoUrl::toEmbedUrl($this->video_url),
+            ] : null,
             'purpose' => $this->purpose,
             'price' => (float) $this->price,
             'price_period' => $this->price_period,

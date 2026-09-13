@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
 class Media extends Model
 {
     protected $fillable = [
-        'mediable_type', 'mediable_id', 'type', 'disk_path', 'mime_type',
+        'mediable_type', 'mediable_id', 'type', 'disk_path', 'disk', 'mime_type',
         'size_bytes', 'width', 'height', 'sort_order', 'uploaded_by',
     ];
 
@@ -37,6 +37,19 @@ class Media extends Model
 
     public function url(): string
     {
-        return \Illuminate\Support\Facades\Storage::disk('public')->url($this->disk_path);
+        $disk = $this->disk ?: 'public';
+
+        if ($disk === 'public') {
+            return \Illuminate\Support\Facades\Storage::disk('public')->url($this->disk_path);
+        }
+
+        // Private disk (verification/land-title documents): a permanent public
+        // URL would defeat the point, so hand back a short-lived signed one
+        // instead — long enough for the page that requested it to load the
+        // file, not so long that a leaked link stays useful.
+        return \Illuminate\Support\Facades\Storage::disk($disk)->temporaryUrl(
+            $this->disk_path,
+            now()->addMinutes(10),
+        );
     }
 }

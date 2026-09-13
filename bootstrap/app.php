@@ -15,6 +15,11 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->statefulApi();
+        // Applies throttle:api (the 'api' limiter defined in AppServiceProvider)
+        // to every route in the api middleware group — previously nothing
+        // rate-limited the API at all. Login/register/OTP get their own,
+        // tighter limiters applied directly on those routes in routes/api.php.
+        $middleware->throttleApi();
         $middleware->alias(['admin' => EnsureUserIsAdmin::class]);
         // Global (not just the `api` group) so it also covers the stateful
         // web routes Sanctum's SPA auth uses — a no-op for guests either way.

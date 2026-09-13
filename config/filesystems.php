@@ -33,6 +33,12 @@ return [
         'local' => [
             'driver' => 'local',
             'root' => storage_path('app/private'),
+            // Own URL prefix (not '/storage') so this never collides with the
+            // 'public' disk's own files, which live directly under
+            // public_path('storage') and are served as plain static files —
+            // sharing a prefix would mean two very differently-protected
+            // storage areas answering to the same URL space.
+            'url' => '/private-storage',
             'serve' => true,
             'throw' => false,
             'report' => false,

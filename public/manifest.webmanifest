@@ -1,0 +1,17 @@
+{
+  "name": "Ghar Nepal — Property Marketplace",
+  "short_name": "Ghar Nepal",
+  "description": "Find your next home in Nepal — buy, rent, or list property with verified owners and trust scores.",
+  "start_url": "/?source=pwa",
+  "id": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#1f4b3f",
+  "orientation": "portrait-primary",
+  "lang": "en",
+  "icons": [
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+  ]
+}

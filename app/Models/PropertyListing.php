@@ -25,7 +25,7 @@ class PropertyListing extends Model
 
     protected $fillable = [
         'property_id', 'purpose', 'price', 'price_period', 'currency', 'negotiable',
-        'availability_date', 'status', 'title', 'slug', 'description',
+        'availability_date', 'status', 'title', 'slug', 'description', 'video_url',
         'published_at', 'expires_at', 'featured_until', 'views_count',
         'created_by', 'reviewed_by', 'reviewed_at', 'rejection_reason',
     ];
