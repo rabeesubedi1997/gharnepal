@@ -19,6 +19,28 @@ export function usePendingListings(status: string = 'pending_review') {
   })
 }
 
+export interface AdminListingFilters {
+  status?: string // any real listing status, or 'all'
+  featured?: boolean
+  page?: number
+}
+
+/** The general "browse every listing" admin view — status defaults to 'all'
+ * here (unlike usePendingListings above, which is the moderation queue and
+ * defaults to pending_review). */
+export function useAdminListings(filters: AdminListingFilters) {
+  return useQuery({
+    queryKey: ['admin', 'listings', 'browse', filters],
+    queryFn: async () => {
+      const { data } = await apiClient.get<PaginatedResponse<ListingDetail>>('/admin/listings', {
+        params: { status: filters.status ?? 'all', featured: filters.featured || undefined, page: filters.page },
+      })
+      return data
+    },
+    placeholderData: (prev) => prev,
+  })
+}
+
 export function useApproveListing() {
   const queryClient = useQueryClient()
   return useMutation({
@@ -66,7 +88,7 @@ export function useDashboardStats() {
 
 // --- User management ---
 
-export type AdminRoleKey = 'buyer' | 'owner' | 'agent' | 'agency_admin' | 'admin'
+export type AdminRoleKey = 'buyer' | 'owner' | 'agent' | 'agency_admin' | 'admin' | 'super_admin'
 export type AccountStatus = 'active' | 'suspended' | 'pending'
 
 export interface AdminUser {
@@ -78,6 +100,7 @@ export interface AdminUser {
   email_verified: boolean
   phone_verified: boolean
   roles: AdminRoleKey[]
+  is_super_admin: boolean
   agencies: string[]
   created_at: string
 }
@@ -118,6 +141,29 @@ export function useUpdateUserRoles() {
     mutationFn: async ({ userId, roles }: { userId: number; roles: AdminRoleKey[] }) => {
       await ensureCsrfCookie()
       const { data } = await apiClient.put<{ data: AdminUser }>(`/admin/users/${userId}/roles`, { roles })
+      return data.data
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['admin', 'users'] }),
+  })
+}
+
+export interface CreateUserInput {
+  name: string
+  email: string
+  password: string
+  roles: AdminRoleKey[]
+}
+
+/** Lets an admin onboard someone directly instead of everyone always having
+ * to self-register first. Granting admin/super_admin at creation time is
+ * still server-enforced to super admins only — a regular admin gets a
+ * validation error back if they try. */
+export function useCreateAdminUser() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (input: CreateUserInput) => {
+      await ensureCsrfCookie()
+      const { data } = await apiClient.post<{ data: AdminUser }>('/admin/users', input)
       return data.data
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['admin', 'users'] }),

@@ -11,6 +11,7 @@ class AdminUser {
     required this.emailVerified,
     required this.phoneVerified,
     required this.roles,
+    required this.isSuperAdmin,
     required this.agencies,
     required this.createdAt,
   });
@@ -25,6 +26,7 @@ class AdminUser {
       emailVerified: json['email_verified'] as bool? ?? false,
       phoneVerified: json['phone_verified'] as bool? ?? false,
       roles: (json['roles'] as List<dynamic>? ?? const []).map((r) => r.toString()).toList(growable: false),
+      isSuperAdmin: json['is_super_admin'] as bool? ?? false,
       agencies: (json['agencies'] as List<dynamic>? ?? const []).map((a) => a.toString()).toList(growable: false),
       createdAt: json['created_at'] as String,
     );
@@ -38,12 +40,16 @@ class AdminUser {
   final bool emailVerified;
   final bool phoneVerified;
   final List<String> roles;
+  final bool isSuperAdmin;
   final List<String> agencies;
   final String createdAt;
 }
 
-/// The five role keys the roles editor offers, in display order.
-const kAdminUserRoles = ['buyer', 'owner', 'agent', 'agency_admin', 'admin'];
+/// The six role keys the roles editor offers, in display order. 'admin' and
+/// 'super_admin' are only shown/toggleable to an actor who is themselves a
+/// super admin — see AdminUsersScreen's role-editor and create-user sheet.
+const kAdminUserRoles = ['buyer', 'owner', 'agent', 'agency_admin', 'admin', 'super_admin'];
+const kPrivilegedAdminUserRoles = ['admin', 'super_admin'];
 
 /// The three status filter/values the users list and status toggle use.
 const kAdminUserStatuses = ['active', 'suspended', 'pending'];

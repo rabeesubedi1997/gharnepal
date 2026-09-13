@@ -6,7 +6,11 @@ import '../../../../core/formatters/npr_formatter.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../widgets/error_state.dart';
 import '../../../../widgets/skeleton.dart';
+import '../../agencies/application/admin_agencies_providers.dart';
+import '../../listings/application/admin_listings_providers.dart';
+import '../../payments/application/admin_payments_providers.dart';
 import '../../presentation/admin_drawer.dart';
+import '../../users/application/admin_users_providers.dart';
 import '../application/admin_dashboard_providers.dart';
 import '../data/models/admin_dashboard_stats.dart';
 
@@ -15,6 +19,37 @@ import '../data/models/admin_dashboard_stats.dart';
 /// tappable rows into each queue's own screen.
 class AdminDashboardScreen extends ConsumerWidget {
   const AdminDashboardScreen({super.key});
+
+  // Every tile below sets the destination screen's own filter state (a
+  // Riverpod StateProvider, not a URL query param on this stack) before
+  // navigating, so e.g. tapping "Owners" actually lands pre-filtered
+  // instead of just opening the plain Users screen every time.
+
+  void _goToListings(WidgetRef ref, BuildContext context, {required String status, bool featured = false}) {
+    ref.read(adminListingsStatusFilterProvider.notifier).state = status;
+    ref.read(adminListingsFeaturedFilterProvider.notifier).state = featured;
+    ref.read(adminListingsPageProvider.notifier).state = 1;
+    context.push('/admin/listings');
+  }
+
+  void _goToUsers(WidgetRef ref, BuildContext context, {String? role, String? status}) {
+    ref.read(adminUsersRoleFilterProvider.notifier).state = role;
+    ref.read(adminUsersStatusFilterProvider.notifier).state = status;
+    ref.read(adminUsersPageProvider.notifier).state = 1;
+    context.push('/admin/users');
+  }
+
+  void _goToAgencies(WidgetRef ref, BuildContext context, {String? status}) {
+    ref.read(adminAgenciesStatusFilterProvider.notifier).state = status;
+    ref.read(adminAgenciesPageProvider.notifier).state = 1;
+    context.push('/admin/agencies');
+  }
+
+  void _goToPayments(WidgetRef ref, BuildContext context, {String? status}) {
+    ref.read(adminPaymentsStatusFilterProvider.notifier).state = status;
+    ref.read(adminPaymentsPageProvider.notifier).state = 1;
+    context.push('/admin/payments');
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -39,38 +74,86 @@ class AdminDashboardScreen extends ConsumerWidget {
               _SectionTitle('Listings'),
               _StatGrid(
                 tiles: [
-                  _StatTileData('Total', '${data.listings.total}'),
-                  _StatTileData('Published', '${data.listings.published}'),
-                  _StatTileData('Pending review', '${data.listings.pendingReview}'),
-                  _StatTileData('Featured active', '${data.listings.featuredActive}'),
+                  _StatTileData(
+                    'Total',
+                    '${data.listings.total}',
+                    onTap: () => _goToListings(ref, context, status: 'all'),
+                  ),
+                  _StatTileData(
+                    'Published',
+                    '${data.listings.published}',
+                    onTap: () => _goToListings(ref, context, status: 'published'),
+                  ),
+                  _StatTileData(
+                    'Pending review',
+                    '${data.listings.pendingReview}',
+                    onTap: () => _goToListings(ref, context, status: 'pending_review'),
+                  ),
+                  _StatTileData(
+                    'Featured active',
+                    '${data.listings.featuredActive}',
+                    onTap: () => _goToListings(ref, context, status: 'all', featured: true),
+                  ),
                 ],
               ),
               const SizedBox(height: 20),
               _SectionTitle('Users'),
               _StatGrid(
                 tiles: [
-                  _StatTileData('Total', '${data.users.total}'),
-                  _StatTileData('Owners', '${data.users.owners}'),
-                  _StatTileData('Agents', '${data.users.agents}'),
-                  _StatTileData('Suspended', '${data.users.suspended}'),
+                  _StatTileData('Total', '${data.users.total}', onTap: () => _goToUsers(ref, context)),
+                  _StatTileData(
+                    'Owners',
+                    '${data.users.owners}',
+                    onTap: () => _goToUsers(ref, context, role: 'owner'),
+                  ),
+                  _StatTileData(
+                    'Agents',
+                    '${data.users.agents}',
+                    onTap: () => _goToUsers(ref, context, role: 'agent'),
+                  ),
+                  _StatTileData(
+                    'Suspended',
+                    '${data.users.suspended}',
+                    onTap: () => _goToUsers(ref, context, status: 'suspended'),
+                  ),
                 ],
               ),
               const SizedBox(height: 20),
               _SectionTitle('Agencies'),
               _StatGrid(
                 tiles: [
-                  _StatTileData('Total', '${data.agencies.total}'),
-                  _StatTileData('Verified', '${data.agencies.verified}'),
-                  _StatTileData('Pending', '${data.agencies.pending}'),
+                  _StatTileData('Total', '${data.agencies.total}', onTap: () => _goToAgencies(ref, context)),
+                  _StatTileData(
+                    'Verified',
+                    '${data.agencies.verified}',
+                    onTap: () => _goToAgencies(ref, context, status: 'active'),
+                  ),
+                  _StatTileData(
+                    'Pending',
+                    '${data.agencies.pending}',
+                    onTap: () => _goToAgencies(ref, context, status: 'pending'),
+                  ),
                 ],
               ),
               const SizedBox(height: 20),
               _SectionTitle('Payments'),
               _StatGrid(
                 tiles: [
-                  _StatTileData('Completed', '${data.payments.completedCount}'),
-                  _StatTileData('Completed amount', NprFormatter.formatCompact(data.payments.completedAmount)),
-                  _StatTileData('Pending', '${data.payments.pending}'),
+                  _StatTileData(
+                    'Completed',
+                    '${data.payments.completedCount}',
+                    onTap: () => _goToPayments(ref, context, status: 'completed'),
+                  ),
+                  _StatTileData(
+                    'Completed amount',
+                    NprFormatter.formatCompact(data.payments.completedAmount),
+                    onTap: () => _goToPayments(ref, context, status: 'completed'),
+                  ),
+                  _StatTileData(
+                    'Pending',
+                    '${data.payments.pending}',
+                    onTap: () => _goToPayments(ref, context, status: 'pending'),
+                  ),
                 ],
               ),
             ],
@@ -96,10 +179,11 @@ class _SectionTitle extends StatelessWidget {
 }
 
 class _StatTileData {
-  const _StatTileData(this.label, this.value);
+  const _StatTileData(this.label, this.value, {this.onTap});
 
   final String label;
   final String value;
+  final VoidCallback? onTap;
 }
 
 class _StatGrid extends StatelessWidget {
@@ -122,21 +206,25 @@ class _StatGrid extends StatelessWidget {
       itemBuilder: (context, index) {
         final tile = tiles[index];
         return Card(
-          child: Padding(
-            padding: const EdgeInsets.all(12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  tile.value,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700, color: AppColors.trust700),
-                ),
-                const SizedBox(height: 2),
-                Text(tile.label, style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppColors.ink700)),
-              ],
+          child: InkWell(
+            onTap: tile.onTap,
+            borderRadius: BorderRadius.circular(12),
+            child: Padding(
+              padding: const EdgeInsets.all(12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    tile.value,
+                    style: Theme.of(
+                      context,
+                    ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700, color: AppColors.trust700),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(tile.label, style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppColors.ink700)),
+                ],
+              ),
             ),
           ),
         );

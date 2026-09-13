@@ -15,12 +15,18 @@ class AdminListingsRepository {
 
   final Dio _dio;
 
-  /// Oldest-first FIFO queue, paginated 20/page.
-  Future<PaginatedResult<ListingDetail>> list({String status = 'pending_review', int page = 1}) async {
+  /// Oldest-first FIFO for the 'pending_review' queue; newest-first for
+  /// every other status (including 'all', meaning no status filter at all —
+  /// the general "browse everything" view, not just the moderation queue).
+  Future<PaginatedResult<ListingDetail>> list({
+    String status = 'pending_review',
+    bool featured = false,
+    int page = 1,
+  }) async {
     try {
       final response = await _dio.get(
         '/admin/listings',
-        queryParameters: {'status': status, 'page': page},
+        queryParameters: {'status': status, if (featured) 'featured': true, 'page': page},
       );
       return PaginatedResult.fromJson(response.data as Map<String, dynamic>, ListingDetail.fromJson);
     } on DioException catch (error) {
@@ -49,9 +55,10 @@ class AdminListingsRepository {
   }
 }
 
-/// The full `PropertyListing.status` enum, for the moderation filter
-/// dropdown.
+/// 'all' (no filter) plus the full `PropertyListing.status` enum, for the
+/// status filter dropdown.
 const kAdminListingStatuses = [
+  'all',
   'draft',
   'pending_review',
   'published',

@@ -104,8 +104,14 @@ export function Dashboard() {
       <div>
         <h2 className="mb-3 font-display text-base font-semibold text-ink-900">Listings</h2>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <StatCard tone="trust" icon={ClipboardList} label="Total listings" value={stats.listings.total} />
-          <StatCard tone="trust" icon={ClipboardList} label="Published" value={stats.listings.published} />
+          <StatCard tone="trust" icon={ClipboardList} label="Total listings" value={stats.listings.total} to="/admin/listings" />
+          <StatCard
+            tone="trust"
+            icon={ClipboardList}
+            label="Published"
+            value={stats.listings.published}
+            to="/admin/listings?status=published"
+          />
           <StatCard
             tone="warning"
             icon={ClipboardList}
@@ -114,7 +120,13 @@ export function Dashboard() {
             to="/admin/listings/pending"
             sub={stats.listings.pending_review > 0 ? 'Needs attention' : 'All caught up'}
           />
-          <StatCard tone="trust" icon={ClipboardList} label="Featured now" value={stats.listings.featured_active} />
+          <StatCard
+            tone="trust"
+            icon={ClipboardList}
+            label="Featured now"
+            value={stats.listings.featured_active}
+            to="/admin/listings?featured=true"
+          />
         </div>
       </div>
 
@@ -122,14 +134,14 @@ export function Dashboard() {
         <h2 className="mb-3 font-display text-base font-semibold text-ink-900">People</h2>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <StatCard tone="trust" icon={Users} label="Total users" value={stats.users.total} to="/admin/users" />
-          <StatCard tone="trust" icon={Users} label="Owners" value={stats.users.owners} />
-          <StatCard tone="trust" icon={Users} label="Agents" value={stats.users.agents} />
+          <StatCard tone="trust" icon={Users} label="Owners" value={stats.users.owners} to="/admin/users?role=owner" />
+          <StatCard tone="trust" icon={Users} label="Agents" value={stats.users.agents} to="/admin/users?role=agent" />
           <StatCard
             tone="danger"
             icon={Users}
             label="Suspended"
             value={stats.users.suspended}
-            to="/admin/users"
+            to="/admin/users?status=suspended"
             sub={stats.users.suspended > 0 ? 'Review if needed' : undefined}
           />
         </div>

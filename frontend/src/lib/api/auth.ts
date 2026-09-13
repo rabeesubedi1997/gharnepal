@@ -10,6 +10,8 @@ export interface AuthUser {
   email_verified: boolean
   phone_verified: boolean
   roles: string[]
+  is_admin: boolean
+  is_super_admin: boolean
 }
 
 async function fetchMe(): Promise<AuthUser | null> {

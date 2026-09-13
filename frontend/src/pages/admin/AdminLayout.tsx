@@ -27,7 +27,7 @@ import {
 import { useCurrentUser, useLogout } from '../../lib/api/auth'
 import { ADMIN_TONE_ACTIVE_NAV, ADMIN_TONE_DOT, type AdminTone } from '../../components/admin/tones'
 
-const NAV_GROUPS: { title: string; tone: AdminTone; items: { to: string; label: string; icon: typeof Users }[] }[] = [
+const NAV_GROUPS: { title: string; tone: AdminTone; items: { to: string; label: string; icon: typeof Users; end?: boolean }[] }[] = [
   {
     title: 'Overview',
     tone: 'trust',
@@ -49,6 +49,7 @@ const NAV_GROUPS: { title: string; tone: AdminTone; items: { to: string; label: 
     title: 'Listings & locations',
     tone: 'trust',
     items: [
+      { to: '/admin/listings', label: 'All listings', icon: ClipboardList, end: true },
       { to: '/admin/listings/pending', label: 'Pending listings', icon: ClipboardList },
       { to: '/admin/duplicate-flags', label: 'Duplicate flags', icon: Copy },
       { to: '/admin/locations', label: 'Locations', icon: MapPin },
@@ -95,10 +96,11 @@ function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
             {group.title}
           </p>
           <div className="flex flex-col gap-0.5">
-            {group.items.map(({ to, label, icon: Icon }) => (
+            {group.items.map(({ to, label, icon: Icon, end }) => (
               <NavLink
                 key={to}
                 to={to}
+                end={end}
                 onClick={onNavigate}
                 className={({ isActive }) =>
                   clsx(
@@ -207,10 +209,11 @@ export function AdminLayout() {
 
         {/* Compact tab strip on mobile for quick jumps without opening the drawer */}
         <nav className="flex gap-1 overflow-x-auto border-b border-stone-200 bg-white px-3 py-2 lg:hidden" aria-label="Admin sections">
-          {FLAT_NAV.map(({ to, label, tone }) => (
+          {FLAT_NAV.map(({ to, label, tone, end }) => (
             <NavLink
               key={to}
               to={to}
+              end={end}
               className={({ isActive }) =>
                 clsx(
                   'shrink-0 rounded-full px-3 py-1 text-xs font-medium',

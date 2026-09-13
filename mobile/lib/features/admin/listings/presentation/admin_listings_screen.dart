@@ -30,22 +30,43 @@ class AdminListingsScreen extends ConsumerWidget {
     final listingsAsync = ref.watch(adminListingsProvider);
     final page = ref.watch(adminListingsPageProvider);
     final status = ref.watch(adminListingsStatusFilterProvider);
+    final featured = ref.watch(adminListingsFeaturedFilterProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Listings moderation')),
+      appBar: AppBar(title: const Text('Listings')),
       body: Column(
         children: [
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-            child: DropdownButtonFormField<String>(
-              initialValue: status,
-              decoration: const InputDecoration(labelText: 'Status'),
-              items: [
-                for (final s in kAdminListingStatuses) DropdownMenuItem(value: s, child: Text(s.replaceAll('_', ' '))),
+            child: Row(
+              children: [
+                Expanded(
+                  child: DropdownButtonFormField<String>(
+                    initialValue: status,
+                    decoration: const InputDecoration(labelText: 'Status'),
+                    items: [
+                      for (final s in kAdminListingStatuses)
+                        DropdownMenuItem(value: s, child: Text(s == 'all' ? 'All statuses' : s.replaceAll('_', ' '))),
+                    ],
+                    onChanged: (value) {
+                      if (value == null) return;
+                      ref.read(adminListingsStatusFilterProvider.notifier).state = value;
+                      ref.read(adminListingsPageProvider.notifier).state = 1;
+                    },
+                  ),
+                ),
               ],
-              onChanged: (value) {
-                if (value == null) return;
-                ref.read(adminListingsStatusFilterProvider.notifier).state = value;
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 4),
+            child: CheckboxListTile(
+              contentPadding: EdgeInsets.zero,
+              controlAffinity: ListTileControlAffinity.leading,
+              title: const Text('Featured now only'),
+              value: featured,
+              onChanged: (checked) {
+                ref.read(adminListingsFeaturedFilterProvider.notifier).state = checked ?? false;
                 ref.read(adminListingsPageProvider.notifier).state = 1;
               },
             ),

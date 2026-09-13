@@ -28,7 +28,7 @@ class DatabaseSeeder extends Seeder
                 'email_verified_at' => now(),
             ],
         );
-        $admin->roles()->syncWithoutDetaching(Role::where('key', Role::ADMIN)->pluck('id'));
+        $admin->roles()->syncWithoutDetaching(Role::whereIn('key', [Role::ADMIN, Role::SUPER_ADMIN])->pluck('id'));
 
         $buyer = User::factory()->create([
             'name' => 'Test Buyer',
