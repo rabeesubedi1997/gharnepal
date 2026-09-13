@@ -104,6 +104,8 @@ class DemoDataSeeder extends Seeder
                 'slug' => 'himalayan-homes-realty',
                 'description' => 'A Kathmandu Valley-focused agency specializing in residential sales and rentals, with over a decade of local market experience.',
                 'verified' => true,
+                'registration_number' => 'DOI/KTM/2013/00842',
+                'founded_year' => 2013,
                 'agents' => [
                     ['Rajan Bhattarai', 'rajan.bhattarai'],
                     ['Manisha Adhikari', 'manisha.adhikari'],
@@ -115,6 +117,8 @@ class DemoDataSeeder extends Seeder
                 'slug' => 'kathmandu-property-partners',
                 'description' => 'Full-service brokerage covering land, apartments, and commercial space across the Kathmandu Valley and Pokhara.',
                 'verified' => true,
+                'registration_number' => 'DOI/KTM/2018/01567',
+                'founded_year' => 2018,
                 'agents' => [
                     ['Sunita Lama', 'sunita.lama'],
                     ['Bishnu Acharya', 'bishnu.acharya'],
@@ -142,6 +146,8 @@ class DemoDataSeeder extends Seeder
                     'description' => $def['description'],
                     'status' => $def['verified'] ? 'active' : 'pending',
                     'verified_at' => $def['verified'] ? now() : null,
+                    'registration_number' => $def['registration_number'] ?? null,
+                    'founded_year' => $def['founded_year'] ?? null,
                 ],
             );
 

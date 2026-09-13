@@ -48,4 +48,9 @@ class Neighborhood extends Model
     {
         return $this->hasMany(CommunityNote::class);
     }
+
+    public function addresses(): HasMany
+    {
+        return $this->hasMany(Address::class);
+    }
 }

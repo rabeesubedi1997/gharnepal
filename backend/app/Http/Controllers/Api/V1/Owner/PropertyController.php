@@ -41,7 +41,7 @@ class PropertyController extends Controller
     {
         $this->authorize('view', $property);
 
-        return new PropertyResource($property->load(['address.province', 'address.district', 'address.municipality', 'address.ward', 'address.neighborhood', 'media', 'listings', 'landProfile.lalpurjaDocument']));
+        return new PropertyResource($property->load(['address.province', 'address.district', 'address.municipality', 'address.ward', 'address.neighborhood', 'media', 'listings', 'landProfile.lalpurjaDocument', 'floorBreakdown']));
     }
 
     public function update(UpdatePropertyRequest $request, Property $property): PropertyResource

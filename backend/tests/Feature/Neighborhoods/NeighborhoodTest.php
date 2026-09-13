@@ -4,6 +4,8 @@ namespace Tests\Feature\Neighborhoods;
 
 use App\Models\Municipality;
 use App\Models\Neighborhood;
+use App\Models\Property;
+use App\Models\PropertyListing;
 use App\Models\Role;
 use App\Models\User;
 use App\Models\Ward;
@@ -45,6 +47,68 @@ class NeighborhoodTest extends TestCase
         $response->assertOk();
         $names = collect($response->json('data'))->pluck('name');
         $this->assertTrue($names->contains('Boudha'));
+    }
+
+    public function test_the_directory_exposes_a_real_published_listing_count_per_neighborhood(): void
+    {
+        $ward = $this->ward();
+        $neighborhood = Neighborhood::create(['ward_id' => $ward->id, 'name' => 'Boudha']);
+        $owner = User::factory()->create();
+
+        // Two published listings in this neighborhood...
+        foreach (range(1, 2) as $i) {
+            $property = Property::create([
+                'owner_user_id' => $owner->id,
+                'created_by' => $owner->id,
+                'property_type' => 'apartment',
+            ]);
+            $property->address()->create([
+                'province_id' => $ward->municipality->district->province_id,
+                'district_id' => $ward->municipality->district_id,
+                'municipality_id' => $ward->municipality_id,
+                'ward_id' => $ward->id,
+                'neighborhood_id' => $neighborhood->id,
+            ]);
+            $property->listings()->create([
+                'purpose' => 'rent',
+                'price' => 20000,
+                'price_period' => 'monthly',
+                'title' => "Boudha listing $i",
+                'slug' => "boudha-listing-$i",
+                'status' => PropertyListing::STATUS_PUBLISHED,
+                'published_at' => now(),
+                'created_by' => $owner->id,
+            ]);
+        }
+
+        // ...and one draft, which must not count toward the public figure.
+        $draftProperty = Property::create([
+            'owner_user_id' => $owner->id,
+            'created_by' => $owner->id,
+            'property_type' => 'apartment',
+        ]);
+        $draftProperty->address()->create([
+            'province_id' => $ward->municipality->district->province_id,
+            'district_id' => $ward->municipality->district_id,
+            'municipality_id' => $ward->municipality_id,
+            'ward_id' => $ward->id,
+            'neighborhood_id' => $neighborhood->id,
+        ]);
+        $draftProperty->listings()->create([
+            'purpose' => 'rent',
+            'price' => 20000,
+            'price_period' => 'monthly',
+            'title' => 'Boudha draft',
+            'slug' => 'boudha-draft',
+            'status' => PropertyListing::STATUS_DRAFT,
+            'created_by' => $owner->id,
+        ]);
+
+        $response = $this->getJson('/api/v1/neighborhoods');
+
+        $response->assertOk();
+        $row = collect($response->json('data'))->firstWhere('id', $neighborhood->id);
+        $this->assertSame(2, $row['active_listings_count']);
     }
 
     public function test_a_neighborhood_profile_shows_score_pois_and_approved_notes_only(): void

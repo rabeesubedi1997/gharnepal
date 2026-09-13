@@ -1,25 +1,25 @@
 import { useState } from 'react'
 import { Link, NavLink, useNavigate } from 'react-router-dom'
-import { Heart, Home, LogOut, Menu, MessageCircle, Plus, Settings, X } from 'lucide-react'
+import { Building2, Heart, Home, LogOut, Menu, MessageCircle, Plus, Settings, X } from 'lucide-react'
 import { clsx } from 'clsx'
 import { ButtonLink } from '../ui/Button'
 import { useCurrentUser, useLogout } from '../../lib/api/auth'
+import { useMunicipalities } from '../../lib/api/locations'
 import { NotificationBell } from './NotificationBell'
 
 const primaryNav = [
   { to: '/buy', label: 'Buy' },
   { to: '/rent', label: 'Rent' },
-  { to: '/rooms', label: 'Rooms' },
-  { to: '/land', label: 'Land' },
   { to: '/commercial', label: 'Commercial' },
-  { to: '/neighborhoods', label: 'Neighborhoods' },
-  { to: '/agents', label: 'Agents' },
-  { to: '/property-requests', label: 'Requests' },
+  { to: '/land', label: 'Land & Plots' },
+  { to: '/agents', label: 'Agencies & Brokers' },
+  { to: '/neighborhoods', label: 'Neighborhood Guides' },
 ]
 
 export function Header() {
   const [mobileOpen, setMobileOpen] = useState(false)
   const { data: user } = useCurrentUser()
+  const { data: municipalities } = useMunicipalities()
   const logout = useLogout()
   const navigate = useNavigate()
 
@@ -29,20 +29,41 @@ export function Header() {
 
   return (
     <header className="sticky top-0 z-40 border-b border-stone-200 bg-stone-50/95 backdrop-blur">
-      <div className="mx-auto flex h-16 max-w-[1440px] items-center justify-between gap-4 px-4 sm:px-6 lg:px-10">
-        <Link to="/" className="flex shrink-0 items-center gap-2 font-display text-lg font-semibold text-trust-700">
-          <Home className="h-6 w-6" aria-hidden="true" />
-          Ghar Nepal
+      <div className="mx-auto flex h-16 max-w-[1440px] items-center justify-between gap-3 px-4 sm:px-6 lg:px-10">
+        <Link to="/" className="flex shrink-0 items-center gap-2">
+          <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-trust-700 text-white">
+            <Home className="h-5 w-5" aria-hidden="true" />
+          </span>
+          <span className="flex flex-col leading-none">
+            <span className="font-display text-base font-bold text-ink-900">GharNepal</span>
+            <span className="text-[10px] font-semibold uppercase tracking-wider text-ink-700/50">Proptech Hub</span>
+          </span>
         </Link>
 
-        <nav className="hidden items-center gap-0.5 lg:flex" aria-label="Primary">
+        <label className="hidden shrink-0 items-center rounded-md border border-stone-200 px-2 lg:flex">
+          <span className="sr-only">City or valley</span>
+          <select
+            onChange={(e) => e.target.value && navigate(`/search?municipality_id=${e.target.value}`)}
+            defaultValue=""
+            className="h-9 max-w-[9rem] truncate bg-transparent text-xs font-medium text-ink-700 focus:outline-none"
+          >
+            <option value="">Kathmandu Valley (All)</option>
+            {municipalities?.map((m) => (
+              <option key={m.id} value={m.id}>
+                {m.name}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <nav className="hidden min-w-0 items-center gap-0 lg:flex" aria-label="Primary">
           {primaryNav.map((item) => (
             <NavLink
               key={item.to}
               to={item.to}
               className={({ isActive }) =>
                 clsx(
-                  'shrink-0 whitespace-nowrap rounded-md px-2.5 py-2 text-sm font-medium transition-colors',
+                  'shrink-0 whitespace-nowrap rounded-md px-1 py-2 text-[13px] font-medium transition-colors xl:px-2.5 xl:text-sm',
                   isActive ? 'text-trust-700' : 'text-ink-700 hover:text-ink-900',
                 )
               }
@@ -52,15 +73,18 @@ export function Header() {
           ))}
         </nav>
 
-        <div className="hidden shrink-0 items-center gap-2 lg:flex">
+        <div className="hidden shrink-0 items-center gap-1 lg:flex">
           <IconLink to="/saved" label="Saved" icon={<Heart className="h-5 w-5" />} />
           <IconLink to="/messages" label="Messages" icon={<MessageCircle className="h-5 w-5" />} />
           <ButtonLink to="/post-property" size="sm" variant="primary" className="shrink-0 whitespace-nowrap">
-            <Plus className="h-4 w-4" /> Post property
+            <Plus className="h-4 w-4" /> Post Free Property
           </ButtonLink>
           {user ? (
             <>
               <NotificationBell />
+              {user.agency && (
+                <IconLink to="/agency/dashboard" label="Agency dashboard" icon={<Building2 className="h-5 w-5" />} />
+              )}
               <Link to="/dashboard" className="text-sm font-medium text-ink-900 hover:text-trust-700">
                 {user.name.split(' ')[0]}
               </Link>
@@ -99,7 +123,13 @@ export function Header() {
               { to: '/saved', label: 'Saved' },
               { to: '/messages', label: 'Messages' },
               { to: '/post-property', label: 'Post property' },
-              ...(user ? [{ to: '/dashboard', label: 'Dashboard' }, { to: '/account/settings', label: 'Account settings' }] : [{ to: '/login', label: 'Log in' }]),
+              ...(user
+                ? [
+                    ...(user.agency ? [{ to: '/agency/dashboard', label: 'Agency dashboard' }] : []),
+                    { to: '/dashboard', label: 'Dashboard' },
+                    { to: '/account/settings', label: 'Account settings' },
+                  ]
+                : [{ to: '/login', label: 'Log in' }]),
             ].map((item) => (
               <li key={item.to}>
                 <NavLink

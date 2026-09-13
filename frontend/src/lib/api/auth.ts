@@ -12,6 +12,7 @@ export interface AuthUser {
   roles: string[]
   is_admin: boolean
   is_super_admin: boolean
+  agency: { id: number; name: string; slug: string } | null
 }
 
 async function fetchMe(): Promise<AuthUser | null> {

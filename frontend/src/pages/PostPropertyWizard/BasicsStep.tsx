@@ -1,7 +1,20 @@
+import { Plus, X } from 'lucide-react'
 import type { AreaUnit } from '../../lib/api/properties'
 import { Input, Select } from '../../components/ui/Input'
 import { Button } from '../../components/ui/Button'
-import { type BasicsState, RESIDENTIAL_TYPES } from './types'
+import { type BasicsState, RESIDENTIAL_TYPES, STRUCTURAL_DETAIL_TYPES } from './types'
+
+const FACING_DIRECTIONS: { value: string; label: string }[] = [
+  { value: '', label: 'Not specified' },
+  { value: 'north', label: 'North' },
+  { value: 'south', label: 'South' },
+  { value: 'east', label: 'East' },
+  { value: 'west', label: 'West' },
+  { value: 'northeast', label: 'Northeast' },
+  { value: 'northwest', label: 'Northwest' },
+  { value: 'southeast', label: 'Southeast' },
+  { value: 'southwest', label: 'Southwest' },
+]
 
 const AREA_UNITS: { value: AreaUnit; label: string }[] = [
   { value: 'sqft', label: 'sq ft' },
@@ -21,6 +34,23 @@ interface Props {
 
 export function BasicsStep({ value, onChange, errors, onNext }: Props) {
   const isResidential = RESIDENTIAL_TYPES.includes(value.property_type as never)
+  const showStructuralDetails = STRUCTURAL_DETAIL_TYPES.includes(value.property_type as never)
+
+  const addFloor = () => {
+    onChange({
+      ...value,
+      floor_breakdown: [...value.floor_breakdown, { label: `Floor ${value.floor_breakdown.length + 1}`, area_sqft: '', description: '' }],
+    })
+  }
+  const updateFloor = (index: number, patch: Partial<BasicsState['floor_breakdown'][number]>) => {
+    onChange({
+      ...value,
+      floor_breakdown: value.floor_breakdown.map((row, i) => (i === index ? { ...row, ...patch } : row)),
+    })
+  }
+  const removeFloor = (index: number) => {
+    onChange({ ...value, floor_breakdown: value.floor_breakdown.filter((_, i) => i !== index) })
+  }
 
   return (
     <div className="flex flex-col gap-4">
@@ -140,6 +170,85 @@ export function BasicsStep({ value, onChange, errors, onNext }: Props) {
           <option value="semi">Semi-furnished</option>
           <option value="full">Fully furnished</option>
         </Select>
+      )}
+
+      {showStructuralDetails && (
+        <>
+          <div className="grid grid-cols-2 gap-4">
+            <Select
+              label="Facing direction (optional)"
+              value={value.facing_direction}
+              onChange={(e) => onChange({ ...value, facing_direction: e.target.value as BasicsState['facing_direction'] })}
+            >
+              {FACING_DIRECTIONS.map((d) => (
+                <option key={d.value} value={d.value}>{d.label}</option>
+              ))}
+            </Select>
+            <Input
+              label="Water tank capacity, liters (optional)"
+              type="number"
+              min="0"
+              placeholder="e.g. 15000"
+              value={value.water_tank_capacity_liters}
+              onChange={(e) => onChange({ ...value, water_tank_capacity_liters: e.target.value })}
+            />
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <label className="text-sm font-medium text-ink-900">Structural notes (optional)</label>
+            <textarea
+              rows={2}
+              value={value.structural_notes}
+              onChange={(e) => onChange({ ...value, structural_notes: e.target.value })}
+              className="rounded-lg border border-stone-200 bg-white px-3 py-2 text-sm text-ink-900 focus:outline-none focus:ring-2 focus:ring-trust-700"
+              placeholder="e.g. 14x14 inch RCC columns, NBC 105:2020 seismic compliant"
+            />
+          </div>
+
+          <div className="flex flex-col gap-3">
+            <div className="flex items-center justify-between">
+              <label className="text-sm font-medium text-ink-900">Floor-by-floor breakdown (optional)</label>
+              <button type="button" onClick={addFloor} className="inline-flex items-center gap-1 text-xs font-medium text-trust-700 hover:underline">
+                <Plus className="h-3.5 w-3.5" /> Add floor
+              </button>
+            </div>
+            {value.floor_breakdown.map((row, i) => (
+              <div key={i} className="flex flex-col gap-2 rounded-lg border border-stone-200 p-3">
+                <div className="flex items-start gap-2">
+                  <div className="grid flex-1 grid-cols-2 gap-2">
+                    <Input
+                      label="Level name"
+                      value={row.label}
+                      onChange={(e) => updateFloor(i, { label: e.target.value })}
+                    />
+                    <Input
+                      label="Area, sq ft"
+                      type="number"
+                      min="0"
+                      value={row.area_sqft}
+                      onChange={(e) => updateFloor(i, { area_sqft: e.target.value })}
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => removeFloor(i)}
+                    aria-label="Remove floor"
+                    className="mt-6 rounded-md p-1.5 text-ink-700/60 hover:bg-stone-100"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+                <textarea
+                  rows={2}
+                  value={row.description}
+                  onChange={(e) => updateFloor(i, { description: e.target.value })}
+                  className="rounded-lg border border-stone-200 bg-white px-3 py-2 text-sm text-ink-900 focus:outline-none focus:ring-2 focus:ring-trust-700"
+                  placeholder="What's on this level"
+                />
+              </div>
+            ))}
+          </div>
+        </>
       )}
 
       <div className="mt-2 flex justify-end">

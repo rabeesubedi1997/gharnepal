@@ -28,6 +28,9 @@ class Property extends Model
         'parking_spaces',
         'parking_type',
         'is_furnished',
+        'facing_direction',
+        'water_tank_capacity_liters',
+        'structural_notes',
         'created_by',
     ];
 
@@ -42,6 +45,7 @@ class Property extends Model
             'floors' => 'integer',
             'year_built' => 'integer',
             'parking_spaces' => 'integer',
+            'water_tank_capacity_liters' => 'integer',
             'created_by' => 'integer',
         ];
     }
@@ -81,6 +85,13 @@ class Property extends Model
     public function landProfile(): HasOne
     {
         return $this->hasOne(LandProfile::class);
+    }
+
+    /** Named to avoid colliding with the `floors` column (a plain count) —
+     * this is the optional floor-by-floor breakdown some owners fill in. */
+    public function floorBreakdown(): HasMany
+    {
+        return $this->hasMany(PropertyFloor::class)->orderBy('sort_order');
     }
 
     /** Is $user allowed to manage (edit/list) this property? */

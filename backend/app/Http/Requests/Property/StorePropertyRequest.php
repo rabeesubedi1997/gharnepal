@@ -30,6 +30,14 @@ class StorePropertyRequest extends FormRequest
             'parking_spaces' => ['nullable', 'integer', 'min:0', 'max:100'],
             'parking_type' => ['nullable', Rule::in(['car', 'bike', 'both'])],
             'is_furnished' => ['nullable', Rule::in(['unfurnished', 'semi', 'full'])],
+            'facing_direction' => ['nullable', Rule::in(['north', 'south', 'east', 'west', 'northeast', 'northwest', 'southeast', 'southwest'])],
+            'water_tank_capacity_liters' => ['nullable', 'integer', 'min:0', 'max:1000000'],
+            'structural_notes' => ['nullable', 'string', 'max:1000'],
+
+            'floor_breakdown' => ['nullable', 'array', 'max:20'],
+            'floor_breakdown.*.label' => ['required', 'string', 'max:100'],
+            'floor_breakdown.*.area_sqft' => ['nullable', 'numeric', 'min:0'],
+            'floor_breakdown.*.description' => ['nullable', 'string', 'max:500'],
 
             'address' => ['required', 'array'],
             'address.province_id' => ['required', 'integer', 'exists:provinces,id'],
