@@ -98,7 +98,7 @@ class ListingController extends Controller
         $listing = PropertyListing::query()
             ->where('slug', $slug)
             ->where('status', PropertyListing::STATUS_PUBLISHED)
-            ->with(['property.address.province', 'property.address.district', 'property.address.municipality', 'property.address.ward', 'property.address.neighborhood', 'property.media', 'property.owner.agencies', 'property.createdBy.agencies', 'property.landProfile.lalpurjaDocument', 'amenities', 'trustScore.breakdowns.factor', 'priceHistory'])
+            ->with(['property.address.province', 'property.address.district', 'property.address.municipality', 'property.address.ward', 'property.address.neighborhood', 'property.media', 'property.owner.agencies', 'property.createdBy.agencies', 'property.landProfile.lalpurjaDocument', 'property.floorBreakdown', 'amenities', 'trustScore.breakdowns.factor', 'priceHistory'])
             ->withCount(['ratings' => fn ($q) => $q->where('status', 'visible')])
             ->withAvg(['ratings' => fn ($q) => $q->where('status', 'visible')], 'score')
             ->firstOrFail();

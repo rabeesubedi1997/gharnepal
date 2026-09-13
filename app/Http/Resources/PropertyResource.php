@@ -33,6 +33,18 @@ class PropertyResource extends JsonResource
             'parking_spaces' => $this->parking_spaces,
             'parking_type' => $this->parking_type,
             'is_furnished' => $this->is_furnished,
+            'facing_direction' => $this->facing_direction,
+            'water_tank_capacity_liters' => $this->water_tank_capacity_liters,
+            'structural_notes' => $this->structural_notes,
+            'floor_breakdown' => $this->whenLoaded('floorBreakdown', fn () => $this->floorBreakdown->map(fn ($floor) => [
+                'id' => $floor->id,
+                'label' => $floor->label,
+                'area_sqm' => $floor->area_sqm,
+                'display' => $floor->area_sqm !== null ? [
+                    'sqft' => AreaUnitConverter::fromSqm((float) $floor->area_sqm, 'sqft'),
+                ] : null,
+                'description' => $floor->description,
+            ])),
             'address' => new AddressResource($this->whenLoaded('address')),
             'media' => MediaResource::collection($this->whenLoaded('media')),
             'listings' => $this->whenLoaded('listings', fn () => $this->listings->map(fn ($listing) => [

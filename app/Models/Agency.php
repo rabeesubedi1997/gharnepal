@@ -17,6 +17,7 @@ class Agency extends Model
         'logo_path',
         'description',
         'registration_number',
+        'founded_year',
         'verified_at',
         'verified_by',
         'status',
@@ -27,6 +28,7 @@ class Agency extends Model
         return [
             'verified_by' => 'integer',
             'verified_at' => 'datetime',
+            'founded_year' => 'integer',
         ];
     }
 

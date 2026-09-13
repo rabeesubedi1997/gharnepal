@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\V1\Account\PhoneVerificationController;
 use App\Http\Controllers\Api\V1\Account\ProfileController;
 use App\Http\Controllers\Api\V1\Account\SavedSearchController;
 use App\Http\Controllers\Api\V1\Account\VerificationController;
+use App\Http\Controllers\Api\V1\Agency\DashboardController as AgencyDashboardController;
 use App\Http\Controllers\Api\V1\Admin\AdvertisementController as AdminAdvertisementController;
 use App\Http\Controllers\Api\V1\Admin\AgencyController as AdminAgencyController;
 use App\Http\Controllers\Api\V1\Admin\AmenityController as AdminAmenityController;
@@ -55,6 +56,7 @@ use App\Http\Controllers\Api\V1\Public\AmenityController;
 use App\Http\Controllers\Api\V1\Public\BannerController;
 use App\Http\Controllers\Api\V1\Public\BlogController;
 use App\Http\Controllers\Api\V1\Public\ListingController;
+use App\Http\Controllers\Api\V1\Public\PlatformStatsController;
 use App\Http\Controllers\Api\V1\Public\LocationController;
 use App\Http\Controllers\Api\V1\Public\NeighborhoodController;
 use App\Http\Controllers\Api\V1\Public\PushConfigController;
@@ -120,6 +122,16 @@ Route::prefix('v1')->group(function () {
         Route::post('match-results/refresh', [MatchResultController::class, 'refresh']);
     });
 
+    // Agency self-service dashboard — any member (owner_admin or agent) of
+    // the requesting user's own agency. 404s (not 403) for a user with no
+    // agency membership at all, since there is nothing to "forbid" here.
+    Route::middleware('auth:sanctum')->prefix('agency/dashboard')->group(function () {
+        Route::get('overview', [AgencyDashboardController::class, 'overview']);
+        Route::get('listings', [AgencyDashboardController::class, 'listings']);
+        Route::get('inquiries', [AgencyDashboardController::class, 'inquiries']);
+        Route::get('site-visits', [AgencyDashboardController::class, 'siteVisits']);
+    });
+
     // Web push — public key so the frontend can build a subscription;
     // subscribe/unsubscribe are per-account.
     Route::get('push/vapid-public-key', [PushConfigController::class, 'vapidPublicKey']);
@@ -132,6 +144,7 @@ Route::prefix('v1')->group(function () {
     Route::get('listings', [ListingController::class, 'index']);
     Route::get('listings/{slug}', [ListingController::class, 'show']);
     Route::get('amenities', [AmenityController::class, 'index']);
+    Route::get('platform-stats', [PlatformStatsController::class, 'index']);
 
     // Shared favorite collections — public, unguessable-token read access, no auth.
     Route::get('collections/{token}', [PublicFavoriteCollectionController::class, 'show']);

@@ -33,15 +33,19 @@ class PropertyService
                 'parking_spaces' => $data['parking_spaces'] ?? 0,
                 'parking_type' => $data['parking_type'] ?? null,
                 'is_furnished' => $data['is_furnished'] ?? null,
+                'facing_direction' => $data['facing_direction'] ?? null,
+                'water_tank_capacity_liters' => $data['water_tank_capacity_liters'] ?? null,
+                'structural_notes' => $data['structural_notes'] ?? null,
             ]);
 
             $this->putAddress($property, $data['address']);
+            $this->putFloorBreakdown($property, $data['floor_breakdown'] ?? null);
 
             $property->managers()->syncWithoutDetaching([$user->id => ['relation' => 'owner']]);
 
             $user->roles()->syncWithoutDetaching(Role::where('key', Role::OWNER)->pluck('id'));
 
-            return $property->fresh(['address.province', 'address.district', 'address.municipality', 'address.ward', 'address.neighborhood']);
+            return $property->fresh(['address.province', 'address.district', 'address.municipality', 'address.ward', 'address.neighborhood', 'floorBreakdown']);
         });
     }
 
@@ -66,13 +70,47 @@ class PropertyService
             'parking_spaces' => $data['parking_spaces'] ?? null,
             'parking_type' => $data['parking_type'] ?? null,
             'is_furnished' => $data['is_furnished'] ?? null,
+            'facing_direction' => $data['facing_direction'] ?? null,
+            'water_tank_capacity_liters' => $data['water_tank_capacity_liters'] ?? null,
+            'structural_notes' => $data['structural_notes'] ?? null,
         ], fn ($v) => $v !== null));
 
         if (isset($data['address'])) {
             $this->putAddress($property, $data['address']);
         }
 
-        return $property->fresh(['address.province', 'address.district', 'address.municipality', 'address.ward', 'address.neighborhood']);
+        if (array_key_exists('floor_breakdown', $data)) {
+            $this->putFloorBreakdown($property, $data['floor_breakdown']);
+        }
+
+        return $property->fresh(['address.province', 'address.district', 'address.municipality', 'address.ward', 'address.neighborhood', 'floorBreakdown']);
+    }
+
+    /** Replaces the whole floor-breakdown list wholesale — simplest correct
+     * behavior for a small (2-4 row) owner-edited list where there's no
+     * independent identity to preserve across edits (same pattern already
+     * used for a neighborhood's POIs and an admin's score factors). A null
+     * $rows leaves the existing rows untouched; an empty array clears them. */
+    private function putFloorBreakdown(Property $property, ?array $rows): void
+    {
+        if ($rows === null) {
+            return;
+        }
+
+        $property->floorBreakdown()->delete();
+
+        foreach ($rows as $index => $row) {
+            $property->floorBreakdown()->create([
+                'label' => $row['label'],
+                // Entered as sq ft (the unit Nepali builder specs quote a
+                // per-floor built-up area in, even when the land itself is
+                // in Aana/Ropani) and stored as sqm like every other area
+                // field, so a unit-system toggle elsewhere can still convert it.
+                'area_sqm' => isset($row['area_sqft']) ? AreaUnitConverter::toSqm((float) $row['area_sqft'], 'sqft') : null,
+                'description' => $row['description'] ?? null,
+                'sort_order' => $index,
+            ]);
+        }
     }
 
     private function putAddress(Property $property, array $addressData): Address
