@@ -101,136 +101,131 @@ export function Home() {
     <div className="flex flex-col gap-16">
       <SeoHead seo={seo} />
 
-      {/* Hero — full-bleed to the viewport edge (not just the 1440px page
-          column) so the backdrop fills a wide monitor instead of sitting in
-          a boxed strip with plain background on either side; inner content
-          stays aligned with the rest of the page. */}
-      <section className="full-bleed relative overflow-hidden">
+      {/* Hero */}
+      <section className="relative -mx-4 overflow-hidden px-4 py-16 sm:-mx-6 sm:px-6 sm:py-24 lg:-mx-10 lg:px-10">
         <HeroBackdrop />
-        <div className="relative mx-auto max-w-[1440px] px-4 py-16 sm:px-6 sm:py-24 lg:px-10">
-          <div className="relative mx-auto flex max-w-3xl flex-col items-center gap-6 text-center">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-white backdrop-blur-sm">
-              Official Nepal Real Estate MLS
-            </span>
-            <h1 className="font-display text-3xl font-extrabold leading-tight text-white sm:text-5xl">
-              Find Your Sanctuary in Nepal
-            </h1>
-            <p lang="ne" className="max-w-xl font-display text-lg text-white/90">
-              नेपालमा तपाईंको सपनाको घर खोज्नुहोस्
-            </p>
-            <p className="max-w-xl text-base text-white/80">
-              Discover vetted freehold residences, agricultural parcels, and prime commercial
-              developments with verified Lalpurja (land title) records.
-            </p>
+        <div className="relative mx-auto flex max-w-3xl flex-col items-center gap-6 text-center">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-white backdrop-blur-sm">
+            Official Nepal Real Estate MLS
+          </span>
+          <h1 className="font-display text-3xl font-extrabold leading-tight text-white sm:text-5xl">
+            Find Your Sanctuary in Nepal
+          </h1>
+          <p lang="ne" className="max-w-xl font-display text-lg text-white/90">
+            नेपालमा तपाईंको सपनाको घर खोज्नुहोस्
+          </p>
+          <p className="max-w-xl text-base text-white/80">
+            Discover vetted freehold residences, agricultural parcels, and prime commercial
+            developments with verified Lalpurja (land title) records.
+          </p>
 
-            <form
-              role="search"
-              className="w-full max-w-2xl rounded-2xl bg-white/95 p-3 shadow-xl shadow-black/20 backdrop-blur"
-              onSubmit={handleSearch}
-            >
-              <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-                <div className="flex flex-wrap gap-1.5">
-                  {HERO_TABS.map((tab) => (
-                    <button
-                      key={tab.key}
-                      type="button"
-                      onClick={() => setHeroTab(tab.key)}
-                      className={
-                        heroTab === tab.key
-                          ? 'rounded-lg bg-trust-700 px-3 py-1.5 text-xs font-semibold text-white'
-                          : 'rounded-lg px-3 py-1.5 text-xs font-medium text-ink-700 hover:bg-stone-100'
-                      }
-                    >
-                      {tab.label} <span lang="ne" className="opacity-70">({tab.label_ne})</span>
-                    </button>
-                  ))}
-                </div>
-                <div className="flex items-center gap-1 rounded-lg bg-stone-100 p-0.5 text-[11px] font-semibold">
+          <form
+            role="search"
+            className="w-full max-w-2xl rounded-2xl bg-white/95 p-3 shadow-xl shadow-black/20 backdrop-blur"
+            onSubmit={handleSearch}
+          >
+            <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+              <div className="flex flex-wrap gap-1.5">
+                {HERO_TABS.map((tab) => (
                   <button
+                    key={tab.key}
                     type="button"
-                    onClick={() => setUnitSystem('traditional')}
-                    className={unitSystem === 'traditional' ? 'rounded-md bg-white px-2 py-1 text-trust-700 shadow-sm' : 'px-2 py-1 text-ink-700/60'}
+                    onClick={() => setHeroTab(tab.key)}
+                    className={
+                      heroTab === tab.key
+                        ? 'rounded-lg bg-trust-700 px-3 py-1.5 text-xs font-semibold text-white'
+                        : 'rounded-lg px-3 py-1.5 text-xs font-medium text-ink-700 hover:bg-stone-100'
+                    }
                   >
-                    Aana / Ropani
+                    {tab.label} <span lang="ne" className="opacity-70">({tab.label_ne})</span>
                   </button>
-                  <button
-                    type="button"
-                    onClick={() => setUnitSystem('metric')}
-                    className={unitSystem === 'metric' ? 'rounded-md bg-white px-2 py-1 text-trust-700 shadow-sm' : 'px-2 py-1 text-ink-700/60'}
-                  >
-                    Sq. Ft
-                  </button>
-                </div>
-              </div>
-              <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-                <label className="flex flex-col gap-0.5 rounded-lg border border-stone-200 px-3 py-1">
-                  <span className="text-[10px] font-semibold uppercase tracking-wide text-ink-700/50">City or neighborhood</span>
-                  <span className="flex items-center gap-1.5">
-                    <MapPin className="h-3.5 w-3.5 shrink-0 text-ink-700/50" aria-hidden="true" />
-                    <select
-                      value={cityId}
-                      onChange={(e) => setCityId(e.target.value)}
-                      className="h-7 w-full min-w-0 bg-transparent text-sm text-ink-900 focus:outline-none"
-                    >
-                      <option value="">Kathmandu Valley (All)</option>
-                      {municipalities?.map((m) => (
-                        <option key={m.id} value={m.id}>
-                          {m.name}
-                        </option>
-                      ))}
-                    </select>
-                  </span>
-                </label>
-                <label className="flex flex-col gap-0.5 rounded-lg border border-stone-200 px-3 py-1">
-                  <span className="text-[10px] font-semibold uppercase tracking-wide text-ink-700/50">Subtype &amp; structure</span>
-                  <select
-                    value={subtype}
-                    onChange={(e) => setSubtype(e.target.value)}
-                    className="h-7 w-full min-w-0 bg-transparent text-sm text-ink-900 focus:outline-none"
-                  >
-                    {PROPERTY_SUBTYPES.map((s) => (
-                      <option key={s.value} value={s.value}>
-                        {s.label}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <label className="flex flex-col gap-0.5 rounded-lg border border-stone-200 px-3 py-1">
-                  <span className="text-[10px] font-semibold uppercase tracking-wide text-ink-700/50">Budget threshold</span>
-                  <select
-                    value={budgetIndex}
-                    onChange={(e) => setBudgetIndex(Number(e.target.value))}
-                    className="h-7 w-full min-w-0 bg-transparent text-sm text-ink-900 focus:outline-none"
-                  >
-                    {BUDGET_BANDS.map((band, i) => (
-                      <option key={band.label} value={i}>
-                        {band.label}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-              </div>
-              <Button type="submit" size="lg" className="mt-2 w-full">
-                <Search className="h-4 w-4" />
-                Search {platformStats ? `${formatCompactCount(platformStats.published_listings)}+ ` : ''}Properties
-              </Button>
-            </form>
-
-            {hotspots.length > 0 && (
-              <div className="flex flex-wrap items-center justify-center gap-2 text-xs text-white/70">
-                <span className="font-medium text-white/50">Popular hotspots:</span>
-                {hotspots.map((n) => (
-                  <Link
-                    key={n.id}
-                    to={`/neighborhoods/${n.id}`}
-                    className="rounded-full border border-white/20 bg-white/10 px-3 py-1 font-medium text-white backdrop-blur-sm transition-colors hover:bg-white/20"
-                  >
-                    {n.name}
-                  </Link>
                 ))}
               </div>
-            )}
-          </div>
+              <div className="flex items-center gap-1 rounded-lg bg-stone-100 p-0.5 text-[11px] font-semibold">
+                <button
+                  type="button"
+                  onClick={() => setUnitSystem('traditional')}
+                  className={unitSystem === 'traditional' ? 'rounded-md bg-white px-2 py-1 text-trust-700 shadow-sm' : 'px-2 py-1 text-ink-700/60'}
+                >
+                  Aana / Ropani
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setUnitSystem('metric')}
+                  className={unitSystem === 'metric' ? 'rounded-md bg-white px-2 py-1 text-trust-700 shadow-sm' : 'px-2 py-1 text-ink-700/60'}
+                >
+                  Sq. Ft
+                </button>
+              </div>
+            </div>
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+              <label className="flex flex-col gap-0.5 rounded-lg border border-stone-200 px-3 py-1">
+                <span className="text-[10px] font-semibold uppercase tracking-wide text-ink-700/50">City or neighborhood</span>
+                <span className="flex items-center gap-1.5">
+                  <MapPin className="h-3.5 w-3.5 shrink-0 text-ink-700/50" aria-hidden="true" />
+                  <select
+                    value={cityId}
+                    onChange={(e) => setCityId(e.target.value)}
+                    className="h-7 w-full min-w-0 bg-transparent text-sm text-ink-900 focus:outline-none"
+                  >
+                    <option value="">Kathmandu Valley (All)</option>
+                    {municipalities?.map((m) => (
+                      <option key={m.id} value={m.id}>
+                        {m.name}
+                      </option>
+                    ))}
+                  </select>
+                </span>
+              </label>
+              <label className="flex flex-col gap-0.5 rounded-lg border border-stone-200 px-3 py-1">
+                <span className="text-[10px] font-semibold uppercase tracking-wide text-ink-700/50">Subtype &amp; structure</span>
+                <select
+                  value={subtype}
+                  onChange={(e) => setSubtype(e.target.value)}
+                  className="h-7 w-full min-w-0 bg-transparent text-sm text-ink-900 focus:outline-none"
+                >
+                  {PROPERTY_SUBTYPES.map((s) => (
+                    <option key={s.value} value={s.value}>
+                      {s.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="flex flex-col gap-0.5 rounded-lg border border-stone-200 px-3 py-1">
+                <span className="text-[10px] font-semibold uppercase tracking-wide text-ink-700/50">Budget threshold</span>
+                <select
+                  value={budgetIndex}
+                  onChange={(e) => setBudgetIndex(Number(e.target.value))}
+                  className="h-7 w-full min-w-0 bg-transparent text-sm text-ink-900 focus:outline-none"
+                >
+                  {BUDGET_BANDS.map((band, i) => (
+                    <option key={band.label} value={i}>
+                      {band.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
+            <Button type="submit" size="lg" className="mt-2 w-full">
+              <Search className="h-4 w-4" />
+              Search {platformStats ? `${formatCompactCount(platformStats.published_listings)}+ ` : ''}Properties
+            </Button>
+          </form>
+
+          {hotspots.length > 0 && (
+            <div className="flex flex-wrap items-center justify-center gap-2 text-xs text-white/70">
+              <span className="font-medium text-white/50">Popular hotspots:</span>
+              {hotspots.map((n) => (
+                <Link
+                  key={n.id}
+                  to={`/neighborhoods/${n.id}`}
+                  className="rounded-full border border-white/20 bg-white/10 px-3 py-1 font-medium text-white backdrop-blur-sm transition-colors hover:bg-white/20"
+                >
+                  {n.name}
+                </Link>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
