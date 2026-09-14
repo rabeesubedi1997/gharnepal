@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, NavLink, useNavigate } from 'react-router-dom'
-import { Building2, Heart, Home, LogOut, Menu, MessageCircle, Plus, Settings, X } from 'lucide-react'
+import { Building2, Heart, Home, LogOut, Menu, MessageCircle, Plus, Settings, Sparkles, X } from 'lucide-react'
 import { clsx } from 'clsx'
 import { ButtonLink } from '../ui/Button'
 import { useCurrentUser, useLogout } from '../../lib/api/auth'
@@ -64,6 +64,7 @@ export function Header() {
           {user ? (
             <>
               <NotificationBell />
+              <IconLink to="/account/match-results" label="Smart Match" icon={<Sparkles className="h-5 w-5" />} />
               {user.agency && (
                 <IconLink to="/agency/dashboard" label="Agency dashboard" icon={<Building2 className="h-5 w-5" />} />
               )}
@@ -107,6 +108,7 @@ export function Header() {
               { to: '/post-property', label: 'Post property' },
               ...(user
                 ? [
+                    { to: '/account/match-results', label: 'Smart Match' },
                     ...(user.agency ? [{ to: '/agency/dashboard', label: 'Agency dashboard' }] : []),
                     { to: '/dashboard', label: 'Dashboard' },
                     { to: '/account/settings', label: 'Account settings' },
