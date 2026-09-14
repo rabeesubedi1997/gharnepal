@@ -19,6 +19,10 @@ class RegisterRequest extends FormRequest
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
             'phone' => ['nullable', 'string', 'max:20', 'unique:users,phone'],
             'password' => ['required', 'confirmed', Password::min(8)],
+            // Format-only here — whether one is actually *required* depends
+            // on whether an admin has turned reCAPTCHA on (PlatformSecurity),
+            // checked in AuthController::register via RecaptchaVerifier.
+            'captcha_token' => ['nullable', 'string'],
         ];
     }
 }

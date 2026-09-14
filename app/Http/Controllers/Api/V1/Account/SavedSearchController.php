@@ -26,6 +26,22 @@ class SavedSearchController extends Controller
             'alert_frequency' => ['sometimes', Rule::in(['instant', 'daily', 'weekly', 'off'])],
         ]);
 
+        // Nothing stopped the same city (or any identical filter set) being
+        // submitted over and over — e.g. re-clicking the homepage alert
+        // banner — silently stacking duplicate alerts that'd each separately
+        // email/push the user about the same listing. Same user + same
+        // filters (order-independent — PHP's == on arrays ignores key
+        // order) reuses the existing row instead of creating another.
+        $existing = $request->user()->savedSearches()->get()->first(fn ($s) => $s->filters == $data['filters']);
+
+        if ($existing) {
+            if ($existing->alert_frequency === 'off' && ($data['alert_frequency'] ?? 'instant') !== 'off') {
+                $existing->update(['alert_frequency' => $data['alert_frequency']]);
+            }
+
+            return (new SavedSearchResource($existing))->response()->setStatusCode(200);
+        }
+
         $savedSearch = $request->user()->savedSearches()->create([
             'name' => $data['name'],
             'filters' => $data['filters'],
