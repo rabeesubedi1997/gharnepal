@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Auth;
 
+use App\Models\Agency;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Auth;
@@ -55,6 +56,32 @@ class LoginTest extends TestCase
             ->getJson('/api/v1/auth/me')
             ->assertOk()
             ->assertJsonPath('data.id', $user->id);
+    }
+
+    /** Regression test: login/register originally only loaded the `roles`
+     * relation, not `agencies`, so `UserResource::agency` (built on
+     * `whenLoaded('agencies', ...)`) silently vanished from the response
+     * right after authenticating — only a later `/auth/me` call (which does
+     * load both) would show it. Both web's and the mobile app's "Agency
+     * dashboard" nav entry are gated on this field, so a freshly-logged-in
+     * agency member wouldn't see their own dashboard link until a session
+     * restore/refresh. */
+    public function test_login_includes_the_users_agency_membership(): void
+    {
+        $user = User::factory()->create([
+            'email' => 'ram@example.com',
+            'password' => Hash::make('correct-password'),
+        ]);
+        $agency = Agency::create(['name' => 'Himalayan Homes', 'slug' => 'himalayan-homes', 'status' => 'active']);
+        $user->agencies()->attach($agency->id, ['role_in_agency' => 'agent']);
+
+        $this->postJson('/api/v1/auth/login', [
+            'email' => 'ram@example.com',
+            'password' => 'correct-password',
+        ])
+            ->assertOk()
+            ->assertJsonPath('data.agency.id', $agency->id)
+            ->assertJsonPath('data.agency.slug', 'himalayan-homes');
     }
 
     public function test_logout_revokes_the_bearer_token_it_was_called_with(): void

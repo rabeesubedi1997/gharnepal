@@ -43,7 +43,7 @@ class AuthController extends Controller
         // (which has no session to speak of) uses it as a Bearer token.
         $token = $user->createToken('mobile')->plainTextToken;
 
-        return (new UserResource($user->load('roles')))
+        return (new UserResource($user->load('roles', 'agencies')))
             ->additional(['token' => $token])
             ->response()->setStatusCode(201);
     }
@@ -71,7 +71,7 @@ class AuthController extends Controller
         $user = $request->user();
         $token = $user->createToken('mobile')->plainTextToken;
 
-        return (new UserResource($user->load('roles')))->additional(['token' => $token]);
+        return (new UserResource($user->load('roles', 'agencies')))->additional(['token' => $token]);
     }
 
     public function logout(Request $request): JsonResponse
