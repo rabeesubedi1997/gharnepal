@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\V1\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Domain\Identity\Services\RecaptchaVerifier;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Requests\Auth\RegisterRequest;
 use App\Http\Resources\UserResource;
@@ -17,8 +18,19 @@ use Laravel\Sanctum\PersonalAccessToken;
 
 class AuthController extends Controller
 {
+    public function __construct(private readonly RecaptchaVerifier $recaptcha) {}
+
     public function register(RegisterRequest $request): JsonResponse
     {
+        // A no-op the moment nothing is configured (PlatformSecurity) — this
+        // is the actual fix for "a script can create unlimited accounts",
+        // not just validation the form already did.
+        if (! $this->recaptcha->verify($request->validated('captcha_token'), $request->ip())) {
+            throw ValidationException::withMessages([
+                'captcha_token' => 'Please complete the "I\'m not a robot" check.',
+            ]);
+        }
+
         $user = User::create([
             'name' => $request->validated('name'),
             'email' => $request->validated('email'),

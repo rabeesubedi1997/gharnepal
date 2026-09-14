@@ -1,20 +1,27 @@
+import { useState } from 'react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useRegister } from '../../lib/api/auth'
+import { useCaptchaConfig } from '../../lib/api/security'
 import { applyServerErrors, getErrorMessage } from '../../lib/api/errors'
 import { registerSchema, type RegisterValues } from '../../lib/auth/schemas'
 import { Input } from '../../components/ui/Input'
 import { Button } from '../../components/ui/Button'
 import { Card } from '../../components/ui/Card'
+import { Recaptcha } from '../../components/auth/Recaptcha'
 
 export function Register() {
   const registerUser = useRegister()
+  const { data: captcha } = useCaptchaConfig()
   const navigate = useNavigate()
   const location = useLocation()
   // Same redirect-back Login already does — a guest who lands here via a
   // gated action (rather than the inline AuthModal) doesn't lose it.
   const from = (location.state as { from?: Location })?.from?.pathname ?? '/dashboard'
+
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null)
+  const [captchaError, setCaptchaError] = useState<string | null>(null)
 
   const {
     register,
@@ -24,14 +31,32 @@ export function Register() {
   } = useForm<RegisterValues>({ resolver: zodResolver(registerSchema) })
 
   const onSubmit = handleSubmit((values) => {
-    registerUser.mutate(values, {
-      onSuccess: () => navigate(from, { replace: true }),
-      onError: (error) => {
-        if (!applyServerErrors(error, setError)) {
-          setError('email', { type: 'server', message: getErrorMessage(error) })
-        }
+    if (captcha?.enabled && !captchaToken) {
+      setCaptchaError('Please complete the "I\'m not a robot" check.')
+      return
+    }
+    setCaptchaError(null)
+    registerUser.mutate(
+      { ...values, captcha_token: captchaToken ?? undefined },
+      {
+        onSuccess: () => navigate(from, { replace: true }),
+        onError: (error) => {
+          // A rejected/expired token is reported under captcha_token, not a
+          // form field — surface it next to the widget and make the user
+          // re-verify (the token is single-use regardless).
+          const captchaMessage = (error as { response?: { data?: { errors?: Record<string, string[]> } } })?.response?.data
+            ?.errors?.captcha_token?.[0]
+          if (captchaMessage) {
+            setCaptchaToken(null)
+            setCaptchaError(captchaMessage)
+            return
+          }
+          if (!applyServerErrors(error, setError)) {
+            setError('email', { type: 'server', message: getErrorMessage(error) })
+          }
+        },
       },
-    })
+    )
   })
 
   return (
@@ -58,6 +83,12 @@ export function Register() {
             error={errors.password_confirmation?.message}
             {...register('password_confirmation')}
           />
+          {captcha?.enabled && captcha.site_key && (
+            <div>
+              <Recaptcha siteKey={captcha.site_key} onVerify={setCaptchaToken} />
+              {captchaError && <p className="mt-1 text-sm text-danger-600">{captchaError}</p>}
+            </div>
+          )}
           <Button type="submit" isLoading={registerUser.isPending} className="mt-2">
             Create account
           </Button>

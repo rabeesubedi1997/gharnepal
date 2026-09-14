@@ -17,11 +17,13 @@ use App\Http\Controllers\Api\V1\Admin\AmenityController as AdminAmenityControlle
 use App\Http\Controllers\Api\V1\Admin\BannerController as AdminBannerController;
 use App\Http\Controllers\Api\V1\Admin\BlogPostController as AdminBlogPostController;
 use App\Http\Controllers\Api\V1\Admin\BrandingController as AdminBrandingController;
+use App\Http\Controllers\Api\V1\Admin\SecurityController as AdminSecurityController;
 use App\Http\Controllers\Api\V1\Admin\CommunityNoteModerationController;
 use App\Http\Controllers\Api\V1\Admin\ConversationController as AdminConversationController;
 use App\Http\Controllers\Api\V1\Admin\DashboardController;
 use App\Http\Controllers\Api\V1\Admin\DuplicateFlagController;
 use App\Http\Controllers\Api\V1\Admin\ListingModerationController;
+use App\Http\Controllers\Api\V1\Admin\MailTestController;
 use App\Http\Controllers\Api\V1\Admin\LocationManagementController;
 use App\Http\Controllers\Api\V1\Admin\NeighborhoodPoiController;
 use App\Http\Controllers\Api\V1\Admin\NeighborhoodScoreController;
@@ -56,6 +58,7 @@ use App\Http\Controllers\Api\V1\Public\AgencyController;
 use App\Http\Controllers\Api\V1\Public\AmenityController;
 use App\Http\Controllers\Api\V1\Public\BannerController;
 use App\Http\Controllers\Api\V1\Public\BrandingController;
+use App\Http\Controllers\Api\V1\Public\SecurityController;
 use App\Http\Controllers\Api\V1\Public\BlogController;
 use App\Http\Controllers\Api\V1\Public\ListingController;
 use App\Http\Controllers\Api\V1\Public\PlatformStatsController;
@@ -176,6 +179,9 @@ Route::prefix('v1')->group(function () {
 
     // Site branding (name, favicon, mobile app icon source) — admin-editable.
     Route::get('branding', [BrandingController::class, 'show']);
+
+    // Whether to render the "I'm not a robot" widget on registration, and with which site key.
+    Route::get('security/captcha', [SecurityController::class, 'captcha']);
 
     // Advertisements — targeted ad slots across pages (see AdvertisementPlacement)
     Route::get('advertisements', [AdvertisementController::class, 'index']);
@@ -327,6 +333,15 @@ Route::prefix('v1')->group(function () {
         // Every admin can see current branding; only a super admin can change
         // it — same tier as payment refunds and role grants.
         Route::post('branding', [AdminBrandingController::class, 'update'])->middleware('super_admin');
+
+        // reCAPTCHA keys are a real credential (unlike branding) — both read
+        // and write are super-admin only.
+        Route::get('security', [AdminSecurityController::class, 'show'])->middleware('super_admin');
+        Route::post('security', [AdminSecurityController::class, 'update'])->middleware('super_admin');
+
+        // Any admin can send themselves a test email — it only ever mails
+        // the calling admin's own address, so it needs no extra guard.
+        Route::post('mail-test', [MailTestController::class, 'send']);
 
         Route::get('advertisements', [AdminAdvertisementController::class, 'index']);
         Route::post('advertisements', [AdminAdvertisementController::class, 'store']);

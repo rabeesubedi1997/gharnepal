@@ -20,6 +20,7 @@ import {
   Palette,
   Receipt,
   Search,
+  ShieldAlert,
   ShieldCheck,
   Star,
   Users,
@@ -69,6 +70,7 @@ const NAV_GROUPS: { title: string; tone: AdminTone; items: { to: string; label: 
       { to: '/admin/ratings', label: 'Ratings & reviews', icon: Star },
       { to: '/admin/messages', label: 'Messages', icon: MessagesSquare },
       { to: '/admin/trust-factors', label: 'Trust score factors', icon: ShieldCheck },
+      { to: '/admin/security', label: 'Security', icon: ShieldAlert },
     ],
   },
   {

@@ -44,6 +44,7 @@ interface RegisterInput {
   email: string
   password: string
   password_confirmation: string
+  captcha_token?: string
 }
 
 interface LoginInput {

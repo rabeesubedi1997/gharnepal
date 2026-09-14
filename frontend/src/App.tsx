@@ -24,6 +24,7 @@ import { TrustFactors as AdminTrustFactors } from './pages/admin/TrustFactors'
 import { Messages as AdminMessages } from './pages/admin/Messages'
 import { Banners as AdminBanners } from './pages/admin/Banners'
 import { Branding as AdminBranding } from './pages/admin/Branding'
+import { Security as AdminSecurity } from './pages/admin/Security'
 import { Advertisements as AdminAdvertisements } from './pages/admin/Advertisements'
 import { Blog as AdminBlog } from './pages/admin/Blog'
 import { BlogEditor as AdminBlogEditor } from './pages/admin/BlogEditor'
@@ -208,6 +209,7 @@ export default function App() {
           <Route path="dashboard" element={<AdminDashboard />} />
           <Route path="banners" element={<AdminBanners />} />
           <Route path="branding" element={<AdminBranding />} />
+          <Route path="security" element={<AdminSecurity />} />
           <Route path="advertisements" element={<AdminAdvertisements />} />
           <Route path="blog" element={<AdminBlog />} />
           <Route path="blog/:id" element={<AdminBlogEditor />} />
