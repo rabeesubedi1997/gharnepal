@@ -33,6 +33,15 @@ const PROPERTY_TYPE_OPTIONS: { value: PropertyTypeValue; label: string }[] = [
   { value: 'commercial', label: 'Commercial' },
 ]
 
+// Bedrooms/family size/school/parking only make sense for a property with
+// rooms in it. When every type the user picked is one without rooms (land —
+// commercial is a mixed bag, e.g. a serviced office has rooms, so it stays
+// eligible), asking for a bedroom count is nonsensical, so those fields are
+// hidden entirely rather than left visible-but-irrelevant. Leaving the
+// selection empty ("any type") keeps every field visible, since it may
+// still resolve to a residential type.
+const ROOM_BASED_TYPES: PropertyTypeValue[] = ['room', 'apartment', 'house', 'commercial']
+
 type FormState = {
   purposes: Purpose[]
   property_types: PropertyTypeValue[]
@@ -114,6 +123,8 @@ export function MatchPreferences() {
     }))
   }
 
+  const showRoomFields = form.property_types.length === 0 || form.property_types.some((t) => ROOM_BASED_TYPES.includes(t))
+
   const togglePropertyType = (value: PropertyTypeValue) => {
     setForm((f) => ({
       ...f,
@@ -133,15 +144,18 @@ export function MatchPreferences() {
       property_types: form.property_types.length ? form.property_types : undefined,
       budget_min: form.budget_min ? Number(form.budget_min) : undefined,
       budget_max: form.budget_max ? Number(form.budget_max) : undefined,
-      min_bedrooms: form.min_bedrooms ? Number(form.min_bedrooms) : undefined,
+      // Hidden fields (no rooms in the selected type(s), e.g. land-only)
+      // never submit a stale leftover value — an unset preference is simply
+      // not scored, which is exactly "doesn't apply here".
+      min_bedrooms: showRoomFields && form.min_bedrooms ? Number(form.min_bedrooms) : undefined,
       preferred_municipality_id: form.preferred_municipality_id ? Number(form.preferred_municipality_id) : undefined,
       work_lat: form.work_lat ?? undefined,
       work_lng: form.work_lng ?? undefined,
       work_location_label: form.work_location_label || undefined,
       commute_limit_minutes: form.commute_limit_minutes ? Number(form.commute_limit_minutes) : undefined,
-      family_size: form.family_size ? Number(form.family_size) : undefined,
-      requires_school_nearby: form.requires_school_nearby,
-      requires_parking: form.requires_parking,
+      family_size: showRoomFields && form.family_size ? Number(form.family_size) : undefined,
+      requires_school_nearby: showRoomFields && form.requires_school_nearby,
+      requires_parking: showRoomFields && form.requires_parking,
       investment_purpose: form.investment_purpose,
       lifestyle_tags: form.lifestyle_tags,
     }
@@ -222,13 +236,22 @@ export function MatchPreferences() {
                 </button>
               ))}
             </div>
+            {!showRoomFields && (
+              <p className="mt-1.5 text-xs text-ink-700/60">
+                Bedroom, family size and school/parking preferences are hidden — they don't apply to land.
+              </p>
+            )}
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <Input label="Min budget (NPR)" type="number" min="0" placeholder="No minimum" value={form.budget_min} onChange={(e) => setForm({ ...form, budget_min: e.target.value })} />
             <Input label="Max budget (NPR)" type="number" min="0" placeholder="No maximum" value={form.budget_max} onChange={(e) => setForm({ ...form, budget_max: e.target.value })} />
-            <Input label="Min bedrooms" type="number" min="0" max="20" placeholder="e.g. 2" value={form.min_bedrooms} onChange={(e) => setForm({ ...form, min_bedrooms: e.target.value })} />
-            <Input label="Family size" type="number" min="1" max="20" placeholder="e.g. 4" value={form.family_size} onChange={(e) => setForm({ ...form, family_size: e.target.value })} />
+            {showRoomFields && (
+              <>
+                <Input label="Min bedrooms" type="number" min="0" max="20" placeholder="e.g. 2" value={form.min_bedrooms} onChange={(e) => setForm({ ...form, min_bedrooms: e.target.value })} />
+                <Input label="Family size" type="number" min="1" max="20" placeholder="e.g. 4" value={form.family_size} onChange={(e) => setForm({ ...form, family_size: e.target.value })} />
+              </>
+            )}
           </div>
           <Select
             label="Preferred city"
@@ -274,24 +297,28 @@ export function MatchPreferences() {
 
         <Card className="flex flex-col gap-3 p-4">
           <h2 className="font-display text-base font-semibold text-ink-900">Must-haves</h2>
-          <label className="flex items-center gap-2 text-sm text-ink-900">
-            <input
-              type="checkbox"
-              checked={form.requires_school_nearby}
-              onChange={(e) => setForm({ ...form, requires_school_nearby: e.target.checked })}
-              className="h-4 w-4 rounded border-stone-300 text-trust-700 focus:ring-trust-700"
-            />
-            A school nearby (curated in the neighborhood)
-          </label>
-          <label className="flex items-center gap-2 text-sm text-ink-900">
-            <input
-              type="checkbox"
-              checked={form.requires_parking}
-              onChange={(e) => setForm({ ...form, requires_parking: e.target.checked })}
-              className="h-4 w-4 rounded border-stone-300 text-trust-700 focus:ring-trust-700"
-            />
-            Parking space
-          </label>
+          {showRoomFields && (
+            <>
+              <label className="flex items-center gap-2 text-sm text-ink-900">
+                <input
+                  type="checkbox"
+                  checked={form.requires_school_nearby}
+                  onChange={(e) => setForm({ ...form, requires_school_nearby: e.target.checked })}
+                  className="h-4 w-4 rounded border-stone-300 text-trust-700 focus:ring-trust-700"
+                />
+                A school nearby (curated in the neighborhood)
+              </label>
+              <label className="flex items-center gap-2 text-sm text-ink-900">
+                <input
+                  type="checkbox"
+                  checked={form.requires_parking}
+                  onChange={(e) => setForm({ ...form, requires_parking: e.target.checked })}
+                  className="h-4 w-4 rounded border-stone-300 text-trust-700 focus:ring-trust-700"
+                />
+                Parking space
+              </label>
+            </>
+          )}
           <label className="flex items-center gap-2 text-sm text-ink-900">
             <input
               type="checkbox"

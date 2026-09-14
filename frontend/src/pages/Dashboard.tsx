@@ -222,19 +222,19 @@ const ALERT_FREQUENCY_LABEL: Record<SavedSearch['alert_frequency'], string> = {
 }
 
 /** Only ever shows once preferences exist and something has actually
- * crossed the 50% threshold — the same bar that triggers an email/push
+ * crossed the 80% threshold — the same bar that triggers an email/push
  * notification (see MatchThresholdNotification), so this row and that
  * notification always agree on what counts as a "strong" match. */
 function SmartMatchesSection() {
   const { data: results, isPending } = useMatchResults()
-  const strong = (results ?? []).filter((r) => r.score >= 50).slice(0, 3)
+  const strong = (results ?? []).filter((r) => r.score >= 80).slice(0, 3)
 
   if (isPending || strong.length === 0) return null
 
   return (
     <div>
       <h2 className="mb-3 flex items-center gap-2 font-display text-lg font-semibold text-ink-900">
-        <Sparkles className="h-4 w-4" /> Strong Smart Matches (50%+)
+        <Sparkles className="h-4 w-4" /> Strong Smart Matches (80%+)
       </h2>
       <div className="flex flex-col gap-2">
         {strong.map((r) => (

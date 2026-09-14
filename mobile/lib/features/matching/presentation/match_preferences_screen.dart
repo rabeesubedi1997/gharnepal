@@ -36,6 +36,12 @@ class MatchPreferencesScreen extends ConsumerWidget {
 
 const _propertyTypes = ['room', 'apartment', 'house', 'land', 'commercial'];
 
+// Bedrooms/family size/school/parking only make sense for a property with
+// rooms in it — land has none of those, so asking for them is nonsensical.
+// "Any type" (null) leaves everything visible since it may still resolve to
+// a residential type. Mirrors frontend/src/pages/Matching/MatchPreferences.tsx.
+const _roomBasedTypes = {'room', 'apartment', 'house', 'commercial'};
+
 class _PreferencesForm extends ConsumerStatefulWidget {
   const _PreferencesForm({required this.initial});
 
@@ -70,6 +76,8 @@ class _PreferencesFormState extends ConsumerState<_PreferencesForm> {
 
   bool _saving = false;
 
+  bool get _showRoomFields => _propertyType == null || _roomBasedTypes.contains(_propertyType);
+
   @override
   void dispose() {
     _budgetMinController.dispose();
@@ -89,15 +97,17 @@ class _PreferencesFormState extends ConsumerState<_PreferencesForm> {
             propertyType: _propertyType,
             budgetMin: double.tryParse(_budgetMinController.text.trim()),
             budgetMax: double.tryParse(_budgetMaxController.text.trim()),
-            minBedrooms: _minBedrooms,
+            // Hidden fields (no rooms in the selected type, e.g. land) never
+            // submit a stale leftover value — unset simply means "not scored".
+            minBedrooms: _showRoomFields ? _minBedrooms : null,
             preferredMunicipalityId: _municipalityId,
             workLat: _workLat,
             workLng: _workLng,
             workLocationLabel: _workLabelController.text.trim(),
             commuteLimitMinutes: _commuteLimit,
-            familySize: int.tryParse(_familySizeController.text.trim()),
-            requiresSchoolNearby: _requiresSchool,
-            requiresParking: _requiresParking,
+            familySize: _showRoomFields ? int.tryParse(_familySizeController.text.trim()) : null,
+            requiresSchoolNearby: _showRoomFields && _requiresSchool,
+            requiresParking: _showRoomFields && _requiresParking,
             investmentPurpose: _investmentPurpose,
             lifestyleTags: _lifestyleTags.toList(),
           );
@@ -142,6 +152,14 @@ class _PreferencesFormState extends ConsumerState<_PreferencesForm> {
           ],
           onChanged: (value) => setState(() => _propertyType = value),
         ),
+        if (!_showRoomFields)
+          const Padding(
+            padding: EdgeInsets.only(top: 6),
+            child: Text(
+              "Bedroom, family size and school/parking preferences are hidden — they don't apply to land.",
+              style: TextStyle(fontSize: 12, color: AppColors.ink700),
+            ),
+          ),
         const SizedBox(height: 16),
         Row(
           children: [
@@ -162,16 +180,18 @@ class _PreferencesFormState extends ConsumerState<_PreferencesForm> {
             ),
           ],
         ),
-        const SizedBox(height: 16),
-        DropdownButtonFormField<int?>(
-          initialValue: _minBedrooms,
-          decoration: const InputDecoration(labelText: 'Minimum bedrooms'),
-          items: [
-            const DropdownMenuItem(value: null, child: Text('Any')),
-            ...List.generate(5, (i) => i + 1).map((n) => DropdownMenuItem(value: n, child: Text('$n+'))),
-          ],
-          onChanged: (value) => setState(() => _minBedrooms = value),
-        ),
+        if (_showRoomFields) ...[
+          const SizedBox(height: 16),
+          DropdownButtonFormField<int?>(
+            initialValue: _minBedrooms,
+            decoration: const InputDecoration(labelText: 'Minimum bedrooms'),
+            items: [
+              const DropdownMenuItem(value: null, child: Text('Any')),
+              ...List.generate(5, (i) => i + 1).map((n) => DropdownMenuItem(value: n, child: Text('$n+'))),
+            ],
+            onChanged: (value) => setState(() => _minBedrooms = value),
+          ),
+        ],
         const SizedBox(height: 16),
         municipalities.when(
           loading: () => const LinearProgressIndicator(),
@@ -224,24 +244,26 @@ class _PreferencesFormState extends ConsumerState<_PreferencesForm> {
           ],
           onChanged: (value) => setState(() => _commuteLimit = value),
         ),
-        const SizedBox(height: 16),
-        TextField(
-          controller: _familySizeController,
-          keyboardType: TextInputType.number,
-          decoration: const InputDecoration(labelText: 'Family size (optional)'),
-        ),
-        SwitchListTile(
-          contentPadding: EdgeInsets.zero,
-          title: const Text('Needs a school nearby'),
-          value: _requiresSchool,
-          onChanged: (value) => setState(() => _requiresSchool = value),
-        ),
-        SwitchListTile(
-          contentPadding: EdgeInsets.zero,
-          title: const Text('Needs parking'),
-          value: _requiresParking,
-          onChanged: (value) => setState(() => _requiresParking = value),
-        ),
+        if (_showRoomFields) ...[
+          const SizedBox(height: 16),
+          TextField(
+            controller: _familySizeController,
+            keyboardType: TextInputType.number,
+            decoration: const InputDecoration(labelText: 'Family size (optional)'),
+          ),
+          SwitchListTile(
+            contentPadding: EdgeInsets.zero,
+            title: const Text('Needs a school nearby'),
+            value: _requiresSchool,
+            onChanged: (value) => setState(() => _requiresSchool = value),
+          ),
+          SwitchListTile(
+            contentPadding: EdgeInsets.zero,
+            title: const Text('Needs parking'),
+            value: _requiresParking,
+            onChanged: (value) => setState(() => _requiresParking = value),
+          ),
+        ],
         SwitchListTile(
           contentPadding: EdgeInsets.zero,
           title: const Text('Buying as an investment'),

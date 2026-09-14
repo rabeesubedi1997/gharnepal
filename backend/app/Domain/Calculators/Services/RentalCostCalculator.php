@@ -12,7 +12,13 @@ class RentalCostCalculator
     public function calculate(array $input): array
     {
         $monthlyRent = (float) ($input['monthly_rent'] ?? 0);
-        $depositMonths = (float) ($input['deposit_months'] ?? 2);
+        // Every other optional cost defaults to 0 when the renter leaves it
+        // blank — deposit must not be the one silent exception. It used to
+        // default to 2 months' rent, so an empty field quietly added a real
+        // deposit the renter never entered (the frontend's own "2" default
+        // is a pre-filled *value* the renter can see and clear; once it's
+        // cleared here it means 0, not a hidden guess).
+        $depositMonths = (float) ($input['deposit_months'] ?? 0);
         $utilities = (float) ($input['utilities_monthly'] ?? 0);
         $internet = (float) ($input['internet_monthly'] ?? 0);
         $parking = (float) ($input['parking_monthly'] ?? 0);

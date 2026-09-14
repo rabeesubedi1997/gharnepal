@@ -20,7 +20,7 @@ use Tests\TestCase;
 /**
  * Match results were previously only ever recomputed on preference-save or
  * a manual refresh — this is the missing "listing just published, does it
- * cross a buyer's 50% threshold" path. Mirrors
+ * cross a buyer's 80% threshold" path. Mirrors
  * tests/Feature/Engagement/SavedSearchAlertTest.php's shape.
  */
 class SmartMatchAlertTest extends TestCase
@@ -100,7 +100,7 @@ class SmartMatchAlertTest extends TestCase
             ->assertOk();
 
         Notification::assertSentTo($buyer, MatchThresholdNotification::class, function (MatchThresholdNotification $n) use ($listing) {
-            return $n->listing->id === $listing->id && $n->score >= 50;
+            return $n->listing->id === $listing->id && $n->score >= 80;
         });
         $this->assertDatabaseHas('match_results', [
             'user_id' => $buyer->id,

@@ -16,7 +16,7 @@ export function MatchResults() {
   const [strongOnly, setStrongOnly] = useState(false)
 
   const hasPreferences = !!prefs?.id
-  const visibleResults = strongOnly ? (results ?? []).filter((r) => r.score >= 50) : (results ?? [])
+  const visibleResults = strongOnly ? (results ?? []).filter((r) => r.score >= 80) : (results ?? [])
 
   return (
     <div className="flex flex-col gap-6">
@@ -47,7 +47,7 @@ export function MatchResults() {
             onChange={(e) => setStrongOnly(e.target.checked)}
             className="h-4 w-4 rounded border-stone-300 text-trust-700 focus:ring-trust-700"
           />
-          Only show strong matches (50%+) — you'll also get an email the moment a new listing crosses 50%
+          Only show strong matches (80%+) — you'll also get an email the moment a new listing crosses 80%
         </label>
       )}
 
@@ -80,8 +80,8 @@ export function MatchResults() {
 
       {hasPreferences && !isPending && !isError && results && results.length > 0 && visibleResults.length === 0 && (
         <EmptyState
-          title="No strong matches (50%+) yet"
-          description="Nothing has crossed the 50% mark. Uncheck the filter above to see every scored match, or widen your preferences."
+          title="No strong matches (80%+) yet"
+          description="Nothing has crossed the 80% mark. Uncheck the filter above to see every scored match, or widen your preferences."
         />
       )}
 
