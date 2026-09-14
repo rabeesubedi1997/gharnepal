@@ -113,15 +113,25 @@ class SecurityTest extends TestCase
             ->assertJsonPath('data.site_key', 'public-site-key');
     }
 
-    public function test_a_regular_admin_cannot_view_or_change_security_settings(): void
+    public function test_a_regular_admin_can_view_and_change_security_settings(): void
     {
-        $this->actingAs($this->admin(), 'sanctum')->getJson('/api/v1/admin/security')->assertForbidden();
-        $this->actingAs($this->admin(), 'sanctum')->postJson('/api/v1/admin/security', ['recaptcha_enabled' => true])->assertForbidden();
+        $this->actingAs($this->admin(), 'sanctum')->getJson('/api/v1/admin/security')->assertOk();
+        $this->actingAs($this->admin(), 'sanctum')
+            ->postJson('/api/v1/admin/security', ['recaptcha_enabled' => true])
+            ->assertOk();
     }
 
-    public function test_a_super_admin_can_configure_captcha_without_ever_seeing_the_secret_echoed_back(): void
+    public function test_a_non_admin_still_cannot_view_or_change_security_settings(): void
     {
-        $response = $this->actingAs($this->superAdmin(), 'sanctum')->postJson('/api/v1/admin/security', [
+        $buyer = User::factory()->create();
+
+        $this->actingAs($buyer, 'sanctum')->getJson('/api/v1/admin/security')->assertForbidden();
+        $this->actingAs($buyer, 'sanctum')->postJson('/api/v1/admin/security', ['recaptcha_enabled' => true])->assertForbidden();
+    }
+
+    public function test_an_admin_can_configure_captcha_without_ever_seeing_the_secret_echoed_back(): void
+    {
+        $response = $this->actingAs($this->admin(), 'sanctum')->postJson('/api/v1/admin/security', [
             'recaptcha_enabled' => true,
             'recaptcha_site_key' => 'my-site-key',
             'recaptcha_secret_key' => 'my-secret-key',

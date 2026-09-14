@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { Mail, ShieldAlert } from 'lucide-react'
-import { useCurrentUser } from '../../lib/api/auth'
 import { useAdminSecurity, useSendTestEmail, useUpdateSecurity } from '../../lib/api/security'
 import { getErrorMessage } from '../../lib/api/errors'
 import { AdminPageHeader } from '../../components/admin/AdminPageHeader'
@@ -11,7 +10,6 @@ import { ErrorState } from '../../components/ui/ErrorState'
 import { Skeleton } from '../../components/ui/Skeleton'
 
 export function Security() {
-  const { data: user } = useCurrentUser()
   const { data, isPending, isError, refetch } = useAdminSecurity()
   const update = useUpdateSecurity()
   const testEmail = useSendTestEmail()
@@ -21,7 +19,6 @@ export function Security() {
   const [error, setError] = useState<string | null>(null)
   const [saved, setSaved] = useState(false)
 
-  const canEdit = !!user?.is_super_admin
   const enabled = data?.recaptcha_enabled ?? false
 
   const handleToggle = (next: boolean) => {
@@ -60,16 +57,10 @@ export function Security() {
       <AdminPageHeader
         icon={ShieldAlert}
         title="Security"
-        description="Registration bot protection and a way to check outbound email actually works. Only a super admin can change these."
+        description="Registration bot protection and a way to check outbound email actually works."
       />
 
       {isError && <ErrorState onRetry={refetch} />}
-
-      {!canEdit && (
-        <Card className="border-warning-600/30 bg-warning-100/40 p-4 text-sm text-ink-700">
-          You can see the current settings below, but only a super admin can change them.
-        </Card>
-      )}
 
       <Card className="flex flex-col gap-4 p-4">
         <div className="flex items-center justify-between">
@@ -84,7 +75,7 @@ export function Security() {
             type="button"
             role="switch"
             aria-checked={enabled}
-            disabled={!canEdit || !data?.recaptcha_site_key || !data?.recaptcha_secret_configured}
+            disabled={!data?.recaptcha_site_key || !data?.recaptcha_secret_configured}
             onClick={() => handleToggle(!enabled)}
             className={`relative h-6 w-11 shrink-0 rounded-full transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${enabled ? 'bg-trust-700' : 'bg-stone-300'}`}
           >
@@ -113,24 +104,20 @@ export function Security() {
             placeholder={data?.recaptcha_site_key ?? 'Not set'}
             value={siteKey}
             onChange={(e) => setSiteKey(e.target.value)}
-            disabled={!canEdit}
           />
           <Input
             label="Secret key"
             placeholder={data?.recaptcha_secret_configured ? '•••••••••••• (set — leave blank to keep it)' : 'Not set'}
             value={secretKey}
             onChange={(e) => setSecretKey(e.target.value)}
-            disabled={!canEdit}
           />
         </div>
 
         {error && <p className="text-sm text-danger-600">{error}</p>}
         {saved && <p className="text-sm text-success-600">Saved.</p>}
-        {canEdit && (
-          <Button className="self-start" size="sm" variant="outline" isLoading={update.isPending} onClick={handleSaveKeys}>
-            Save keys
-          </Button>
-        )}
+        <Button className="self-start" size="sm" variant="outline" isLoading={update.isPending} onClick={handleSaveKeys}>
+          Save keys
+        </Button>
       </Card>
 
       <Card className="flex flex-col gap-3 p-4">

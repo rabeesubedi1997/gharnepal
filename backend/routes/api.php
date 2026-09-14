@@ -334,10 +334,10 @@ Route::prefix('v1')->group(function () {
         // it — same tier as payment refunds and role grants.
         Route::post('branding', [AdminBrandingController::class, 'update'])->middleware('super_admin');
 
-        // reCAPTCHA keys are a real credential (unlike branding) — both read
-        // and write are super-admin only.
-        Route::get('security', [AdminSecurityController::class, 'show'])->middleware('super_admin');
-        Route::post('security', [AdminSecurityController::class, 'update'])->middleware('super_admin');
+        // Open to any admin (not just super admin) — the secret itself is
+        // still never echoed back in full (see SecurityController::respond).
+        Route::get('security', [AdminSecurityController::class, 'show']);
+        Route::post('security', [AdminSecurityController::class, 'update']);
 
         // Any admin can send themselves a test email — it only ever mails
         // the calling admin's own address, so it needs no extra guard.
