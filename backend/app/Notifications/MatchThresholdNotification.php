@@ -34,6 +34,7 @@ class MatchThresholdNotification extends Notification
         return [
             'type' => 'smart_match_threshold',
             'listing_id' => $this->listing->id,
+            'listing_slug' => $this->listing->slug,
             'listing_title' => $this->listing->title,
             'score' => $this->score,
             'message' => "{$this->score}% match: \"{$this->listing->title}\"",

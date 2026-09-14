@@ -15,6 +15,8 @@ function describe(n: { type: string | null; data: Record<string, unknown> }): { 
       return { text: (n.data.message as string) ?? 'New message', href: `/messages/${n.data.conversation_id}` }
     case 'saved_search_match':
       return { text: (n.data.message as string) ?? 'A saved search has new matches', href: '/search' }
+    case 'smart_match_threshold':
+      return { text: (n.data.message as string) ?? 'A new Smart Match appeared', href: `/listings/${n.data.listing_slug}` }
     case 'viewing_request_received':
       return { text: (n.data.message as string) ?? 'New viewing request', href: '/account/viewing-requests?as=host' }
     case 'viewing_request_updated':

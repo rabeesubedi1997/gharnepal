@@ -63,6 +63,7 @@ class _NotificationTile extends ConsumerWidget {
     'listing_featured' => Icons.star_outline,
     'viewing_request_received' => Icons.calendar_month_outlined,
     'viewing_request_updated' => Icons.event_available_outlined,
+    'smart_match_threshold' => Icons.auto_awesome_outlined,
     _ => Icons.notifications_none,
   };
 
