@@ -44,6 +44,8 @@ void main() {
     }
 
     expect(find.text('Ghar Nepal'), findsOneWidget);
-    expect(find.text('Search houses, land, rooms...'), findsOneWidget);
+    // The hero search card's purpose tab — always rendered regardless of
+    // network state, unlike the municipality/listing data around it.
+    expect(find.text('For Sale'), findsOneWidget);
   });
 }

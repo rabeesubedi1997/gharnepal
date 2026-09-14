@@ -70,6 +70,29 @@ class OwnerListingSummary {
 /// field, and also used standalone as an item of the Owner Dashboard's
 /// "My Properties" list (`GET /owner/properties`), where `listings` is
 /// populated instead of empty.
+/// One row of `PropertyResource.floor_breakdown` — a floor-by-floor area
+/// breakdown, only present when the `floorBreakdown` relation was loaded.
+class FloorBreakdownEntry {
+  FloorBreakdownEntry({required this.id, this.label, this.areaSqm, this.areaSqft, this.description});
+
+  factory FloorBreakdownEntry.fromJson(Map<String, dynamic> json) {
+    final display = json['display'] as Map<String, dynamic>?;
+    return FloorBreakdownEntry(
+      id: json['id'] as int,
+      label: json['label'] as String?,
+      areaSqm: asDouble(json['area_sqm']),
+      areaSqft: display != null ? asDouble(display['sqft']) : null,
+      description: json['description'] as String?,
+    );
+  }
+
+  final int id;
+  final String? label;
+  final double? areaSqm;
+  final double? areaSqft;
+  final String? description;
+}
+
 class Property {
   Property({
     required this.id,
@@ -82,6 +105,10 @@ class Property {
     this.parkingSpaces,
     this.parkingType,
     this.isFurnished,
+    this.facingDirection,
+    this.waterTankCapacityLiters,
+    this.structuralNotes,
+    this.floorBreakdown = const [],
     this.address,
     required this.media,
     this.landProfile,
@@ -100,6 +127,12 @@ class Property {
       parkingSpaces: asInt(json['parking_spaces']),
       parkingType: json['parking_type'] as String?,
       isFurnished: json['is_furnished'] as String?,
+      facingDirection: json['facing_direction'] as String?,
+      waterTankCapacityLiters: asInt(json['water_tank_capacity_liters']),
+      structuralNotes: json['structural_notes'] as String?,
+      floorBreakdown: (json['floor_breakdown'] as List<dynamic>? ?? const [])
+          .map((f) => FloorBreakdownEntry.fromJson(f as Map<String, dynamic>))
+          .toList(growable: false),
       address: json['address'] != null ? Address.fromJson(json['address'] as Map<String, dynamic>) : null,
       media: (json['media'] as List<dynamic>? ?? const [])
           .map((m) => MediaItem.fromJson(m as Map<String, dynamic>))
@@ -123,10 +156,15 @@ class Property {
   final int? parkingSpaces;
   final String? parkingType; // car | bike | both
   final String? isFurnished; // unfurnished | semi | full
+  final String? facingDirection; // north | south | east | west | northeast | ...
+  final int? waterTankCapacityLiters;
+  final String? structuralNotes;
+  final List<FloorBreakdownEntry> floorBreakdown;
   final Address? address;
   final List<MediaItem> media;
   final LandProfile? landProfile;
   final List<OwnerListingSummary> listings;
 
   List<MediaItem> get images => media.where((m) => m.type == 'image').toList(growable: false);
+  List<MediaItem> get floorPlans => media.where((m) => m.type == 'floor_plan').toList(growable: false);
 }

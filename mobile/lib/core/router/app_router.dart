@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../features/account/presentation/account_screen.dart';
+import '../../features/agency_dashboard/presentation/agency_dashboard_screen.dart';
 import '../../features/agencies/presentation/agencies_screen.dart';
 import '../../features/agencies/presentation/agency_profile_screen.dart';
 import '../../features/admin/agencies/presentation/admin_agencies_screen.dart';
@@ -145,6 +146,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => EditListingScreen(listingId: int.parse(state.pathParameters['id']!)),
       ),
       GoRoute(path: '/payments', builder: (context, state) => const PaymentHistoryScreen()),
+      GoRoute(path: '/agency/dashboard', builder: (context, state) => const AgencyDashboardScreen()),
       GoRoute(path: '/settings', builder: (context, state) => const SettingsScreen()),
       GoRoute(path: '/verifications', builder: (context, state) => const VerificationCenterScreen()),
       GoRoute(path: '/calculators', builder: (context, state) => const CalculatorsScreen()),

@@ -28,6 +28,7 @@ class NeighborhoodSummary {
     required this.isCurated,
     required this.ward,
     this.score,
+    this.activeListingsCount = 0,
   });
 
   factory NeighborhoodSummary.fromJson(Map<String, dynamic> json) {
@@ -38,6 +39,7 @@ class NeighborhoodSummary {
       isCurated: json['is_curated'] as bool? ?? false,
       ward: NeighborhoodWardRef.fromJson(json['ward'] as Map<String, dynamic>),
       score: json['score'] != null ? NeighborhoodScore.fromJson(json['score'] as Map<String, dynamic>) : null,
+      activeListingsCount: json['active_listings_count'] as int? ?? 0,
     );
   }
 
@@ -47,6 +49,7 @@ class NeighborhoodSummary {
   final bool isCurated;
   final NeighborhoodWardRef ward;
   final NeighborhoodScore? score;
+  final int activeListingsCount;
 
   /// e.g. "Baneshwor, Kathmandu Metropolitan City" — used both for display
   /// and as the client-side search haystack (the directory has no server

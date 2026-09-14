@@ -20,6 +20,17 @@ class PriceHistoryEntry {
   final String changedAt;
 }
 
+class VideoTour {
+  VideoTour({required this.url, required this.embedUrl});
+
+  factory VideoTour.fromJson(Map<String, dynamic> json) {
+    return VideoTour(url: json['url'] as String, embedUrl: json['embed_url'] as String?);
+  }
+
+  final String url;
+  final String? embedUrl;
+}
+
 class MyRating {
   MyRating({required this.id, required this.score, this.comment});
 
@@ -44,6 +55,7 @@ class ListingDetail {
     required this.referenceCode,
     required this.title,
     this.description,
+    this.videoTour,
     required this.purpose,
     required this.price,
     this.pricePeriod,
@@ -72,6 +84,7 @@ class ListingDetail {
       referenceCode: json['reference_code'] as String,
       title: json['title'] as String,
       description: json['description'] as String?,
+      videoTour: json['video_tour'] != null ? VideoTour.fromJson(json['video_tour'] as Map<String, dynamic>) : null,
       purpose: json['purpose'] as String,
       price: asDoubleOr(json['price'], 0),
       pricePeriod: json['price_period'] as String?,
@@ -105,6 +118,7 @@ class ListingDetail {
   final String referenceCode;
   final String title;
   final String? description;
+  final VideoTour? videoTour;
   final String purpose;
   final double price;
   final String? pricePeriod;

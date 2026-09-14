@@ -55,6 +55,16 @@ class AccountScreen extends ConsumerWidget {
             trailing: const Icon(Icons.chevron_right),
             onTap: () => context.push('/post-property'),
           ),
+          if (user.agency != null) ...[
+            const Divider(),
+            ListTile(
+              leading: const Icon(Icons.business_outlined, color: AppColors.trust700),
+              title: const Text('Agency dashboard', style: TextStyle(fontWeight: FontWeight.w700)),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => context.push('/agency/dashboard'),
+            ),
+          ],
+          const Divider(),
           ListTile(
             leading: const Icon(Icons.receipt_long_outlined),
             title: const Text('Payment history'),

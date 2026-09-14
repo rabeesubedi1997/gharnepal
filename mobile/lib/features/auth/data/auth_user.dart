@@ -10,6 +10,7 @@ class AuthUser {
     required this.emailVerified,
     required this.phoneVerified,
     required this.roles,
+    this.agency,
   });
 
   factory AuthUser.fromJson(Map<String, dynamic> json) {
@@ -24,6 +25,7 @@ class AuthUser {
       roles: (json['roles'] as List<dynamic>? ?? const [])
           .map((role) => role.toString())
           .toList(growable: false),
+      agency: json['agency'] != null ? AuthUserAgencyRef.fromJson(json['agency'] as Map<String, dynamic>) : null,
     );
   }
 
@@ -35,6 +37,11 @@ class AuthUser {
   final bool emailVerified;
   final bool phoneVerified;
   final List<String> roles;
+  // Just enough to decide whether to show the agency dashboard nav entry —
+  // mirrors `UserResource::agency` (`only(['id','name','slug'])`). A user
+  // can only ever have at most one membership handled anywhere in this
+  // product yet (see AgencyDashboardController), so this is never a list.
+  final AuthUserAgencyRef? agency;
 
   bool hasRole(String role) => roles.contains(role);
 
@@ -44,4 +51,20 @@ class AuthUser {
   bool get isAdmin => hasRole('admin') || hasRole('super_admin');
 
   bool get isSuperAdmin => hasRole('super_admin');
+}
+
+class AuthUserAgencyRef {
+  AuthUserAgencyRef({required this.id, required this.name, required this.slug});
+
+  factory AuthUserAgencyRef.fromJson(Map<String, dynamic> json) {
+    return AuthUserAgencyRef(
+      id: json['id'] as int,
+      name: json['name'] as String,
+      slug: json['slug'] as String,
+    );
+  }
+
+  final int id;
+  final String name;
+  final String slug;
 }

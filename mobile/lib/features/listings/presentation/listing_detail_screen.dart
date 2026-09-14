@@ -1,7 +1,11 @@
+import 'dart:math' as math;
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:latlong2/latlong.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -9,20 +13,54 @@ import '../../../core/formatters/npr_formatter.dart';
 import '../../../core/network/api_config.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../features/auth/application/auth_controller.dart';
+import '../../../features/calculators/application/calculators_providers.dart';
 import '../../../features/messaging/presentation/start_conversation_sheet.dart';
+import '../../../features/neighborhoods/application/neighborhoods_providers.dart';
+import '../../../features/neighborhoods/data/models/neighborhood_poi.dart';
 import '../../../features/viewing_requests/presentation/request_viewing_sheet.dart';
 import '../../../widgets/app_badge.dart';
 import '../../../widgets/app_button.dart';
 import '../../../widgets/error_state.dart';
 import '../../../widgets/favorite_button.dart';
 import '../../../widgets/property_card.dart';
+import '../../../widgets/skeleton.dart';
 import '../../../widgets/trust_badge.dart';
 import '../application/listings_providers.dart';
+import '../data/models/address.dart';
 import '../data/models/land_profile.dart';
 import '../data/models/listing_detail.dart';
+import '../data/models/media_item.dart';
 import '../data/models/property.dart';
 import 'ratings_section.dart';
 import 'report_listing_sheet.dart';
+
+const _kParkingTypeLabel = {'car': 'Car', 'bike': 'Bike/scooter', 'both': 'Car & bike'};
+
+const _kFacingDirectionLabel = {
+  'north': 'North',
+  'south': 'South',
+  'east': 'East',
+  'west': 'West',
+  'northeast': 'Northeast',
+  'northwest': 'Northwest',
+  'southeast': 'Southeast',
+  'southwest': 'Southwest',
+};
+
+// Mirrors distanceMeters()/formatDistance() in frontend/src/pages/ListingDetail.tsx.
+double _distanceMeters(double lat1, double lng1, double lat2, double lng2) {
+  const r = 6371000;
+  double toRad(double d) => d * math.pi / 180;
+  final dLat = toRad(lat2 - lat1);
+  final dLng = toRad(lng2 - lng1);
+  final a =
+      math.pow(math.sin(dLat / 2), 2) + math.cos(toRad(lat1)) * math.cos(toRad(lat2)) * math.pow(math.sin(dLng / 2), 2);
+  return r * 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a));
+}
+
+String _formatDistance(double meters) {
+  return meters >= 1000 ? '${(meters / 1000).toStringAsFixed(1)} km' : '${meters.round()} m';
+}
 
 /// Mirrors frontend/src/pages/ListingDetail.tsx: gallery, price/area (incl.
 /// Nepali land units), amenities, ratings & reviews, land due-diligence
@@ -151,6 +189,8 @@ class _ListingDetailBody extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                _Breadcrumb(listing: listing),
+                const SizedBox(height: 8),
                 Row(
                   children: [
                     if (listing.isFeatured) ...[
@@ -170,10 +210,11 @@ class _ListingDetailBody extends ConsumerWidget {
                 ),
                 if (listing.negotiable)
                   Text('Negotiable', style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppColors.ink700)),
+                if (listing.priceHistory.length > 1) _PriceHistoryDisclosure(history: listing.priceHistory),
                 const SizedBox(height: 8),
                 Text(listing.title, style: Theme.of(context).textTheme.titleLarge),
                 Text(
-                  listing.referenceCode,
+                  '${listing.referenceCode} · ${listing.viewsCount} view${listing.viewsCount == 1 ? '' : 's'}',
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppColors.ink700),
                 ),
                 if (listing.property.address != null && listing.property.address!.summary.isNotEmpty) ...[
@@ -193,6 +234,13 @@ class _ListingDetailBody extends ConsumerWidget {
                 ],
                 const SizedBox(height: 16),
                 _FactsRow(property: listing.property),
+                if (listing.availabilityDate != null) ...[
+                  const SizedBox(height: 8),
+                  Text(
+                    'Available from ${listing.availabilityDate}',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppColors.ink700),
+                  ),
+                ],
                 if (listing.rating.count > 0) ...[
                   const SizedBox(height: 12),
                   Row(
@@ -237,6 +285,40 @@ class _ListingDetailBody extends ConsumerWidget {
                   const SizedBox(height: 8),
                   Text(listing.description!, style: Theme.of(context).textTheme.bodyMedium),
                 ],
+                if (listing.videoTour != null) ...[
+                  const SizedBox(height: 20),
+                  Text('Video tour', style: Theme.of(context).textTheme.titleMedium),
+                  const SizedBox(height: 8),
+                  OutlinedButton.icon(
+                    onPressed: () => launchUrl(Uri.parse(listing.videoTour!.url), mode: LaunchMode.externalApplication),
+                    icon: const Icon(Icons.play_circle_outline),
+                    label: const Text('Watch video tour'),
+                  ),
+                ],
+                if (listing.purpose == 'sale') ...[
+                  const SizedBox(height: 20),
+                  _MortgageEstimate(propertyPrice: listing.price),
+                ],
+                if (listing.property.structuralNotes != null || listing.property.waterTankCapacityLiters != null) ...[
+                  const SizedBox(height: 20),
+                  Text('Architectural & Structural Overview', style: Theme.of(context).textTheme.titleMedium),
+                  const SizedBox(height: 8),
+                  if (listing.property.waterTankCapacityLiters != null)
+                    Text(
+                      'Water tank capacity: ${listing.property.waterTankCapacityLiters} litres',
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
+                  if (listing.property.structuralNotes != null) ...[
+                    const SizedBox(height: 4),
+                    Text(listing.property.structuralNotes!, style: Theme.of(context).textTheme.bodyMedium),
+                  ],
+                ],
+                if (listing.property.floorBreakdown.isNotEmpty) ...[
+                  const SizedBox(height: 20),
+                  Text('Floor-by-Floor Breakdown', style: Theme.of(context).textTheme.titleMedium),
+                  const SizedBox(height: 8),
+                  for (final floor in listing.property.floorBreakdown) _FloorBreakdownTile(floor: floor),
+                ],
                 const SizedBox(height: 20),
                 RatingsSection(listingId: listing.id, slug: listing.slug, myRating: listing.myRating),
                 if (listing.amenities.isNotEmpty) ...[
@@ -251,11 +333,31 @@ class _ListingDetailBody extends ConsumerWidget {
                         .toList(),
                   ),
                 ],
+                if (listing.property.floorPlans.isNotEmpty) ...[
+                  const SizedBox(height: 20),
+                  Text('Floor plan', style: Theme.of(context).textTheme.titleMedium),
+                  const SizedBox(height: 8),
+                  for (final plan in listing.property.floorPlans) _FloorPlanTile(plan: plan),
+                ],
                 if (listing.property.landProfile != null) ...[
                   const SizedBox(height: 20),
                   Text('Land due-diligence', style: Theme.of(context).textTheme.titleMedium),
                   const SizedBox(height: 8),
                   _LandDueDiligence(landProfile: listing.property.landProfile!),
+                ],
+                if (listing.property.address?.neighborhood != null) ...[
+                  const SizedBox(height: 20),
+                  _NeighborhoodAccessibility(
+                    neighborhoodId: listing.property.address!.neighborhood!.id,
+                    lat: listing.property.address!.lat,
+                    lng: listing.property.address!.lng,
+                  ),
+                ],
+                if (listing.property.address?.hasCoordinates ?? false) ...[
+                  const SizedBox(height: 20),
+                  Text('Map', style: Theme.of(context).textTheme.titleMedium),
+                  const SizedBox(height: 8),
+                  _ListingMiniMap(address: listing.property.address!),
                 ],
                 if (listing.poster != null) ...[
                   const SizedBox(height: 20),
@@ -295,6 +397,329 @@ class _ListingDetailBody extends ConsumerWidget {
   }
 }
 
+class _Breadcrumb extends StatelessWidget {
+  const _Breadcrumb({required this.listing});
+
+  final ListingDetail listing;
+
+  @override
+  Widget build(BuildContext context) {
+    final address = listing.property.address;
+    final crumbs = <String>[
+      'Home',
+      if (address?.municipality != null) address!.municipality!.name,
+      if (address?.neighborhood != null) address!.neighborhood!.name,
+    ];
+
+    return Text(
+      '${crumbs.join(' / ')} / ${listing.referenceCode}',
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+      style: Theme.of(context).textTheme.labelSmall?.copyWith(color: AppColors.ink700),
+    );
+  }
+}
+
+class _PriceHistoryDisclosure extends StatelessWidget {
+  const _PriceHistoryDisclosure({required this.history});
+
+  final List<PriceHistoryEntry> history;
+
+  @override
+  Widget build(BuildContext context) {
+    final sorted = [...history]..sort((a, b) => a.changedAt.compareTo(b.changedAt));
+
+    return Theme(
+      data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+      child: ExpansionTile(
+        tilePadding: EdgeInsets.zero,
+        title: Text(
+          'Price history (${sorted.length})',
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppColors.trust700, fontWeight: FontWeight.w600),
+        ),
+        children: [
+          for (final entry in sorted)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 2),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(entry.changedAt, style: Theme.of(context).textTheme.bodySmall),
+                  Text(NprFormatter.format(entry.price), style: Theme.of(context).textTheme.bodySmall),
+                ],
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Real mortgage/EMI estimate reusing the existing purchase-calculator
+/// endpoint (`CalculatorsRepository.calculatePurchase`) rather than
+/// reimplementing the finance math client-side.
+class _MortgageEstimate extends ConsumerStatefulWidget {
+  const _MortgageEstimate({required this.propertyPrice});
+
+  final double propertyPrice;
+
+  @override
+  ConsumerState<_MortgageEstimate> createState() => _MortgageEstimateState();
+}
+
+class _MortgageEstimateState extends ConsumerState<_MortgageEstimate> {
+  double? _monthlyRepayment;
+  bool _loading = true;
+  bool _failed = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    try {
+      final result = await ref
+          .read(calculatorsRepositoryProvider)
+          .calculatePurchase(propertyPrice: widget.propertyPrice);
+      if (mounted) setState(() => _monthlyRepayment = result.result.monthlyRepaymentEstimate);
+    } catch (_) {
+      if (mounted) setState(() => _failed = true);
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_failed) return const SizedBox.shrink();
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Row(
+          children: [
+            const Icon(Icons.calculate_outlined, color: AppColors.trust700),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Estimated EMI', style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppColors.ink700)),
+                  _loading
+                      ? const Skeleton(width: 100, height: 20)
+                      : Text(
+                          '${NprFormatter.format(_monthlyRepayment ?? 0)}/mo',
+                          style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+                        ),
+                ],
+              ),
+            ),
+            TextButton(onPressed: () => context.push('/calculators'), child: const Text('Full calculator')),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _FloorBreakdownTile extends StatelessWidget {
+  const _FloorBreakdownTile({required this.floor});
+
+  final FloorBreakdownEntry floor;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(floor.label ?? 'Floor', style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600)),
+                if (floor.description != null && floor.description!.isNotEmpty)
+                  Text(
+                    floor.description!,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppColors.ink700),
+                  ),
+              ],
+            ),
+          ),
+          if (floor.areaSqft != null)
+            Text('${floor.areaSqft!.toStringAsFixed(0)} sqft', style: Theme.of(context).textTheme.bodySmall),
+        ],
+      ),
+    );
+  }
+}
+
+class _FloorPlanTile extends StatelessWidget {
+  const _FloorPlanTile({required this.plan});
+
+  final MediaItem plan;
+
+  @override
+  Widget build(BuildContext context) {
+    if (plan.isPdf) {
+      return Padding(
+        padding: const EdgeInsets.only(bottom: 8),
+        child: OutlinedButton.icon(
+          onPressed: () => launchUrl(Uri.parse(plan.url), mode: LaunchMode.externalApplication),
+          icon: const Icon(Icons.picture_as_pdf_outlined),
+          label: const Text('View floor plan (PDF)'),
+        ),
+      );
+    }
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(8),
+        child: CachedNetworkImage(imageUrl: plan.url, fit: BoxFit.contain),
+      ),
+    );
+  }
+}
+
+/// Real curated neighborhood score + nearest POIs by haversine distance from
+/// this listing's own coordinates — mirrors `NeighborhoodAccessibility` in
+/// frontend/src/pages/ListingDetail.tsx. Renders nothing if the neighborhood
+/// has no curated score/POIs yet, rather than fabricating a "walk score".
+class _NeighborhoodAccessibility extends ConsumerWidget {
+  const _NeighborhoodAccessibility({required this.neighborhoodId, this.lat, this.lng});
+
+  final int neighborhoodId;
+  final double? lat;
+  final double? lng;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final profile = ref.watch(neighborhoodProfileProvider(neighborhoodId));
+
+    return profile.when(
+      loading: () => const SizedBox.shrink(),
+      error: (_, _) => const SizedBox.shrink(),
+      data: (data) {
+        final pois = data.pois.where((p) => p.lat != null && p.lng != null).toList();
+        if (data.score == null && pois.isEmpty) return const SizedBox.shrink();
+
+        List<(NeighborhoodPoi, double)> nearest = [];
+        if (lat != null && lng != null) {
+          nearest = pois.map((p) => (p, _distanceMeters(lat!, lng!, p.lat!, p.lng!))).toList()
+            ..sort((a, b) => a.$2.compareTo(b.$2));
+          nearest = nearest.take(4).toList();
+        }
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: Text('Neighborhood & Accessibility', style: Theme.of(context).textTheme.titleMedium),
+                ),
+                if (data.score != null) ...[
+                  const SizedBox(width: 8),
+                  AppBadge(label: '${data.score!.overallScore}/10 score', tone: BadgeTone.trust),
+                ],
+              ],
+            ),
+            if (nearest.isNotEmpty) ...[
+              const SizedBox(height: 10),
+              GridView.count(
+                crossAxisCount: 2,
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                mainAxisSpacing: 8,
+                crossAxisSpacing: 8,
+                childAspectRatio: 2.2,
+                children: [
+                  for (final (poi, distance) in nearest)
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        border: Border.all(color: AppColors.stone200),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            poi.typeLabel,
+                            style: Theme.of(context).textTheme.labelSmall?.copyWith(color: AppColors.ink700),
+                          ),
+                          Text(
+                            _formatDistance(distance),
+                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700),
+                          ),
+                          Text(
+                            poi.name,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppColors.ink700),
+                          ),
+                        ],
+                      ),
+                    ),
+                ],
+              ),
+            ],
+            const SizedBox(height: 6),
+            InkWell(
+              onTap: () => context.push('/neighborhoods/$neighborhoodId'),
+              child: Text(
+                'View full neighborhood profile →',
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppColors.trust700, fontWeight: FontWeight.w600),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _ListingMiniMap extends StatelessWidget {
+  const _ListingMiniMap({required this.address});
+
+  final Address address;
+
+  @override
+  Widget build(BuildContext context) {
+    final center = LatLng(address.lat!, address.lng!);
+
+    return SizedBox(
+      height: 200,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(12),
+        child: FlutterMap(
+          options: MapOptions(initialCenter: center, initialZoom: 14),
+          children: [
+            TileLayer(
+              urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+              userAgentPackageName: 'com.gharnepal.ghar_nepal',
+            ),
+            MarkerLayer(
+              markers: [
+                Marker(
+                  point: center,
+                  width: 40,
+                  height: 40,
+                  child: const Icon(Icons.location_on, color: AppColors.trust700, size: 36),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _FactsRow extends StatelessWidget {
   const _FactsRow({required this.property});
 
@@ -305,11 +730,19 @@ class _FactsRow extends StatelessWidget {
     final facts = <(IconData, String)>[
       if (property.bedrooms != null) (Icons.bed_outlined, '${property.bedrooms} bed'),
       if (property.bathrooms != null) (Icons.bathtub_outlined, '${property.bathrooms} bath'),
+      if (property.floors != null) (Icons.layers_outlined, '${property.floors} floor${property.floors == 1 ? '' : 's'}'),
       if (property.area.sqm != null) (Icons.straighten, '${property.area.sqm!.toStringAsFixed(0)} m²'),
       if (property.area.display?['ropani'] != null)
         (Icons.terrain, '${property.area.display!['ropani']!.toStringAsFixed(2)} ropani'),
       if (property.area.display?['aana'] != null)
         (Icons.terrain, '${property.area.display!['aana']!.toStringAsFixed(2)} aana'),
+      if (property.facingDirection != null)
+        (Icons.explore_outlined, '${_kFacingDirectionLabel[property.facingDirection] ?? property.facingDirection} facing'),
+      if (property.parkingSpaces != null && property.parkingSpaces! > 0)
+        (
+          Icons.local_parking_outlined,
+          '${property.parkingSpaces} parking${property.parkingType != null ? ' (${_kParkingTypeLabel[property.parkingType] ?? property.parkingType})' : ''}',
+        ),
     ];
 
     if (facts.isEmpty) return const SizedBox.shrink();
