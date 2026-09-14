@@ -22,8 +22,8 @@ class MatchPreference extends Model
 
     protected $fillable = [
         'user_id',
-        'purpose',
-        'property_type',
+        'purposes',
+        'property_types',
         'budget_min',
         'budget_max',
         'min_bedrooms',
@@ -43,6 +43,8 @@ class MatchPreference extends Model
     {
         return [
             'user_id' => 'integer',
+            'purposes' => 'array',
+            'property_types' => 'array',
             'budget_min' => 'decimal:2',
             'budget_max' => 'decimal:2',
             'min_bedrooms' => 'integer',

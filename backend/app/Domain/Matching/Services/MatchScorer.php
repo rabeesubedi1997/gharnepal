@@ -82,13 +82,13 @@ class MatchScorer
             ])
             ->latest('published_at');
 
-        if ($preference->purpose) {
-            $query->where('purpose', $preference->purpose);
+        if (! empty($preference->purposes)) {
+            $query->whereIn('purpose', $preference->purposes);
         }
 
         $query->whereHas('property', function ($q) use ($preference) {
-            if ($preference->property_type) {
-                $q->where('property_type', $preference->property_type);
+            if (! empty($preference->property_types)) {
+                $q->whereIn('property_type', $preference->property_types);
             }
             if ($preference->preferred_municipality_id) {
                 $q->whereHas('address', fn ($a) => $a->where('municipality_id', $preference->preferred_municipality_id));
@@ -98,8 +98,33 @@ class MatchScorer
         return $query;
     }
 
+    /**
+     * The same hard filters `candidateQuery()` applies at the DB level, but
+     * evaluated against one already-loaded listing — used by
+     * SmartMatchAlertService to find which preferences a single newly
+     * published listing is even eligible to be scored against, without
+     * running a fresh query per preference.
+     */
+    public function listingMatchesHardFilters(PropertyListing $listing, MatchPreference $preference): bool
+    {
+        if (! empty($preference->purposes) && ! in_array($listing->purpose, $preference->purposes, true)) {
+            return false;
+        }
+
+        if (! empty($preference->property_types) && ! in_array($listing->property?->property_type, $preference->property_types, true)) {
+            return false;
+        }
+
+        if ($preference->preferred_municipality_id
+            && $listing->property?->address?->municipality_id !== $preference->preferred_municipality_id) {
+            return false;
+        }
+
+        return true;
+    }
+
     /** @return array{listing: PropertyListing, score: int, reasons: array<int, array<string, mixed>>} */
-    private function score(PropertyListing $listing, MatchPreference $preference): array
+    public function score(PropertyListing $listing, MatchPreference $preference): array
     {
         $reasons = [];
         $awarded = 0;

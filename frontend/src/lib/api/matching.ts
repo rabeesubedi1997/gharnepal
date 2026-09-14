@@ -26,8 +26,8 @@ export const LIFESTYLE_TAG_LABEL: Record<LifestyleTag, string> = {
 
 export interface MatchPreferences {
   id: number | null
-  purpose: ListingPurpose | null
-  property_type: PropertyType | null
+  purposes: ListingPurpose[]
+  property_types: PropertyType[]
   budget_min: number | null
   budget_max: number | null
   min_bedrooms: number | null
@@ -46,8 +46,8 @@ export interface MatchPreferences {
 }
 
 export interface MatchPreferencesInput {
-  purpose?: ListingPurpose
-  property_type?: PropertyType
+  purposes?: ListingPurpose[]
+  property_types?: PropertyType[]
   budget_min?: number
   budget_max?: number
   min_bedrooms?: number

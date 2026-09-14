@@ -17,9 +17,25 @@ import { Input, Select } from '../../components/ui/Input'
 import { Skeleton } from '../../components/ui/Skeleton'
 import { WorkLocationPicker } from '../../components/matching/WorkLocationPicker'
 
+type Purpose = 'sale' | 'rent'
+type PropertyTypeValue = 'room' | 'apartment' | 'house' | 'land' | 'commercial'
+
+const PURPOSE_OPTIONS: { value: Purpose; label: string }[] = [
+  { value: 'sale', label: 'Buy' },
+  { value: 'rent', label: 'Rent' },
+]
+
+const PROPERTY_TYPE_OPTIONS: { value: PropertyTypeValue; label: string }[] = [
+  { value: 'room', label: 'Room' },
+  { value: 'apartment', label: 'Apartment' },
+  { value: 'house', label: 'House' },
+  { value: 'land', label: 'Land' },
+  { value: 'commercial', label: 'Commercial' },
+]
+
 type FormState = {
-  purpose: '' | 'sale' | 'rent'
-  property_type: '' | 'room' | 'apartment' | 'house' | 'land' | 'commercial'
+  purposes: Purpose[]
+  property_types: PropertyTypeValue[]
   budget_min: string
   budget_max: string
   min_bedrooms: string
@@ -36,8 +52,8 @@ type FormState = {
 }
 
 const initial: FormState = {
-  purpose: '',
-  property_type: '',
+  purposes: [],
+  property_types: [],
   budget_min: '',
   budget_max: '',
   min_bedrooms: '',
@@ -66,8 +82,8 @@ export function MatchPreferences() {
   useEffect(() => {
     if (!prefs) return
     setForm({
-      purpose: prefs.purpose ?? '',
-      property_type: prefs.property_type ?? '',
+      purposes: prefs.purposes,
+      property_types: prefs.property_types,
       budget_min: prefs.budget_min?.toString() ?? '',
       budget_max: prefs.budget_max?.toString() ?? '',
       min_bedrooms: prefs.min_bedrooms?.toString() ?? '',
@@ -91,14 +107,30 @@ export function MatchPreferences() {
     }))
   }
 
+  const togglePurpose = (value: Purpose) => {
+    setForm((f) => ({
+      ...f,
+      purposes: f.purposes.includes(value) ? f.purposes.filter((p) => p !== value) : [...f.purposes, value],
+    }))
+  }
+
+  const togglePropertyType = (value: PropertyTypeValue) => {
+    setForm((f) => ({
+      ...f,
+      property_types: f.property_types.includes(value)
+        ? f.property_types.filter((t) => t !== value)
+        : [...f.property_types, value],
+    }))
+  }
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
     setSaved(false)
 
     const input: MatchPreferencesInput = {
-      purpose: form.purpose || undefined,
-      property_type: form.property_type || undefined,
+      purposes: form.purposes.length ? form.purposes : undefined,
+      property_types: form.property_types.length ? form.property_types : undefined,
       budget_min: form.budget_min ? Number(form.budget_min) : undefined,
       budget_max: form.budget_max ? Number(form.budget_max) : undefined,
       min_bedrooms: form.min_bedrooms ? Number(form.min_bedrooms) : undefined,
@@ -146,24 +178,53 @@ export function MatchPreferences() {
       <form onSubmit={handleSubmit} className="flex flex-col gap-6">
         <Card className="flex flex-col gap-4 p-4">
           <h2 className="font-display text-base font-semibold text-ink-900">Looking for</h2>
+          <p className="-mt-2 text-xs text-ink-700/60">
+            Select every service you're interested in — matches against any of them will show up in your results.
+          </p>
+
+          <div>
+            <span className="mb-1.5 block text-xs font-medium text-ink-700">Buy or rent (leave empty for either)</span>
+            <div className="flex flex-wrap gap-2">
+              {PURPOSE_OPTIONS.map((opt) => (
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={() => togglePurpose(opt.value)}
+                  aria-pressed={form.purposes.includes(opt.value)}
+                  className={
+                    form.purposes.includes(opt.value)
+                      ? 'rounded-full bg-trust-700 px-3 py-1.5 text-xs font-medium text-white'
+                      : 'rounded-full border border-stone-200 bg-white px-3 py-1.5 text-xs font-medium text-ink-700 hover:bg-stone-100'
+                  }
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <span className="mb-1.5 block text-xs font-medium text-ink-700">Property type (leave empty for any)</span>
+            <div className="flex flex-wrap gap-2">
+              {PROPERTY_TYPE_OPTIONS.map((opt) => (
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={() => togglePropertyType(opt.value)}
+                  aria-pressed={form.property_types.includes(opt.value)}
+                  className={
+                    form.property_types.includes(opt.value)
+                      ? 'rounded-full bg-trust-700 px-3 py-1.5 text-xs font-medium text-white'
+                      : 'rounded-full border border-stone-200 bg-white px-3 py-1.5 text-xs font-medium text-ink-700 hover:bg-stone-100'
+                  }
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
           <div className="grid grid-cols-2 gap-3">
-            <Select label="Purpose" value={form.purpose} onChange={(e) => setForm({ ...form, purpose: e.target.value as FormState['purpose'] })}>
-              <option value="">Any</option>
-              <option value="rent">Rent</option>
-              <option value="sale">Buy</option>
-            </Select>
-            <Select
-              label="Property type"
-              value={form.property_type}
-              onChange={(e) => setForm({ ...form, property_type: e.target.value as FormState['property_type'] })}
-            >
-              <option value="">Any</option>
-              <option value="room">Room</option>
-              <option value="apartment">Apartment</option>
-              <option value="house">House</option>
-              <option value="land">Land</option>
-              <option value="commercial">Commercial</option>
-            </Select>
             <Input label="Min budget (NPR)" type="number" min="0" placeholder="No minimum" value={form.budget_min} onChange={(e) => setForm({ ...form, budget_min: e.target.value })} />
             <Input label="Max budget (NPR)" type="number" min="0" placeholder="No maximum" value={form.budget_max} onChange={(e) => setForm({ ...form, budget_max: e.target.value })} />
             <Input label="Min bedrooms" type="number" min="0" max="20" placeholder="e.g. 2" value={form.min_bedrooms} onChange={(e) => setForm({ ...form, min_bedrooms: e.target.value })} />

@@ -50,8 +50,10 @@ class MatchingRepository {
       final response = await _dio.put(
         '/account/match-preferences',
         data: {
-          'purpose': ?purpose,
-          'property_type': ?propertyType,
+          // Backend field is now a multi-select array — mobile's form is
+          // still single-select, so just wrap the one chosen value.
+          if (purpose != null) 'purposes': [purpose],
+          if (propertyType != null) 'property_types': [propertyType],
           'budget_min': ?budgetMin,
           'budget_max': ?budgetMax,
           'min_bedrooms': ?minBedrooms,

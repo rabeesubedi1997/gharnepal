@@ -13,8 +13,10 @@ export function MatchResults() {
   const { data: results, isPending, isError, refetch } = useMatchResults()
   const refresh = useRefreshMatchResults()
   const [expanded, setExpanded] = useState<number | null>(null)
+  const [strongOnly, setStrongOnly] = useState(false)
 
   const hasPreferences = !!prefs?.id
+  const visibleResults = strongOnly ? (results ?? []).filter((r) => r.score >= 50) : (results ?? [])
 
   return (
     <div className="flex flex-col gap-6">
@@ -36,6 +38,18 @@ export function MatchResults() {
           )}
         </div>
       </div>
+
+      {hasPreferences && !isPending && !isError && results && results.length > 0 && (
+        <label className="flex w-fit items-center gap-2 text-sm text-ink-700">
+          <input
+            type="checkbox"
+            checked={strongOnly}
+            onChange={(e) => setStrongOnly(e.target.checked)}
+            className="h-4 w-4 rounded border-stone-300 text-trust-700 focus:ring-trust-700"
+          />
+          Only show strong matches (50%+) — you'll also get an email the moment a new listing crosses 50%
+        </label>
+      )}
 
       {!prefsPending && !hasPreferences && (
         <EmptyState
@@ -64,9 +78,16 @@ export function MatchResults() {
         />
       )}
 
-      {hasPreferences && !isPending && !isError && results && results.length > 0 && (
+      {hasPreferences && !isPending && !isError && results && results.length > 0 && visibleResults.length === 0 && (
+        <EmptyState
+          title="No strong matches (50%+) yet"
+          description="Nothing has crossed the 50% mark. Uncheck the filter above to see every scored match, or widen your preferences."
+        />
+      )}
+
+      {hasPreferences && !isPending && !isError && visibleResults.length > 0 && (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {results.map((result) => (
+          {visibleResults.map((result) => (
             <div key={result.id} className="flex flex-col gap-2">
               <div className="relative">
                 <PropertyCard listing={result.listing} />

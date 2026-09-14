@@ -77,7 +77,7 @@ class SmartMatchTest extends TestCase
         $user = User::factory()->create();
 
         $response = $this->actingAs($user, 'sanctum')->putJson('/api/v1/account/match-preferences', [
-            'purpose' => 'rent',
+            'purposes' => ['rent'],
             'budget_max' => 35000,
             'min_bedrooms' => 2,
         ]);
@@ -202,7 +202,7 @@ class SmartMatchTest extends TestCase
         // (not omitted) for every checkbox, which is what a submitted HTML
         // form always sends once every field has a controlled default.
         $response = $this->actingAs($user, 'sanctum')->putJson('/api/v1/account/match-preferences', [
-            'purpose' => 'rent',
+            'purposes' => ['rent'],
             'requires_school_nearby' => false,
             'requires_parking' => false,
             'investment_purpose' => false,

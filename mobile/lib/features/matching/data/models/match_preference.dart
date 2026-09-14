@@ -39,10 +39,17 @@ class MatchPreference {
   });
 
   factory MatchPreference.fromJson(Map<String, dynamic> json) {
+    // Backend now stores these as arrays (multi-select) — mobile's form is
+    // still single-select, so just surface the first chosen value here; see
+    // MatchingRepository.savePreferences for the write side of the same
+    // simplification.
+    final purposes = (json['purposes'] as List<dynamic>? ?? const []).cast<String>();
+    final propertyTypes = (json['property_types'] as List<dynamic>? ?? const []).cast<String>();
+
     return MatchPreference(
       id: json['id'] as int?,
-      purpose: json['purpose'] as String?,
-      propertyType: json['property_type'] as String?,
+      purpose: purposes.isNotEmpty ? purposes.first : null,
+      propertyType: propertyTypes.isNotEmpty ? propertyTypes.first : null,
       budgetMin: asDouble(json['budget_min']),
       budgetMax: asDouble(json['budget_max']),
       minBedrooms: asInt(json['min_bedrooms']),

@@ -5,6 +5,7 @@ import { useCurrentUser } from '../lib/api/auth'
 import { useOwnerProperties, useTransitionListing, type ListingStatus } from '../lib/api/listings'
 import { useDeleteSavedSearch, useSavedSearches, useUpdateSavedSearch, type SavedSearch } from '../lib/api/savedSearches'
 import { useDeleteScenario, useSavedScenarios } from '../lib/api/calculators'
+import { useMatchResults } from '../lib/api/matching'
 import { useListingAnalytics } from '../lib/api/analytics'
 import { filtersToSearchParams } from '../lib/searchParams'
 import { formatNpr } from '../design-system/tokens'
@@ -77,6 +78,7 @@ export function Dashboard() {
         </ButtonLink>
       </div>
 
+      <SmartMatchesSection />
       <SavedSearchesSection />
       <SavedScenariosSection />
 
@@ -217,6 +219,38 @@ const ALERT_FREQUENCY_LABEL: Record<SavedSearch['alert_frequency'], string> = {
   daily: 'Daily digest',
   weekly: 'Weekly digest',
   off: 'Alerts off',
+}
+
+/** Only ever shows once preferences exist and something has actually
+ * crossed the 50% threshold — the same bar that triggers an email/push
+ * notification (see MatchThresholdNotification), so this row and that
+ * notification always agree on what counts as a "strong" match. */
+function SmartMatchesSection() {
+  const { data: results, isPending } = useMatchResults()
+  const strong = (results ?? []).filter((r) => r.score >= 50).slice(0, 3)
+
+  if (isPending || strong.length === 0) return null
+
+  return (
+    <div>
+      <h2 className="mb-3 flex items-center gap-2 font-display text-lg font-semibold text-ink-900">
+        <Sparkles className="h-4 w-4" /> Strong Smart Matches (50%+)
+      </h2>
+      <div className="flex flex-col gap-2">
+        {strong.map((r) => (
+          <Card key={r.id} className="flex flex-wrap items-center justify-between gap-3 p-3">
+            <ButtonLink to={`/listings/${r.listing.slug}`} variant="ghost" size="sm" className="text-left">
+              {r.listing.title}
+            </ButtonLink>
+            <Badge tone="trust">{r.score}% match</Badge>
+          </Card>
+        ))}
+      </div>
+      <ButtonLink to="/account/match-results" variant="outline" size="sm" className="mt-2">
+        See all matches
+      </ButtonLink>
+    </div>
+  )
 }
 
 function SavedSearchesSection() {
