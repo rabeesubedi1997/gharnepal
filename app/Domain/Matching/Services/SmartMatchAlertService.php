@@ -11,7 +11,7 @@ use App\Notifications\MatchThresholdNotification;
  * Match results were previously only ever (re)computed per-user, on
  * preference save or a manual "Refresh" click — a listing published after
  * that point never updated an existing buyer's cached matches, and nothing
- * ever notified a buyer that a strong match had appeared. This is the
+ * ever notified a buyer that a strong (80%+) match had appeared. This is the
  * missing piece, mirroring SavedSearchAlertService::notifyInstantMatches()
  * exactly: hooked into PropertyListingService::approve() so it runs the
  * moment a listing goes live.
@@ -26,7 +26,7 @@ use App\Notifications\MatchThresholdNotification;
  */
 class SmartMatchAlertService
 {
-    private const THRESHOLD = 50;
+    private const THRESHOLD = 80;
 
     public function __construct(private readonly MatchScorer $matchScorer) {}
 
