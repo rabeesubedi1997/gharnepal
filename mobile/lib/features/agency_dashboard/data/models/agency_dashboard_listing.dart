@@ -7,7 +7,10 @@ class AgencyListingLocation {
   factory AgencyListingLocation.fromJson(Map<String, dynamic> json) {
     return AgencyListingLocation(
       municipality: json['municipality'] as String?,
-      wardNumber: json['ward_number'] as String?,
+      // Backend sends this as a bare JSON int (`ward_number` is an
+      // unsigned-int column, no string cast) — a hard `as String?` here
+      // throws and was silently taking down the whole Listings tab.
+      wardNumber: json['ward_number']?.toString(),
     );
   }
 
