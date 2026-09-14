@@ -3,6 +3,7 @@
 namespace App\Domain\Properties\Services;
 
 use App\Domain\Engagement\Services\SavedSearchAlertService;
+use App\Domain\Matching\Services\SmartMatchAlertService;
 use App\Domain\Trust\Services\TrustScoreCalculator;
 use App\Models\Property;
 use App\Models\PropertyListing;
@@ -16,6 +17,7 @@ class PropertyListingService
         private readonly DuplicateListingDetector $duplicateDetector,
         private readonly TrustScoreCalculator $trustScoreCalculator,
         private readonly SavedSearchAlertService $savedSearchAlerts,
+        private readonly SmartMatchAlertService $smartMatchAlerts,
     ) {}
 
     /** Transitions an owner/agent can trigger themselves, without admin involvement. */
@@ -149,6 +151,7 @@ class PropertyListingService
         $listing->property?->owner?->notify(new \App\Notifications\ListingApprovedNotification($listing));
         $this->trustScoreCalculator->recompute($listing);
         $this->savedSearchAlerts->notifyInstantMatches($listing);
+        $this->smartMatchAlerts->notifyThresholdMatches($listing);
 
         return $listing;
     }

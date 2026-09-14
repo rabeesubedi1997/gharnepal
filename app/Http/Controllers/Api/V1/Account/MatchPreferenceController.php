@@ -25,8 +25,10 @@ class MatchPreferenceController extends Controller
     public function store(Request $request): MatchPreferenceResource
     {
         $data = $request->validate([
-            'purpose' => ['nullable', Rule::in(['sale', 'rent'])],
-            'property_type' => ['nullable', Rule::in(['room', 'apartment', 'house', 'land', 'commercial'])],
+            'purposes' => ['nullable', 'array'],
+            'purposes.*' => [Rule::in(['sale', 'rent'])],
+            'property_types' => ['nullable', 'array'],
+            'property_types.*' => [Rule::in(['room', 'apartment', 'house', 'land', 'commercial'])],
             'budget_min' => ['nullable', 'numeric', 'min:0'],
             'budget_max' => ['nullable', 'numeric', 'min:0'],
             'min_bedrooms' => ['nullable', 'integer', 'min:0', 'max:20'],
