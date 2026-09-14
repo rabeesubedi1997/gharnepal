@@ -12,8 +12,11 @@
  * Illustrated (SVG), not a stock photo — same reasoning as HeroBackdrop:
  * no licensing question, nothing to load, and it echoes the same Himalayan
  * motif used in the hero rather than introducing a second visual language.
- * Kept extremely low-opacity and `fixed` (not `absolute`) so it never
- * competes with foreground text/cards and never affects page height/scroll.
+ * A soft trust-toned gradient wash sits under the ridge art so the margin
+ * actually reads as designed rather than empty (the earlier version at 5%
+ * opacity / 18vw was too faint to register as anything). Still `fixed`
+ * (not `absolute`) so it never competes with foreground text/cards and
+ * never affects page height/scroll.
  */
 function Ridge({ flip = false }: { flip?: boolean }) {
   return (
@@ -42,11 +45,15 @@ function Ridge({ flip = false }: { flip?: boolean }) {
 export function PageBackdrop() {
   return (
     <div className="pointer-events-none fixed inset-0 -z-10 overflow-hidden" aria-hidden="true">
-      <div className="absolute inset-y-0 left-0 w-[18vw] max-w-[280px] opacity-[0.05]">
-        <Ridge />
+      <div className="absolute inset-y-0 left-0 w-[26vw] max-w-[420px] bg-gradient-to-r from-trust-100/70 via-trust-100/25 to-transparent">
+        <div className="h-full w-full opacity-[0.12]">
+          <Ridge />
+        </div>
       </div>
-      <div className="absolute inset-y-0 right-0 w-[18vw] max-w-[280px] opacity-[0.05]">
-        <Ridge flip />
+      <div className="absolute inset-y-0 right-0 w-[26vw] max-w-[420px] bg-gradient-to-l from-trust-100/70 via-trust-100/25 to-transparent">
+        <div className="h-full w-full opacity-[0.12]">
+          <Ridge flip />
+        </div>
       </div>
     </div>
   )

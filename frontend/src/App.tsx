@@ -23,6 +23,7 @@ import { Ratings as AdminRatings } from './pages/admin/Ratings'
 import { TrustFactors as AdminTrustFactors } from './pages/admin/TrustFactors'
 import { Messages as AdminMessages } from './pages/admin/Messages'
 import { Banners as AdminBanners } from './pages/admin/Banners'
+import { Branding as AdminBranding } from './pages/admin/Branding'
 import { Advertisements as AdminAdvertisements } from './pages/admin/Advertisements'
 import { Blog as AdminBlog } from './pages/admin/Blog'
 import { BlogEditor as AdminBlogEditor } from './pages/admin/BlogEditor'
@@ -206,6 +207,7 @@ export default function App() {
           <Route index element={<Navigate to="dashboard" replace />} />
           <Route path="dashboard" element={<AdminDashboard />} />
           <Route path="banners" element={<AdminBanners />} />
+          <Route path="branding" element={<AdminBranding />} />
           <Route path="advertisements" element={<AdminAdvertisements />} />
           <Route path="blog" element={<AdminBlog />} />
           <Route path="blog/:id" element={<AdminBlogEditor />} />

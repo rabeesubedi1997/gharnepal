@@ -4,6 +4,7 @@ import { Building2, Heart, Home, LogOut, Menu, MessageCircle, Plus, Settings, Sp
 import { clsx } from 'clsx'
 import { ButtonLink } from '../ui/Button'
 import { useCurrentUser, useLogout } from '../../lib/api/auth'
+import { useBranding } from '../../lib/api/branding'
 import { NotificationBell } from './NotificationBell'
 
 const primaryNav = [
@@ -18,8 +19,10 @@ const primaryNav = [
 export function Header() {
   const [mobileOpen, setMobileOpen] = useState(false)
   const { data: user } = useCurrentUser()
+  const { data: branding } = useBranding()
   const logout = useLogout()
   const navigate = useNavigate()
+  const siteName = branding?.site_name ?? 'GharNepal'
 
   const handleLogout = () => {
     logout.mutate(undefined, { onSuccess: () => navigate('/') })
@@ -33,7 +36,7 @@ export function Header() {
             <Home className="h-5 w-5" aria-hidden="true" />
           </span>
           <span className="flex flex-col leading-none">
-            <span className="font-display text-base font-bold text-ink-900">GharNepal</span>
+            <span className="font-display text-base font-bold text-ink-900">{siteName}</span>
             <span className="text-[10px] font-semibold uppercase tracking-wider text-ink-700/50">Proptech Hub</span>
           </span>
         </Link>

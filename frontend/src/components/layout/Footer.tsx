@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { useMunicipalities } from '../../lib/api/locations'
+import { useBranding } from '../../lib/api/branding'
 import { useInstallPrompt } from '../../lib/useInstallPrompt'
 
 const PROPERTY_CLASSES = [
@@ -22,14 +23,16 @@ export function Footer() {
   // Real municipalities the platform actually covers, not a hardcoded
   // "Top Hubs & Valleys" list that could drift from what's really seeded.
   const { data: municipalities } = useMunicipalities()
+  const { data: branding } = useBranding()
   const { canInstall, promptInstall } = useInstallPrompt()
   const topHubs = [...(municipalities ?? [])].slice(0, 6)
+  const siteName = branding?.site_name ?? 'Ghar Nepal'
 
   return (
     <footer className="border-t border-stone-200 bg-white">
-      <div className="mx-auto grid max-w-[1440px] grid-cols-2 gap-8 px-4 py-10 sm:grid-cols-4 sm:px-6 lg:px-10">
-        <div className="col-span-2 sm:col-span-1">
-          <p className="font-display text-lg font-semibold text-trust-700">Ghar Nepal</p>
+      <div className="mx-auto grid max-w-[1440px] grid-cols-1 gap-8 px-4 py-10 sm:grid-cols-4 sm:px-6 lg:px-10">
+        <div>
+          <p className="font-display text-lg font-semibold text-trust-700">{siteName}</p>
           <p className="mt-2 text-sm text-ink-700/70">
             Nepal's benchmark real estate ecosystem — streamlining transparent freehold and
             rental transactions across the country's major valleys.
@@ -89,12 +92,8 @@ export function Footer() {
         </div>
       </div>
 
-      <div className="mx-auto flex max-w-[1440px] flex-wrap items-center justify-center gap-x-4 gap-y-2 border-t border-stone-200 px-4 py-4 text-xs text-ink-700/60 sm:justify-between sm:px-6 lg:px-10">
-        <span>&copy; {new Date().getFullYear()} Ghar Nepal. All rights reserved.</span>
-        <span className="flex flex-wrap gap-2">
-          <span className="rounded-full border border-stone-200 px-2 py-0.5">Ropani · Aana · Kattha · Dhur native</span>
-          <span className="rounded-full border border-stone-200 px-2 py-0.5">NPR Lakhs &amp; Crores</span>
-        </span>
+      <div className="mx-auto max-w-[1440px] border-t border-stone-200 px-4 py-4 text-center text-xs text-ink-700/60 sm:px-6 lg:px-10">
+        <span>&copy; {new Date().getFullYear()} {siteName}. All rights reserved.</span>
       </div>
     </footer>
   )

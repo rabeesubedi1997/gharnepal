@@ -105,15 +105,30 @@ class SeoService
 
         $def = self::STATIC_PAGES[$key];
 
+        // Two separate JSON-LD graphs on the homepage: WebSite (site-wide
+        // search box eligibility in results) and Organization (eligibility
+        // for a Google knowledge-panel/brand treatment — logo, name, social
+        // profiles). Both are safe to emit together as an @graph.
         $structuredData = $key === 'home' ? [
             '@context' => 'https://schema.org',
-            '@type' => 'WebSite',
-            'name' => 'Ghar Nepal',
-            'url' => config('app.frontend_url'),
-            'potentialAction' => [
-                '@type' => 'SearchAction',
-                'target' => config('app.frontend_url').'/search?q={search_term_string}',
-                'query-input' => 'required name=search_term_string',
+            '@graph' => [
+                [
+                    '@type' => 'WebSite',
+                    'name' => 'Ghar Nepal',
+                    'url' => config('app.frontend_url'),
+                    'potentialAction' => [
+                        '@type' => 'SearchAction',
+                        'target' => config('app.frontend_url').'/search?q={search_term_string}',
+                        'query-input' => 'required name=search_term_string',
+                    ],
+                ],
+                [
+                    '@type' => 'Organization',
+                    'name' => 'Ghar Nepal',
+                    'url' => config('app.frontend_url'),
+                    'logo' => config('app.frontend_url').'/icons/icon-512.png',
+                    'description' => $def['description'],
+                ],
             ],
         ] : null;
 

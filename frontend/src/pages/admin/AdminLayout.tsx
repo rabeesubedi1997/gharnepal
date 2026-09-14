@@ -17,6 +17,7 @@ import {
   MessageSquareText,
   MessagesSquare,
   Newspaper,
+  Palette,
   Receipt,
   Search,
   ShieldCheck,
@@ -33,6 +34,7 @@ const NAV_GROUPS: { title: string; tone: AdminTone; items: { to: string; label: 
     tone: 'trust',
     items: [
       { to: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+      { to: '/admin/branding', label: 'Branding', icon: Palette },
       { to: '/admin/banners', label: 'Homepage banners', icon: GalleryHorizontal },
       { to: '/admin/blog', label: 'Blog', icon: Newspaper },
     ],
