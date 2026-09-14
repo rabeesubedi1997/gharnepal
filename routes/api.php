@@ -16,6 +16,7 @@ use App\Http\Controllers\Api\V1\Admin\AgencyController as AdminAgencyController;
 use App\Http\Controllers\Api\V1\Admin\AmenityController as AdminAmenityController;
 use App\Http\Controllers\Api\V1\Admin\BannerController as AdminBannerController;
 use App\Http\Controllers\Api\V1\Admin\BlogPostController as AdminBlogPostController;
+use App\Http\Controllers\Api\V1\Admin\BrandingController as AdminBrandingController;
 use App\Http\Controllers\Api\V1\Admin\CommunityNoteModerationController;
 use App\Http\Controllers\Api\V1\Admin\ConversationController as AdminConversationController;
 use App\Http\Controllers\Api\V1\Admin\DashboardController;
@@ -54,6 +55,7 @@ use App\Http\Controllers\Api\V1\Public\AdvertisementController;
 use App\Http\Controllers\Api\V1\Public\AgencyController;
 use App\Http\Controllers\Api\V1\Public\AmenityController;
 use App\Http\Controllers\Api\V1\Public\BannerController;
+use App\Http\Controllers\Api\V1\Public\BrandingController;
 use App\Http\Controllers\Api\V1\Public\BlogController;
 use App\Http\Controllers\Api\V1\Public\ListingController;
 use App\Http\Controllers\Api\V1\Public\PlatformStatsController;
@@ -171,6 +173,9 @@ Route::prefix('v1')->group(function () {
 
     // Homepage banners
     Route::get('banners', [BannerController::class, 'index']);
+
+    // Site branding (name, favicon, mobile app icon source) — admin-editable.
+    Route::get('branding', [BrandingController::class, 'show']);
 
     // Advertisements — targeted ad slots across pages (see AdvertisementPlacement)
     Route::get('advertisements', [AdvertisementController::class, 'index']);
@@ -317,6 +322,11 @@ Route::prefix('v1')->group(function () {
         Route::post('banners', [AdminBannerController::class, 'store']);
         Route::put('banners/{banner}', [AdminBannerController::class, 'update']);
         Route::delete('banners/{banner}', [AdminBannerController::class, 'destroy']);
+
+        Route::get('branding', [AdminBrandingController::class, 'show']);
+        // Every admin can see current branding; only a super admin can change
+        // it — same tier as payment refunds and role grants.
+        Route::post('branding', [AdminBrandingController::class, 'update'])->middleware('super_admin');
 
         Route::get('advertisements', [AdminAdvertisementController::class, 'index']);
         Route::post('advertisements', [AdminAdvertisementController::class, 'store']);
