@@ -4,7 +4,6 @@ import { Building2, Heart, Home, LogOut, Menu, MessageCircle, Plus, Settings, X 
 import { clsx } from 'clsx'
 import { ButtonLink } from '../ui/Button'
 import { useCurrentUser, useLogout } from '../../lib/api/auth'
-import { useMunicipalities } from '../../lib/api/locations'
 import { NotificationBell } from './NotificationBell'
 
 const primaryNav = [
@@ -19,7 +18,6 @@ const primaryNav = [
 export function Header() {
   const [mobileOpen, setMobileOpen] = useState(false)
   const { data: user } = useCurrentUser()
-  const { data: municipalities } = useMunicipalities()
   const logout = useLogout()
   const navigate = useNavigate()
 
@@ -39,22 +37,6 @@ export function Header() {
             <span className="text-[10px] font-semibold uppercase tracking-wider text-ink-700/50">Proptech Hub</span>
           </span>
         </Link>
-
-        <label className="hidden shrink-0 items-center rounded-md border border-stone-200 px-2 lg:flex">
-          <span className="sr-only">City or valley</span>
-          <select
-            onChange={(e) => e.target.value && navigate(`/search?municipality_id=${e.target.value}`)}
-            defaultValue=""
-            className="h-9 max-w-[9rem] truncate bg-transparent text-xs font-medium text-ink-700 focus:outline-none"
-          >
-            <option value="">Kathmandu Valley (All)</option>
-            {municipalities?.map((m) => (
-              <option key={m.id} value={m.id}>
-                {m.name}
-              </option>
-            ))}
-          </select>
-        </label>
 
         <nav className="hidden min-w-0 items-center gap-0 lg:flex" aria-label="Primary">
           {primaryNav.map((item) => (
