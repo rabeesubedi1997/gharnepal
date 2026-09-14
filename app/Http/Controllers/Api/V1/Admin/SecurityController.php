@@ -8,9 +8,10 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 /**
- * Both read and write are reserved to a super admin (routes/api.php) — the
- * secret key is a real credential, unlike branding's site name/favicon, so
- * this doesn't follow the "any admin can view" pattern Branding does.
+ * Open to any admin, same as most of /admin — the secret key itself is
+ * still never echoed back in full (see respond() below), so a wider
+ * audience being able to view/change these settings doesn't mean a wider
+ * audience can read the actual credential back out.
  */
 class SecurityController extends Controller
 {
