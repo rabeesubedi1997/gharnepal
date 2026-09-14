@@ -70,6 +70,21 @@ body {
   font-family: var(--font-sans);
 }
 
+/* Breaks a section out of the page shell's `max-w-[1440px]` column to the
+   true viewport edge — for branded/background bands (hero, alert banner)
+   that should fill a wide monitor rather than sit in a boxed column with
+   plain background showing on either side. Safe with `overflow-x: hidden`
+   above (no horizontal scrollbar risk from the 100vw width). Content inside
+   still needs its own inner wrapper to stay readable-width and centered. */
+.full-bleed {
+  width: 100vw;
+  position: relative;
+  left: 50%;
+  right: 50%;
+  margin-left: -50vw;
+  margin-right: -50vw;
+}
+
 h1, h2, h3, h4 {
   font-family: var(--font-display);
 }
