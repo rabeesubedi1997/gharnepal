@@ -35,4 +35,16 @@ class AdminPaymentsRepository {
       throw apiExceptionFrom(error);
     }
   }
+
+  /// Only legal for a still-`pending` `manual`-gateway transaction — there's
+  /// no callback for that gateway, so this is how it ever leaves `pending`.
+  /// Any admin can do this (unlike [refund], not reserved to a super admin).
+  Future<AdminPaymentTransaction> markPaid(int id) async {
+    try {
+      final response = await _dio.patch('/admin/payments/$id/mark-paid');
+      return AdminPaymentTransaction.fromJson(response.data['data'] as Map<String, dynamic>);
+    } on DioException catch (error) {
+      throw apiExceptionFrom(error);
+    }
+  }
 }

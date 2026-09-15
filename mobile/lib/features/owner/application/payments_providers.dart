@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/network/providers.dart';
 import '../data/models/featured_plan.dart';
+import '../data/models/payment_gateway_option.dart';
 import '../data/models/payment_transaction.dart';
 import '../data/payments_repository.dart';
 
@@ -11,6 +12,12 @@ final paymentsRepositoryProvider = Provider<PaymentsRepository>((ref) {
 
 final featuredPlansProvider = FutureProvider<List<FeaturedPlan>>((ref) {
   return ref.read(paymentsRepositoryProvider).plans();
+});
+
+/// Every payment method an admin currently has enabled — static-ish (an
+/// admin adding/removing one is rare), so autoDispose is unnecessary here.
+final paymentGatewaysProvider = FutureProvider<List<PaymentGatewayOption>>((ref) {
+  return ref.read(paymentsRepositoryProvider).gateways();
 });
 
 /// Payment History — first page only (same simplification as other account

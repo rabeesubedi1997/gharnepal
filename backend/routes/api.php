@@ -60,6 +60,7 @@ use App\Http\Controllers\Api\V1\Public\AmenityController;
 use App\Http\Controllers\Api\V1\Public\BannerController;
 use App\Http\Controllers\Api\V1\Public\BrandingController;
 use App\Http\Controllers\Api\V1\Public\PaymentCallbackController;
+use App\Http\Controllers\Api\V1\Public\PaymentCheckoutRedirectController;
 use App\Http\Controllers\Api\V1\Public\PaymentGatewayController;
 use App\Http\Controllers\Api\V1\Public\SecurityController;
 use App\Http\Controllers\Api\V1\Public\BlogController;
@@ -208,6 +209,11 @@ Route::prefix('v1')->group(function () {
     // gateway sends the buyer's browser back to afterward.
     Route::get('payment-gateways', [PaymentGatewayController::class, 'index']);
     Route::get('payments/callback/{gatewayConfig}', [PaymentCallbackController::class, 'handle']);
+    // A single URL any client can open externally to actually pay — mainly
+    // for the mobile app, which has no equivalent of the frontend's own
+    // hidden-form-auto-submit JS. See PaymentCheckoutRedirectController.
+    Route::get('payments/checkout/{reference}', [PaymentCheckoutRedirectController::class, 'handle'])
+        ->name('payments.checkout-redirect');
 
     // Neighborhood profiles & community notes
     Route::get('neighborhoods', [NeighborhoodController::class, 'index']);

@@ -26,4 +26,14 @@ class ApiConfig {
     'WEB_BASE_URL',
     defaultValue: 'http://10.0.2.2:5174',
   );
+
+  /// Identifies this build as the official app so the backend will accept a
+  /// registration without the web-only reCAPTCHA widget (see
+  /// `AuthController::isTrustedMobileApp` / `MOBILE_APP_SHARED_SECRET`).
+  /// MUST be set for a real release build:
+  /// `--dart-define=MOBILE_APP_SHARED_SECRET=...` — the same value the
+  /// server's `.env` has. Left blank in dev, which simply falls back to
+  /// requiring a captcha token like the web (fine locally, where reCAPTCHA
+  /// is normally off anyway).
+  static const String mobileAppSharedSecret = String.fromEnvironment('MOBILE_APP_SHARED_SECRET');
 }

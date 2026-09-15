@@ -3,13 +3,22 @@ import 'package:dio/dio.dart';
 import '../../../core/network/api_client.dart';
 import '../../../core/network/api_exception.dart';
 import '../../../core/network/paginated_result.dart';
+import 'models/checkout_instruction.dart';
 import 'models/featured_plan.dart';
+import 'models/payment_gateway_option.dart';
 import 'models/payment_transaction.dart';
 
-/// Talks to the sandbox featured-listing payment flow:
-/// `App\Domain\Payments\Services\SandboxPaymentGateway` — there is no real
-/// gateway wired up yet, "confirm" just simulates a success/failure
-/// callback the owner triggers themselves.
+class PurchaseResult {
+  PurchaseResult({required this.transaction, required this.checkout});
+
+  final PaymentTransaction transaction;
+  final CheckoutInstruction checkout;
+}
+
+/// Talks to the admin-configurable featured-listing payment flow: whatever
+/// gateways an admin has enabled (sandbox, manual, eSewa, Khalti, IME Pay,
+/// PayPal — see `PaymentGatewayDriverRegistry` on the backend) show up here
+/// exactly as `GET /payment-gateways` lists them, nothing hardcoded.
 class PaymentsRepository {
   PaymentsRepository({required ApiClient apiClient}) : _dio = apiClient.dio;
 
@@ -27,13 +36,32 @@ class PaymentsRepository {
     }
   }
 
-  /// Creates a `pending` `PaymentTransaction` for the chosen plan — doesn't
-  /// touch the listing's featured status yet, that only happens on
-  /// [confirm] with `outcome: 'success'`.
-  Future<PaymentTransaction> purchase(int listingId, String planKey) async {
+  /// Public, no auth — every payment method an admin currently has enabled.
+  Future<List<PaymentGatewayOption>> gateways() async {
     try {
-      final response = await _dio.post('/listings/$listingId/feature', data: {'plan_key': planKey});
-      return PaymentTransaction.fromJson(response.data['data'] as Map<String, dynamic>);
+      final response = await _dio.get('/payment-gateways');
+      return (response.data['data'] as List<dynamic>)
+          .map((g) => PaymentGatewayOption.fromJson(g as Map<String, dynamic>))
+          .toList(growable: false);
+    } on DioException catch (error) {
+      throw apiExceptionFrom(error);
+    }
+  }
+
+  /// Creates a `pending` `PaymentTransaction` for the chosen plan + gateway.
+  /// Doesn't touch the listing's featured status yet — that happens either
+  /// on [confirm] (sandbox only) or once the gateway's own callback (or an
+  /// admin, for manual) settles it server-side.
+  Future<PurchaseResult> purchase(int listingId, String planKey, int gatewayConfigId) async {
+    try {
+      final response = await _dio.post(
+        '/listings/$listingId/feature',
+        data: {'plan_key': planKey, 'gateway_config_id': gatewayConfigId},
+      );
+      return PurchaseResult(
+        transaction: PaymentTransaction.fromJson(response.data['data'] as Map<String, dynamic>),
+        checkout: CheckoutInstruction.fromJson(response.data['checkout'] as Map<String, dynamic>),
+      );
     } on DioException catch (error) {
       throw apiExceptionFrom(error);
     }

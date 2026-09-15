@@ -43,6 +43,17 @@ class FeaturedListingPurchaseService
         $driver = PaymentGatewayDriverRegistry::resolve($gatewayConfig->provider);
         $initiation = $driver->initiate($gatewayConfig, $transaction, $returnUrl);
 
+        // Saved so a client that can't run the frontend's own JS (the mobile
+        // app) can fetch "how do I pay for this" again later via the
+        // checkout-redirect route, without re-calling the driver — see the
+        // migration that added this column for why re-calling is unsafe.
+        $transaction->update(['checkout_snapshot' => [
+            'mode' => $initiation->mode,
+            'redirect_url' => $initiation->redirectUrl,
+            'form_fields' => $initiation->formFields,
+            'instructions' => $initiation->instructions,
+        ]]);
+
         return ['transaction' => $transaction, 'initiation' => $initiation];
     }
 

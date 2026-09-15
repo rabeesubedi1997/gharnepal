@@ -56,6 +56,17 @@ class AdminPaymentsScreen extends ConsumerWidget {
     }
   }
 
+  Future<void> _markPaid(BuildContext context, WidgetRef ref, AdminPaymentTransaction transaction) async {
+    try {
+      await ref.read(adminPaymentsRepositoryProvider).markPaid(transaction.id);
+      ref.invalidate(adminPaymentsListProvider);
+    } catch (error) {
+      if (!context.mounted) return;
+      final message = error is ApiException ? error.message : 'Could not mark this payment paid.';
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+    }
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final status = ref.watch(adminPaymentsStatusFilterProvider);
@@ -119,6 +130,7 @@ class AdminPaymentsScreen extends ConsumerWidget {
                           tone: _statusTone(data.items[index].status),
                           dateFormat: _dateFormat,
                           onRefund: isSuperAdmin ? () => _refund(context, ref, data.items[index]) : null,
+                          onMarkPaid: () => _markPaid(context, ref, data.items[index]),
                         ),
                       ),
                     ),
@@ -171,6 +183,7 @@ class _PaymentCard extends StatelessWidget {
     required this.tone,
     required this.dateFormat,
     this.onRefund,
+    this.onMarkPaid,
   });
 
   final AdminPaymentTransaction transaction;
@@ -179,6 +192,7 @@ class _PaymentCard extends StatelessWidget {
   /// Null (not just disabled) for anyone who isn't a super admin — refunding
   /// real money is reserved to that tier, see AdminPaymentsScreen.
   final VoidCallback? onRefund;
+  final VoidCallback? onMarkPaid;
 
   @override
   Widget build(BuildContext context) {
@@ -235,6 +249,13 @@ class _PaymentCard extends StatelessWidget {
               Text(
                 'By ${transaction.user!.name}',
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppColors.ink700),
+              ),
+            ],
+            if (transaction.status == 'pending' && transaction.gateway == 'manual' && onMarkPaid != null) ...[
+              const SizedBox(height: 10),
+              Align(
+                alignment: Alignment.centerRight,
+                child: FilledButton.tonal(onPressed: onMarkPaid, child: const Text('Mark paid')),
               ),
             ],
             if (transaction.status == 'completed' && onRefund != null) ...[

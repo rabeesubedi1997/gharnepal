@@ -87,7 +87,9 @@ class FeaturedListingPurchaseTest extends TestCase
             ->assertJsonPath('data.status', 'pending')
             ->assertJsonPath('data.plan_days', 7)
             ->assertJsonPath('data.amount', 500)
-            ->assertJsonPath('checkout.mode', 'inline');
+            ->assertJsonPath('checkout.mode', 'inline')
+            // Inline mode (sandbox/manual) never needs an external checkout trip.
+            ->assertJsonPath('checkout.checkout_redirect_url', null);
 
         $this->assertDatabaseHas('payment_transactions', [
             'property_listing_id' => $listing->id,

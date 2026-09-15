@@ -43,6 +43,13 @@ class FeaturedListingController extends Controller
                 'redirect_url' => $result['initiation']->redirectUrl,
                 'form_fields' => $result['initiation']->formFields,
                 'instructions' => $result['initiation']->instructions,
+                // One URL any client can just open externally to actually pay
+                // (a browser does the redirect/form-post itself) — what the
+                // mobile app uses instead of replicating the frontend's own
+                // hidden-form-auto-submit JS.
+                'checkout_redirect_url' => $result['initiation']->mode === 'inline'
+                    ? null
+                    : route('payments.checkout-redirect', ['reference' => $result['transaction']->gateway_reference]),
             ]])
             ->response()->setStatusCode(201);
     }

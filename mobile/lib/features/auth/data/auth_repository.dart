@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 
 import '../../../core/network/api_client.dart';
+import '../../../core/network/api_config.dart';
 import '../../../core/network/api_exception.dart';
 import '../../../core/network/token_storage.dart';
 import 'auth_user.dart';
@@ -33,6 +34,9 @@ class AuthRepository {
           'password_confirmation': passwordConfirmation,
           if (phone != null && phone.isNotEmpty) 'phone': phone,
         },
+        options: ApiConfig.mobileAppSharedSecret.isEmpty
+            ? null
+            : Options(headers: {'X-Mobile-App-Secret': ApiConfig.mobileAppSharedSecret}),
       );
       return await _saveTokenAndReturnUser(response.data);
     } on DioException catch (error) {
