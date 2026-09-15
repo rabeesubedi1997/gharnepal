@@ -24,6 +24,7 @@ use App\Http\Controllers\Api\V1\Admin\DashboardController;
 use App\Http\Controllers\Api\V1\Admin\DuplicateFlagController;
 use App\Http\Controllers\Api\V1\Admin\ListingModerationController;
 use App\Http\Controllers\Api\V1\Admin\MailTestController;
+use App\Http\Controllers\Api\V1\Admin\PaymentGatewayConfigController;
 use App\Http\Controllers\Api\V1\Admin\LocationManagementController;
 use App\Http\Controllers\Api\V1\Admin\NeighborhoodPoiController;
 use App\Http\Controllers\Api\V1\Admin\NeighborhoodScoreController;
@@ -58,6 +59,8 @@ use App\Http\Controllers\Api\V1\Public\AgencyController;
 use App\Http\Controllers\Api\V1\Public\AmenityController;
 use App\Http\Controllers\Api\V1\Public\BannerController;
 use App\Http\Controllers\Api\V1\Public\BrandingController;
+use App\Http\Controllers\Api\V1\Public\PaymentCallbackController;
+use App\Http\Controllers\Api\V1\Public\PaymentGatewayController;
 use App\Http\Controllers\Api\V1\Public\SecurityController;
 use App\Http\Controllers\Api\V1\Public\BlogController;
 use App\Http\Controllers\Api\V1\Public\ListingController;
@@ -201,6 +204,11 @@ Route::prefix('v1')->group(function () {
     // Featured-listing boost pricing — public, static catalog
     Route::get('featured-plans', [FeaturedListingController::class, 'plans']);
 
+    // What the checkout screen can offer to pay with, and where every real
+    // gateway sends the buyer's browser back to afterward.
+    Route::get('payment-gateways', [PaymentGatewayController::class, 'index']);
+    Route::get('payments/callback/{gatewayConfig}', [PaymentCallbackController::class, 'handle']);
+
     // Neighborhood profiles & community notes
     Route::get('neighborhoods', [NeighborhoodController::class, 'index']);
     Route::get('neighborhoods/{neighborhood}', [NeighborhoodController::class, 'show']);
@@ -309,6 +317,13 @@ Route::prefix('v1')->group(function () {
         // Refunding real money is reserved to a super admin even though any
         // admin can see the transaction list.
         Route::patch('payments/{transaction}/refund', [AdminPaymentController::class, 'refund'])->middleware('super_admin');
+        Route::patch('payments/{transaction}/mark-paid', [AdminPaymentController::class, 'markPaid']);
+
+        Route::get('payment-gateways', [PaymentGatewayConfigController::class, 'index']);
+        Route::get('payment-gateways/catalog', [PaymentGatewayConfigController::class, 'catalog']);
+        Route::post('payment-gateways', [PaymentGatewayConfigController::class, 'store']);
+        Route::put('payment-gateways/{gatewayConfig}', [PaymentGatewayConfigController::class, 'update']);
+        Route::delete('payment-gateways/{gatewayConfig}', [PaymentGatewayConfigController::class, 'destroy']);
 
         // SEO — "page approach": one page_key per page, override + competitor-scan history.
         // page_key contains a colon (e.g. "listing:some-slug") — Laravel's default route

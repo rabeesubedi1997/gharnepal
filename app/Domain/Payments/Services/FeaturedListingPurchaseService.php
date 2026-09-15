@@ -2,19 +2,20 @@
 
 namespace App\Domain\Payments\Services;
 
-use App\Domain\Payments\Contracts\PaymentGateway;
+use App\Domain\Payments\Contracts\PaymentInitiation;
+use App\Models\PaymentGatewayConfig;
 use App\Models\PaymentTransaction;
 use App\Models\PropertyListing;
 use App\Models\User;
 use App\Notifications\FeaturedListingActivatedNotification;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 class FeaturedListingPurchaseService
 {
-    public function __construct(private readonly PaymentGateway $gateway) {}
-
-    public function initiate(PropertyListing $listing, User $user, string $planKey): PaymentTransaction
+    /** @return array{transaction: PaymentTransaction, initiation: PaymentInitiation} */
+    public function initiate(PropertyListing $listing, User $user, string $planKey, PaymentGatewayConfig $gatewayConfig): array
     {
         $plan = FeaturedListingPlans::find($planKey);
 
@@ -22,17 +23,27 @@ class FeaturedListingPurchaseService
             throw ValidationException::withMessages(['plan_key' => 'Unknown boost plan.']);
         }
 
-        return PaymentTransaction::create([
+        abort_unless($gatewayConfig->is_enabled, 422, 'This payment method is not currently available.');
+
+        $transaction = PaymentTransaction::create([
             'user_id' => $user->id,
             'property_listing_id' => $listing->id,
             'plan_key' => $planKey,
             'plan_days' => $plan['days'],
             'amount' => $plan['price'],
             'currency' => 'NPR',
-            'gateway' => $this->gateway->key(),
-            'gateway_reference' => $this->gateway->generateReference(),
+            'gateway' => $gatewayConfig->provider,
+            'gateway_config_id' => $gatewayConfig->id,
+            'gateway_reference' => 'TX-'.strtoupper(Str::random(14)),
             'status' => PaymentTransaction::STATUS_PENDING,
         ]);
+
+        $returnUrl = rtrim(config('app.url'), '/')."/api/v1/payments/callback/{$gatewayConfig->id}?ref={$transaction->gateway_reference}";
+
+        $driver = PaymentGatewayDriverRegistry::resolve($gatewayConfig->provider);
+        $initiation = $driver->initiate($gatewayConfig, $transaction, $returnUrl);
+
+        return ['transaction' => $transaction, 'initiation' => $initiation];
     }
 
     /**
