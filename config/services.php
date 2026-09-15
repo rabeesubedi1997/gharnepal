@@ -53,4 +53,15 @@ return [
         'allow_sandbox_in_production' => env('PAYMENT_GATEWAY_ALLOW_SANDBOX_IN_PRODUCTION', false),
     ],
 
+    'mobile_app' => [
+        // Lets the official Flutter app skip the reCAPTCHA widget check on
+        // registration — there's no in-app equivalent of the web "I'm not a
+        // robot" checkbox, and a compiled app is a much higher bar for a
+        // scripted bulk-signup abuser to clear than the public web form
+        // this protection was actually built to stop (see
+        // AuthController::register). Not a strong secret (it ships inside
+        // the APK and can be extracted), just a step above nothing.
+        'shared_secret' => env('MOBILE_APP_SHARED_SECRET'),
+    ],
+
 ];

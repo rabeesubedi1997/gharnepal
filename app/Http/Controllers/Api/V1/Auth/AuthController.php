@@ -24,8 +24,12 @@ class AuthController extends Controller
     {
         // A no-op the moment nothing is configured (PlatformSecurity) — this
         // is the actual fix for "a script can create unlimited accounts",
-        // not just validation the form already did.
-        if (! $this->recaptcha->verify($request->validated('captcha_token'), $request->ip())) {
+        // not just validation the form already did. The mobile app has no
+        // way to render the web "I'm not a robot" widget, so it identifies
+        // itself with a build-time shared secret instead — see
+        // config('services.mobile_app.shared_secret').
+        if (! $this->isTrustedMobileApp($request)
+            && ! $this->recaptcha->verify($request->validated('captcha_token'), $request->ip())) {
             throw ValidationException::withMessages([
                 'captcha_token' => 'Please complete the "I\'m not a robot" check.',
             ]);
@@ -109,5 +113,25 @@ class AuthController extends Controller
     public function me(Request $request): UserResource
     {
         return new UserResource($request->user()->load('roles', 'agencies'));
+    }
+
+    /**
+     * True only when the caller sent the exact shared secret compiled into
+     * the official mobile app, via `X-Mobile-App-Secret`. `hash_equals`
+     * guards against a timing attack revealing the secret byte by byte;
+     * an unset `shared_secret` (not configured) always returns false rather
+     * than matching an empty header, which would otherwise defeat the check
+     * entirely.
+     */
+    private function isTrustedMobileApp(Request $request): bool
+    {
+        $configured = config('services.mobile_app.shared_secret');
+        $provided = $request->header('X-Mobile-App-Secret');
+
+        if (! $configured || ! $provided) {
+            return false;
+        }
+
+        return hash_equals($configured, $provided);
     }
 }
