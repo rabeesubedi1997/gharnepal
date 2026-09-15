@@ -10,7 +10,7 @@ import {
   Users,
 } from 'lucide-react'
 import { useMunicipalities } from '../lib/api/locations'
-import { useListingSearch } from '../lib/api/listings'
+import { useListingSearch, type SearchFilters } from '../lib/api/listings'
 import { useNeighborhoodList } from '../lib/api/neighborhoods'
 import { usePlatformStats } from '../lib/api/platformStats'
 import { useStaticPageSeo } from '../lib/api/seo'
@@ -81,16 +81,27 @@ export function Home() {
     .sort((a, b) => b.active_listings_count - a.active_listings_count)
     .slice(0, 5)
 
+  // Shared with FeaturedListings below so the "preview" of results sitting
+  // right under the hero form always matches what it's currently set to —
+  // picking a city here used to only take effect once you pressed Search,
+  // so the very next thing on the page (Featured & Verified Listings) kept
+  // showing every city, unfiltered, looking exactly like a second, broken
+  // search right below the first one.
+  const heroFilters: SearchFilters = {
+    ...(heroTab === 'buy' && { purpose: 'sale' }),
+    ...(heroTab === 'rent' && { purpose: 'rent' }),
+    ...(!subtype && heroTab === 'commercial' && { property_type: 'commercial' }),
+    ...(!subtype && heroTab === 'land' && { property_type: 'land' }),
+    ...(subtype && { property_type: subtype as 'house' | 'apartment' | 'room' | 'land' | 'commercial' }),
+    ...(cityId && { municipality_id: Number(cityId) }),
+  }
+  const heroCityName = cityId ? municipalities?.find((m) => m.id === Number(cityId))?.name : undefined
+
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
     const band = BUDGET_BANDS[budgetIndex]
     const params = filtersToSearchParams({
-      ...(heroTab === 'buy' && { purpose: 'sale' }),
-      ...(heroTab === 'rent' && { purpose: 'rent' }),
-      ...(!subtype && heroTab === 'commercial' && { property_type: 'commercial' }),
-      ...(!subtype && heroTab === 'land' && { property_type: 'land' }),
-      ...(subtype && { property_type: subtype as 'house' | 'apartment' | 'room' | 'land' | 'commercial' }),
-      ...(cityId && { municipality_id: Number(cityId) }),
+      ...heroFilters,
       ...(band.min && { min_price: band.min }),
       ...(band.max && { max_price: band.max }),
     })
@@ -233,7 +244,7 @@ export function Home() {
 
       <BannerCarousel />
 
-      <FeaturedListings />
+      <FeaturedListings filters={heroFilters} cityName={heroCityName} />
 
       {/* Explore by region/valley */}
       <section>
@@ -310,19 +321,32 @@ export function Home() {
   )
 }
 
-function FeaturedListings() {
-  const { data, isPending, isError, refetch } = useListingSearch({ sort: 'newest' })
+/** Live preview of what the hero form above is currently set to — never a
+ * static "newest across all of Nepal" list, or picking a city there would
+ * visibly do nothing to the very next thing on the page. See the
+ * `heroFilters` comment in `Home()`. */
+function FeaturedListings({ filters, cityName }: { filters: SearchFilters; cityName?: string }) {
+  const { data, isPending, isError, refetch } = useListingSearch({ sort: 'newest', ...filters })
   const listings = data?.data.slice(0, 6) ?? []
 
   if (isPending) return <PropertyGridSkeleton count={6} />
   if (isError) return <ErrorState onRetry={refetch} description="Couldn't load listings right now." />
-  if (listings.length === 0) return null
+  if (listings.length === 0) {
+    return cityName ? (
+      <EmptyState
+        title={`No listings in ${cityName} yet`}
+        description="Try another city, or check back soon — new listings are added regularly."
+      />
+    ) : null
+  }
 
   return (
     <section>
       <div className="mb-4 flex items-end justify-between gap-3">
         <div>
-          <h2 className="font-display text-2xl font-semibold text-ink-900">Featured &amp; Verified Listings</h2>
+          <h2 className="font-display text-2xl font-semibold text-ink-900">
+            Featured &amp; Verified Listings{cityName ? ` in ${cityName}` : ''}
+          </h2>
           <p className="text-sm text-ink-700/70">Authentic land ownership documents, and clear title deed histories.</p>
         </div>
         <Link to="/search" className="shrink-0 text-sm font-medium text-trust-700 hover:underline">

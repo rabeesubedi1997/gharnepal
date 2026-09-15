@@ -31,22 +31,37 @@ import '../../saved_searches/application/saved_searches_providers.dart';
 /// a "browse by city" grid, and a real trust/transparency strip. The web
 /// page's install-app section has no native equivalent (nothing to
 /// "install") and is correctly omitted here.
-class HomeScreen extends ConsumerWidget {
+class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
-  void _openSearch(BuildContext context, WidgetRef ref, {SearchFilters? filters}) {
+  @override
+  ConsumerState<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends ConsumerState<HomeScreen> {
+  // Live preview of what the hero card below is currently set to — never a
+  // static "newest nationwide" query, or picking a city there would
+  // visibly do nothing to the very next thing on the page (Featured &
+  // Verified Listings). Kept here, one level up from `_HeroSearchCard`, so
+  // both it and the featured-listings query below share the same filters.
+  SearchFilters _heroFilters = const SearchFilters(sort: 'newest');
+
+  void _openSearch({SearchFilters? filters}) {
     ref.read(searchFiltersProvider.notifier).state = filters ?? const SearchFilters();
     context.push('/search');
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final user = ref.watch(authControllerProvider).valueOrNull;
     final banners = ref.watch(bannersProvider);
     final municipalities = ref.watch(municipalitiesProvider);
     final neighborhoods = ref.watch(neighborhoodsListProvider);
     final platformStats = ref.watch(platformStatsProvider);
-    final featured = ref.watch(searchResultsProvider(const SearchFilters(sort: 'newest')));
+    final featured = ref.watch(searchResultsProvider(_heroFilters));
+    final heroCityName = _heroFilters.municipalityId == null
+        ? null
+        : municipalities.valueOrNull?.where((m) => m.id == _heroFilters.municipalityId).firstOrNull?.name;
     final unreadNotifications = ref.watch(notificationsProvider).valueOrNull?.unreadCount ?? 0;
 
     return Scaffold(
@@ -77,7 +92,7 @@ class HomeScreen extends ConsumerWidget {
           ref.invalidate(municipalitiesProvider);
           ref.invalidate(neighborhoodsListProvider);
           ref.invalidate(platformStatsProvider);
-          ref.invalidate(searchResultsProvider(const SearchFilters(sort: 'newest')));
+          ref.invalidate(searchResultsProvider(_heroFilters));
         },
         child: ListView(
           padding: const EdgeInsets.only(bottom: 24),
@@ -87,7 +102,8 @@ class HomeScreen extends ConsumerWidget {
               child: _HeroSearchCard(
                 municipalities: municipalities.valueOrNull ?? const [],
                 publishedListings: platformStats.valueOrNull?.publishedListings,
-                onSearch: (filters) => _openSearch(context, ref, filters: filters),
+                onSearch: (filters) => _openSearch(filters: filters),
+                onFilterChanged: (filters) => setState(() => _heroFilters = filters),
               ),
             ),
             neighborhoods.when(
@@ -118,7 +134,8 @@ class HomeScreen extends ConsumerWidget {
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: _FeaturedListings(
                 state: featured,
-                onRetry: () => ref.invalidate(searchResultsProvider(const SearchFilters(sort: 'newest'))),
+                cityName: heroCityName,
+                onRetry: () => ref.invalidate(searchResultsProvider(_heroFilters)),
                 onTapListing: (slug) => context.push('/listings/$slug'),
                 onViewAll: () => context.push('/search'),
               ),
@@ -149,11 +166,7 @@ class HomeScreen extends ConsumerWidget {
                   ? const EmptyState(title: 'No cities yet', icon: Icons.location_city_outlined)
                   : _CityGrid(
                       cities: cities,
-                      onTap: (city) => _openSearch(
-                        context,
-                        ref,
-                        filters: SearchFilters(municipalityId: city.id),
-                      ),
+                      onTap: (city) => _openSearch(filters: SearchFilters(municipalityId: city.id)),
                     ),
             ),
             const SizedBox(height: 24),
@@ -180,11 +193,20 @@ class HomeScreen extends ConsumerWidget {
 /// web hero search (budget band + unit toggle live in the Search page's own
 /// filter sheet on mobile rather than being duplicated here).
 class _HeroSearchCard extends StatefulWidget {
-  const _HeroSearchCard({required this.municipalities, required this.publishedListings, required this.onSearch});
+  const _HeroSearchCard({
+    required this.municipalities,
+    required this.publishedListings,
+    required this.onSearch,
+    required this.onFilterChanged,
+  });
 
   final List<Municipality> municipalities;
   final int? publishedListings;
   final ValueChanged<SearchFilters> onSearch;
+  /// Fired immediately on every tab/city change (not just on submit) so the
+  /// Featured & Verified Listings preview further down the page stays in
+  /// sync with what's picked here — see `_HomeScreenState._heroFilters`.
+  final ValueChanged<SearchFilters> onFilterChanged;
 
   @override
   State<_HeroSearchCard> createState() => _HeroSearchCardState();
@@ -201,16 +223,34 @@ class _HeroSearchCardState extends State<_HeroSearchCard> {
   String _tab = 'buy';
   int? _municipalityId;
 
-  void _submit() {
-    final filters = switch (_tab) {
-      'buy' => SearchFilters(purpose: 'sale', municipalityId: _municipalityId),
-      'rent' => SearchFilters(purpose: 'rent', municipalityId: _municipalityId),
-      'commercial' => SearchFilters(propertyType: 'commercial', municipalityId: _municipalityId),
-      'land' => SearchFilters(propertyType: 'land', municipalityId: _municipalityId),
-      _ => SearchFilters(municipalityId: _municipalityId),
-    };
-    widget.onSearch(filters);
+  SearchFilters get _filters => switch (_tab) {
+    'buy' => SearchFilters(purpose: 'sale', municipalityId: _municipalityId),
+    'rent' => SearchFilters(purpose: 'rent', municipalityId: _municipalityId),
+    'commercial' => SearchFilters(propertyType: 'commercial', municipalityId: _municipalityId),
+    'land' => SearchFilters(propertyType: 'land', municipalityId: _municipalityId),
+    _ => SearchFilters(municipalityId: _municipalityId),
+  };
+
+  @override
+  void initState() {
+    super.initState();
+    // Report the (empty) starting filters up front too, not just on the
+    // first change — otherwise the parent's featured-listings query starts
+    // life out of sync with what this card actually shows.
+    WidgetsBinding.instance.addPostFrameCallback((_) => widget.onFilterChanged(_filters));
   }
+
+  void _updateTab(String tab) {
+    setState(() => _tab = tab);
+    widget.onFilterChanged(_filters);
+  }
+
+  void _updateMunicipality(int? id) {
+    setState(() => _municipalityId = id);
+    widget.onFilterChanged(_filters);
+  }
+
+  void _submit() => widget.onSearch(_filters);
 
   @override
   Widget build(BuildContext context) {
@@ -228,7 +268,7 @@ class _HeroSearchCardState extends State<_HeroSearchCard> {
                     (tab) => ChoiceChip(
                       label: Text(tab.label),
                       selected: _tab == tab.key,
-                      onSelected: (_) => setState(() => _tab = tab.key),
+                      onSelected: (_) => _updateTab(tab.key),
                       selectedColor: AppColors.trust700,
                       labelStyle: TextStyle(
                         color: _tab == tab.key ? Colors.white : AppColors.ink700,
@@ -248,7 +288,7 @@ class _HeroSearchCardState extends State<_HeroSearchCard> {
                 for (final city in widget.municipalities)
                   DropdownMenuItem<int?>(value: city.id, child: Text(city.name)),
               ],
-              onChanged: (value) => setState(() => _municipalityId = value),
+              onChanged: _updateMunicipality,
             ),
             const SizedBox(height: 12),
             AppButton(
@@ -438,15 +478,20 @@ class _AlertSignupBannerState extends ConsumerState<_AlertSignupBanner> {
   }
 }
 
+/// Live preview of what the hero card above is currently set to — never a
+/// static "newest nationwide" list, or picking a city there would visibly
+/// do nothing to the very next thing on the page. See `_HomeScreenState`.
 class _FeaturedListings extends StatelessWidget {
   const _FeaturedListings({
     required this.state,
+    required this.cityName,
     required this.onRetry,
     required this.onTapListing,
     required this.onViewAll,
   });
 
   final AsyncValue<SearchResultsState> state;
+  final String? cityName;
   final VoidCallback onRetry;
   final ValueChanged<String> onTapListing;
   final VoidCallback onViewAll;
@@ -458,7 +503,15 @@ class _FeaturedListings extends StatelessWidget {
       error: (error, _) => ErrorState(message: "Couldn't load listings right now.", onRetry: onRetry),
       data: (data) {
         final listings = data.items.take(6).toList();
-        if (listings.isEmpty) return const SizedBox.shrink();
+        if (listings.isEmpty) {
+          return cityName == null
+              ? const SizedBox.shrink()
+              : EmptyState(
+                  title: 'No listings in $cityName yet',
+                  message: 'Try another city, or check back soon.',
+                  icon: Icons.search_off,
+                );
+        }
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -466,7 +519,12 @@ class _FeaturedListings extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text('Featured & Verified Listings', style: Theme.of(context).textTheme.titleLarge),
+                Expanded(
+                  child: Text(
+                    cityName == null ? 'Featured & Verified Listings' : 'Featured & Verified Listings in $cityName',
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
+                ),
                 TextButton(onPressed: onViewAll, child: const Text('View all →')),
               ],
             ),

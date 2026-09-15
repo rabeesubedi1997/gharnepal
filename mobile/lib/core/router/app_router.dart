@@ -22,9 +22,11 @@ import '../../features/admin/listings/presentation/admin_listing_detail_screen.d
 import '../../features/admin/listings/presentation/admin_listings_screen.dart';
 import '../../features/admin/locations/presentation/admin_locations_screen.dart';
 import '../../features/admin/neighborhood_scores/presentation/admin_neighborhood_scores_screen.dart';
+import '../../features/admin/payment_gateways/presentation/payment_gateways_screen.dart';
 import '../../features/admin/payments/presentation/admin_payments_screen.dart';
 import '../../features/admin/ratings/presentation/admin_ratings_screen.dart';
 import '../../features/admin/reports/presentation/admin_reports_screen.dart';
+import '../../features/admin/security/presentation/security_screen.dart';
 import '../../features/admin/seo/presentation/admin_seo_page_editor_screen.dart';
 import '../../features/admin/seo/presentation/admin_seo_screen.dart';
 import '../../features/admin/trust/presentation/admin_trust_factors_screen.dart';
@@ -205,6 +207,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/admin/community-notes', builder: (context, state) => const AdminCommunityNotesScreen()),
       GoRoute(path: '/admin/ratings', builder: (context, state) => const AdminRatingsScreen()),
       GoRoute(path: '/admin/payments', builder: (context, state) => const AdminPaymentsScreen()),
+      GoRoute(path: '/admin/payment-gateways', builder: (context, state) => const PaymentGatewaysScreen()),
+      GoRoute(path: '/admin/security', builder: (context, state) => const SecurityScreen()),
       GoRoute(path: '/admin/conversations', builder: (context, state) => const AdminConversationsScreen()),
       GoRoute(
         path: '/admin/conversations/:id',
