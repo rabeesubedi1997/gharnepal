@@ -59,9 +59,9 @@ export interface MailTestResult {
 
 export function useSendTestEmail() {
   return useMutation({
-    mutationFn: async () => {
+    mutationFn: async (to?: string) => {
       await ensureCsrfCookie()
-      const { data } = await apiClient.post<{ data: MailTestResult }>('/admin/mail-test')
+      const { data } = await apiClient.post<{ data: MailTestResult }>('/admin/mail-test', { to: to || undefined })
       return data.data
     },
   })

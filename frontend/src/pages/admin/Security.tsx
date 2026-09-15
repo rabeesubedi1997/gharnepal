@@ -24,6 +24,7 @@ export function Security() {
   const [keysError, setKeysError] = useState<string | null>(null)
   const [saved, setSaved] = useState(false)
   const [toggleError, setToggleError] = useState<string | null>(null)
+  const [testTo, setTestTo] = useState('')
 
   // Reflects the server's last-known state, not local intent — while a
   // toggle request is in flight the switch still shows the pre-click
@@ -152,17 +153,27 @@ export function Security() {
         <p className="text-xs text-ink-700/60">
           If alert emails aren't arriving, the most common cause is <code>MAIL_MAILER</code> still set to <code>log</code> (the
           safe default) even after SMTP credentials were added to the live <code>.env</code> — SMTP host/port/username/password
-          alone don't switch it over. Send yourself a test email right now to check the current setup.
+          alone don't switch it over. Send a test email right now to check the current setup.
         </p>
-        <Button
-          size="sm"
-          variant="outline"
-          className="self-start"
-          isLoading={testEmail.isPending}
-          onClick={() => testEmail.mutate()}
-        >
-          Send me a test email
-        </Button>
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
+          <Input
+            label="Send test to (optional)"
+            placeholder="Leave blank to send to your own email"
+            type="email"
+            value={testTo}
+            onChange={(e) => setTestTo(e.target.value)}
+            className="sm:max-w-xs"
+          />
+          <Button
+            size="sm"
+            variant="outline"
+            className="self-start"
+            isLoading={testEmail.isPending}
+            onClick={() => testEmail.mutate(testTo.trim())}
+          >
+            Send test email
+          </Button>
+        </div>
         {testEmail.data && (
           <div className={`rounded-lg p-3 text-sm ${testEmail.data.sent ? 'bg-success-100/40 text-success-700' : 'bg-danger-100/40 text-danger-700'}`}>
             {testEmail.data.sent ? (

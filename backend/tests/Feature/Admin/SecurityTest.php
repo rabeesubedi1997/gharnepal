@@ -168,4 +168,23 @@ class SecurityTest extends TestCase
             ->assertJsonPath('data.to', $admin->email)
             ->assertJsonPath('data.error', null);
     }
+
+    public function test_an_admin_can_send_a_test_email_to_any_address(): void
+    {
+        Mail::fake();
+
+        $this->actingAs($this->admin(), 'sanctum')
+            ->postJson('/api/v1/admin/mail-test', ['to' => 'someone-else@example.test'])
+            ->assertOk()
+            ->assertJsonPath('data.sent', true)
+            ->assertJsonPath('data.to', 'someone-else@example.test');
+    }
+
+    public function test_an_invalid_test_email_address_is_rejected(): void
+    {
+        $this->actingAs($this->admin(), 'sanctum')
+            ->postJson('/api/v1/admin/mail-test', ['to' => 'not-an-email'])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('to');
+    }
 }
