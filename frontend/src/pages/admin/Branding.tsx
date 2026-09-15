@@ -1,6 +1,5 @@
 import { useRef, useState } from 'react'
 import { Palette } from 'lucide-react'
-import { useCurrentUser } from '../../lib/api/auth'
 import { useAdminBranding, useUpdateBranding } from '../../lib/api/branding'
 import { getErrorMessage } from '../../lib/api/errors'
 import { AdminPageHeader } from '../../components/admin/AdminPageHeader'
@@ -11,7 +10,6 @@ import { ErrorState } from '../../components/ui/ErrorState'
 import { Skeleton } from '../../components/ui/Skeleton'
 
 export function Branding() {
-  const { data: user } = useCurrentUser()
   const { data, isPending, isError, refetch } = useAdminBranding()
   const update = useUpdateBranding()
 
@@ -23,7 +21,6 @@ export function Branding() {
   const faviconRef = useRef<HTMLInputElement>(null)
   const appIconRef = useRef<HTMLInputElement>(null)
 
-  const canEdit = !!user?.is_super_admin
   const nameValue = siteName || data?.site_name || ''
 
   const handleSave = () => {
@@ -63,16 +60,10 @@ export function Branding() {
       <AdminPageHeader
         icon={Palette}
         title="Branding"
-        description="Site name and icons — no code changes or deploy needed for the website. Only a super admin can change these."
+        description="Site name and icons — no code changes or deploy needed for the website."
       />
 
       {isError && <ErrorState onRetry={refetch} />}
-
-      {!canEdit && (
-        <Card className="border-warning-600/30 bg-warning-100/40 p-4 text-sm text-ink-700">
-          You can see the current branding below, but only a super admin can change it.
-        </Card>
-      )}
 
       <Card className="flex flex-col gap-5 p-4">
         <div>
@@ -81,7 +72,6 @@ export function Branding() {
             placeholder={data?.site_name ?? 'Ghar Nepal'}
             value={nameValue}
             onChange={(e) => setSiteName(e.target.value)}
-            disabled={!canEdit}
           />
           <p className="mt-1 text-xs text-ink-700/60">Shown in the header, footer, and browser tab title — updates live.</p>
         </div>
@@ -101,9 +91,8 @@ export function Branding() {
                 ref={faviconRef}
                 type="file"
                 accept="image/png,image/x-icon,image/svg+xml,image/webp"
-                disabled={!canEdit}
                 onChange={(e) => setFavicon(e.target.files?.[0] ?? null)}
-                className="min-w-0 flex-1 rounded-lg border border-stone-200 px-3 py-2 text-xs disabled:opacity-50"
+                className="min-w-0 flex-1 rounded-lg border border-stone-200 px-3 py-2 text-xs"
               />
             </div>
             <p className="text-xs text-ink-700/60">Square PNG/ICO/SVG, up to 1MB. Applies to every visitor's browser tab immediately.</p>
@@ -123,9 +112,8 @@ export function Branding() {
                 ref={appIconRef}
                 type="file"
                 accept="image/png,image/jpeg"
-                disabled={!canEdit}
                 onChange={(e) => setAppIcon(e.target.files?.[0] ?? null)}
-                className="min-w-0 flex-1 rounded-lg border border-stone-200 px-3 py-2 text-xs disabled:opacity-50"
+                className="min-w-0 flex-1 rounded-lg border border-stone-200 px-3 py-2 text-xs"
               />
             </div>
             <p className="text-xs text-ink-700/60">
@@ -138,11 +126,9 @@ export function Branding() {
 
         {error && <p className="text-sm text-danger-600">{error}</p>}
         {saved && <p className="text-sm text-success-600">Saved.</p>}
-        {canEdit && (
-          <Button className="self-start" isLoading={update.isPending} onClick={handleSave}>
-            Save branding
-          </Button>
-        )}
+        <Button className="self-start" isLoading={update.isPending} onClick={handleSave}>
+          Save branding
+        </Button>
       </Card>
     </div>
   )

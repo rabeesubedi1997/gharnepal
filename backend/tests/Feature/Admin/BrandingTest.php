@@ -55,11 +55,12 @@ class BrandingTest extends TestCase
             ->assertJsonPath('data.favicon_url', fn ($url) => str_contains($url, '/storage/branding/'));
     }
 
-    public function test_a_regular_admin_cannot_change_branding(): void
+    public function test_a_regular_admin_can_also_change_branding(): void
     {
         $this->actingAs($this->admin(), 'sanctum')
-            ->post('/api/v1/admin/branding', ['site_name' => 'Hijacked'])
-            ->assertForbidden();
+            ->post('/api/v1/admin/branding', ['site_name' => 'Not Just Super Admins'])
+            ->assertOk()
+            ->assertJsonPath('data.site_name', 'Not Just Super Admins');
     }
 
     public function test_a_regular_admin_can_still_view_current_branding(): void

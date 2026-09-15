@@ -9,11 +9,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
 /**
- * Read is open to any admin; the actual write is reserved to a super admin
- * (see routes/api.php's `super_admin` middleware on the PUT route) — site
- * branding is exactly the kind of "everyone can see it, only the top tier
- * can change it" setting the rest of the super-admin guard already covers
- * (payment refunds, role grants).
+ * Both read and write are open to any admin, not just a super admin — see
+ * routes/api.php's comment on the POST route.
  */
 class BrandingController extends Controller
 {
