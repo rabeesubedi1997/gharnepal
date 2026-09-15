@@ -11,26 +11,38 @@ import { Skeleton } from '../../components/ui/Skeleton'
 
 export function Security() {
   const { data, isPending, isError, refetch } = useAdminSecurity()
-  const update = useUpdateSecurity()
+  // Two independent mutation instances — sharing one meant clicking the
+  // toggle also flipped the "Save keys" button into its loading state (and
+  // vice versa), and gave the toggle itself no loading/error feedback of
+  // its own, so a slow or failed request just looked like nothing happened.
+  const toggleUpdate = useUpdateSecurity()
+  const keysUpdate = useUpdateSecurity()
   const testEmail = useSendTestEmail()
 
   const [siteKey, setSiteKey] = useState('')
   const [secretKey, setSecretKey] = useState('')
-  const [error, setError] = useState<string | null>(null)
+  const [keysError, setKeysError] = useState<string | null>(null)
   const [saved, setSaved] = useState(false)
+  const [toggleError, setToggleError] = useState<string | null>(null)
 
+  // Reflects the server's last-known state, not local intent — while a
+  // toggle request is in flight the switch still shows the pre-click
+  // state (see the pending overlay below) instead of guessing.
   const enabled = data?.recaptcha_enabled ?? false
 
   const handleToggle = (next: boolean) => {
-    setError(null)
-    setSaved(false)
-    update.mutate({ recaptcha_enabled: next }, { onError: (e) => setError(getErrorMessage(e)) })
+    if (toggleUpdate.isPending) return // one flip at a time — no racing double-clicks
+    setToggleError(null)
+    toggleUpdate.mutate(
+      { recaptcha_enabled: next },
+      { onError: (e) => setToggleError(getErrorMessage(e)) },
+    )
   }
 
   const handleSaveKeys = () => {
-    setError(null)
+    setKeysError(null)
     setSaved(false)
-    update.mutate(
+    keysUpdate.mutate(
       { recaptcha_site_key: siteKey.trim() || undefined, recaptcha_secret_key: secretKey.trim() || undefined },
       {
         onSuccess: () => {
@@ -38,7 +50,7 @@ export function Security() {
           setSiteKey('')
           setSecretKey('')
         },
-        onError: (e) => setError(getErrorMessage(e)),
+        onError: (e) => setKeysError(getErrorMessage(e)),
       },
     )
   }
@@ -71,17 +83,31 @@ export function Security() {
               turn this on — registration starts requiring the checkbox the moment it's active.
             </p>
           </div>
-          <button
-            type="button"
-            role="switch"
-            aria-checked={enabled}
-            disabled={!data?.recaptcha_site_key || !data?.recaptcha_secret_configured}
-            onClick={() => handleToggle(!enabled)}
-            className={`relative h-6 w-11 shrink-0 rounded-full transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${enabled ? 'bg-trust-700' : 'bg-stone-300'}`}
-          >
-            <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition-transform ${enabled ? 'translate-x-5' : 'translate-x-0.5'}`} />
-          </button>
+          <div className="flex shrink-0 flex-col items-end gap-1">
+            <button
+              type="button"
+              role="switch"
+              aria-checked={enabled}
+              aria-busy={toggleUpdate.isPending}
+              disabled={!data?.recaptcha_site_key || !data?.recaptcha_secret_configured || toggleUpdate.isPending}
+              onClick={() => handleToggle(!enabled)}
+              className={`relative h-6 w-11 rounded-full transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${enabled ? 'bg-trust-700' : 'bg-stone-300'}`}
+            >
+              <span
+                className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition-transform ${enabled ? 'translate-x-5' : 'translate-x-0.5'}`}
+              >
+                {toggleUpdate.isPending && (
+                  <span className="absolute inset-0 flex items-center justify-center">
+                    <span className="h-3 w-3 animate-spin rounded-full border-2 border-stone-300 border-t-trust-700" />
+                  </span>
+                )}
+              </span>
+            </button>
+            <span className="text-[11px] font-medium text-ink-700/60">{enabled ? 'On' : 'Off'}</span>
+          </div>
         </div>
+
+        {toggleError && <p className="text-sm text-danger-600">{toggleError}</p>}
 
         {data && !data.recaptcha_site_key && (
           <p className="text-xs text-ink-700/60">
@@ -113,9 +139,9 @@ export function Security() {
           />
         </div>
 
-        {error && <p className="text-sm text-danger-600">{error}</p>}
+        {keysError && <p className="text-sm text-danger-600">{keysError}</p>}
         {saved && <p className="text-sm text-success-600">Saved.</p>}
-        <Button className="self-start" size="sm" variant="outline" isLoading={update.isPending} onClick={handleSaveKeys}>
+        <Button className="self-start" size="sm" variant="outline" isLoading={keysUpdate.isPending} onClick={handleSaveKeys}>
           Save keys
         </Button>
       </Card>
