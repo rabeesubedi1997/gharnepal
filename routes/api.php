@@ -350,10 +350,10 @@ Route::prefix('v1')->group(function () {
         Route::put('banners/{banner}', [AdminBannerController::class, 'update']);
         Route::delete('banners/{banner}', [AdminBannerController::class, 'destroy']);
 
+        // Open to any admin (not just super admin) — at the user's explicit
+        // request, same relaxation as Security below.
         Route::get('branding', [AdminBrandingController::class, 'show']);
-        // Every admin can see current branding; only a super admin can change
-        // it — same tier as payment refunds and role grants.
-        Route::post('branding', [AdminBrandingController::class, 'update'])->middleware('super_admin');
+        Route::post('branding', [AdminBrandingController::class, 'update']);
 
         // Open to any admin (not just super admin) — the secret itself is
         // still never echoed back in full (see SecurityController::respond).
