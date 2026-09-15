@@ -11,16 +11,18 @@ use Illuminate\Support\Facades\Mail;
 /**
  * Self-serve SMTP diagnosis: an admin who just set MAIL_* in the live .env
  * has no way to know whether it actually works without waiting for a real
- * alert to (not) arrive. This sends one real email to the calling admin's
- * own address right now and reports success/failure — including the raw
- * transport error (safe: admin-only, and it's exactly what's needed to fix
- * a bad host/port/credential) — instead of a silent miss.
+ * alert to (not) arrive. This sends one real email right now — to whatever
+ * address the admin types in, defaulting to their own — and reports
+ * success/failure, including the raw transport error (safe: admin-only,
+ * and it's exactly what's needed to fix a bad host/port/credential)
+ * instead of a silent miss.
  */
 class MailTestController extends Controller
 {
     public function send(Request $request): JsonResponse
     {
-        $to = $request->user()->email;
+        $data = $request->validate(['to' => ['nullable', 'email', 'max:255']]);
+        $to = $data['to'] ?? $request->user()->email;
         $mailer = config('mail.default');
 
         try {
