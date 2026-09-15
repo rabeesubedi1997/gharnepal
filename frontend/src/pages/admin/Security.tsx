@@ -75,7 +75,7 @@ export function Security() {
       {isError && <ErrorState onRetry={refetch} />}
 
       <Card className="flex flex-col gap-4 p-4">
-        <div className="flex items-center justify-between">
+        <div className="flex items-start justify-between gap-4">
           <div>
             <h2 className="font-display text-base font-semibold text-ink-900">"I'm not a robot" check (reCAPTCHA)</h2>
             <p className="mt-1 text-xs text-ink-700/60">
@@ -83,7 +83,8 @@ export function Security() {
               turn this on — registration starts requiring the checkbox the moment it's active.
             </p>
           </div>
-          <div className="flex shrink-0 flex-col items-end gap-1">
+          <div className="flex shrink-0 items-center gap-2">
+            <span className="text-[11px] font-medium text-ink-700/60">{enabled ? 'On' : 'Off'}</span>
             <button
               type="button"
               role="switch"
@@ -91,19 +92,16 @@ export function Security() {
               aria-busy={toggleUpdate.isPending}
               disabled={!data?.recaptcha_site_key || !data?.recaptcha_secret_configured || toggleUpdate.isPending}
               onClick={() => handleToggle(!enabled)}
-              className={`relative h-6 w-11 rounded-full transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${enabled ? 'bg-trust-700' : 'bg-stone-300'}`}
+              className={`relative h-6 w-11 shrink-0 rounded-full transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${enabled ? 'bg-trust-700' : 'bg-stone-300'}`}
             >
               <span
-                className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition-transform ${enabled ? 'translate-x-5' : 'translate-x-0.5'}`}
+                className={`absolute top-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-white transition-transform ${enabled ? 'translate-x-5' : 'translate-x-0.5'}`}
               >
                 {toggleUpdate.isPending && (
-                  <span className="absolute inset-0 flex items-center justify-center">
-                    <span className="h-3 w-3 animate-spin rounded-full border-2 border-stone-300 border-t-trust-700" />
-                  </span>
+                  <span className="h-3 w-3 animate-spin rounded-full border-2 border-stone-300 border-t-trust-700" />
                 )}
               </span>
             </button>
-            <span className="text-[11px] font-medium text-ink-700/60">{enabled ? 'On' : 'Off'}</span>
           </div>
         </div>
 
