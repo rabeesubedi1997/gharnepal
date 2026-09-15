@@ -5,6 +5,7 @@ import {
   Building2,
   ClipboardList,
   Copy,
+  CreditCard,
   Flag,
   GalleryHorizontal,
   Home,
@@ -76,7 +77,10 @@ const NAV_GROUPS: { title: string; tone: AdminTone; items: { to: string; label: 
   {
     title: 'Finance',
     tone: 'success',
-    items: [{ to: '/admin/payments', label: 'Payments', icon: Receipt }],
+    items: [
+      { to: '/admin/payments', label: 'Payments', icon: Receipt },
+      { to: '/admin/payment-gateways', label: 'Payment gateways', icon: CreditCard },
+    ],
   },
   {
     title: 'SEO & marketing',

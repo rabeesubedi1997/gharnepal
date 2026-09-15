@@ -26,17 +26,21 @@ class PaymentController extends Controller
     }
 
     /**
-     * Sandbox-only stand-in for a real gateway's server-to-server callback:
-     * the transaction's own owner triggers it from the sandbox checkout
-     * screen. A real gateway integration would replace this with a signed
-     * webhook endpoint instead — the FeaturedListingPurchaseService logic
-     * underneath does not change either way.
+     * Sandbox-only: the buyer self-attests success/failure directly, since
+     * nothing external verifies a sandbox transaction. Every real gateway
+     * (eSewa/Khalti/IME Pay/PayPal) is confirmed exclusively through its
+     * own signed/verified callback (see PaymentCallbackController) —
+     * letting a buyer call this endpoint for a *real* transaction would
+     * mean anyone could just claim their own payment succeeded and get the
+     * boost for free, so it's hard-rejected for any gateway but sandbox.
      */
     public function confirm(Request $request, PaymentTransaction $transaction): PaymentTransactionResource
     {
         if ($transaction->user_id !== $request->user()->id) {
             abort(403);
         }
+
+        abort_unless($transaction->gateway === 'sandbox', 422, 'This payment method confirms automatically and cannot be confirmed manually.');
 
         $data = $request->validate([
             'outcome' => ['required', Rule::in(['success', 'failure'])],

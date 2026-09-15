@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { Receipt } from 'lucide-react'
 import { useAdminPayments, type PaymentStatus } from '../../lib/api/payments'
 import { useRefundPayment } from '../../lib/api/admin'
+import { useMarkPaymentPaid } from '../../lib/api/adminPaymentGateways'
 import { useCurrentUser } from '../../lib/api/auth'
 import { formatNpr } from '../../design-system/tokens'
 import { AdminPageHeader } from '../../components/admin/AdminPageHeader'
@@ -25,6 +26,7 @@ export function Payments() {
   const [status, setStatus] = useState<PaymentStatus | ''>('')
   const { data, isPending, isError, refetch } = useAdminPayments(status || undefined)
   const refund = useRefundPayment()
+  const markPaid = useMarkPaymentPaid()
   const { data: me } = useCurrentUser()
 
   return (
@@ -74,6 +76,15 @@ export function Payments() {
           <div className="flex items-center gap-2">
             <span className="font-semibold text-ink-900">{formatNpr(tx.amount)}</span>
             <Badge tone={STATUS_TONE[tx.status]}>{tx.status}</Badge>
+            {tx.status === 'pending' && tx.gateway === 'manual' && (
+              <Button
+                size="sm"
+                isLoading={markPaid.isPending && markPaid.variables === tx.id}
+                onClick={() => markPaid.mutate(tx.id)}
+              >
+                Mark paid
+              </Button>
+            )}
             {tx.status === 'completed' && me?.is_super_admin && (
               <Button
                 size="sm"

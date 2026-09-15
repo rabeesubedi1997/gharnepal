@@ -44,10 +44,12 @@ return [
     ],
 
     'payments' => [
-        // No real gateway (eSewa/Khalti) is wired in yet — PaymentGateway
-        // binds to SandboxPaymentGateway (buyer-self-attested, no real
-        // money) everywhere except production, where it refuses to boot
-        // unless this is explicitly true. See AppServiceProvider::register().
+        // Real gateways (eSewa/Khalti/IME Pay/PayPal) are configured per
+        // merchant account from the admin panel (PaymentGatewayConfig), not
+        // here. This one flag only controls the Sandbox driver
+        // (buyer-self-attested, no real money) — it refuses to run in
+        // production unless this is explicitly true. See
+        // SandboxGatewayDriver::initiate().
         'allow_sandbox_in_production' => env('PAYMENT_GATEWAY_ALLOW_SANDBOX_IN_PRODUCTION', false),
     ],
 

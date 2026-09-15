@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { Receipt } from 'lucide-react'
 import { useOwnerPayments, type PaymentStatus } from '../../lib/api/payments'
 import { formatNpr } from '../../design-system/tokens'
@@ -15,8 +15,16 @@ const STATUS_TONE: Record<PaymentStatus, 'success' | 'warning' | 'danger' | 'neu
   refunded: 'neutral',
 }
 
+const CALLBACK_BANNER: Record<string, { tone: 'success' | 'danger' | 'warning'; text: string }> = {
+  success: { tone: 'success', text: 'Payment received — your boost is now active.' },
+  failed: { tone: 'danger', text: 'That payment did not go through — no charge was made. You can try again below.' },
+  not_found: { tone: 'warning', text: "We couldn't match that payment to a transaction — contact support if you were charged." },
+}
+
 export function PaymentHistory() {
   const { data, isPending, isError, refetch } = useOwnerPayments()
+  const [searchParams] = useSearchParams()
+  const banner = CALLBACK_BANNER[searchParams.get('status') ?? '']
 
   return (
     <div className="mx-auto flex max-w-3xl flex-col gap-6">
@@ -24,6 +32,20 @@ export function PaymentHistory() {
         <Receipt className="h-6 w-6 text-trust-700" aria-hidden="true" />
         <h1 className="font-display text-2xl font-semibold text-ink-900">Payment history</h1>
       </div>
+
+      {banner && (
+        <div
+          className={`rounded-lg p-3 text-sm ${
+            banner.tone === 'success'
+              ? 'bg-success-100/40 text-success-700'
+              : banner.tone === 'danger'
+                ? 'bg-danger-100/40 text-danger-700'
+                : 'bg-warning-100/40 text-warning-700'
+          }`}
+        >
+          {banner.text}
+        </div>
+      )}
 
       {isPending && <PropertyGridSkeleton count={3} />}
       {isError && <ErrorState onRetry={refetch} />}

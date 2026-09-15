@@ -17,7 +17,7 @@ class PaymentTransaction extends Model
 
     protected $fillable = [
         'user_id', 'property_listing_id', 'plan_key', 'plan_days',
-        'amount', 'currency', 'gateway', 'gateway_reference', 'status', 'completed_at',
+        'amount', 'currency', 'gateway', 'gateway_config_id', 'gateway_reference', 'status', 'completed_at',
     ];
 
     protected function casts(): array
@@ -25,6 +25,7 @@ class PaymentTransaction extends Model
         return [
             'user_id' => 'integer',
             'property_listing_id' => 'integer',
+            'gateway_config_id' => 'integer',
             'plan_days' => 'integer',
             'amount' => 'decimal:2',
             'completed_at' => 'datetime',
@@ -39,5 +40,10 @@ class PaymentTransaction extends Model
     public function propertyListing(): BelongsTo
     {
         return $this->belongsTo(PropertyListing::class);
+    }
+
+    public function gatewayConfig(): BelongsTo
+    {
+        return $this->belongsTo(PaymentGatewayConfig::class, 'gateway_config_id');
     }
 }

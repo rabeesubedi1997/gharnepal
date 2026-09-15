@@ -3,6 +3,7 @@
 namespace Tests\Feature\Payments;
 
 use App\Models\Municipality;
+use App\Models\PaymentGatewayConfig;
 use App\Models\Property;
 use App\Models\PropertyListing;
 use App\Models\Role;
@@ -20,6 +21,11 @@ class FeaturedListingPurchaseTest extends TestCase
     {
         parent::setUp();
         $this->seed(NepalLocationSeeder::class);
+    }
+
+    private function sandboxGateway(): PaymentGatewayConfig
+    {
+        return PaymentGatewayConfig::create(['provider' => 'sandbox', 'label' => 'Sandbox', 'is_enabled' => true]);
     }
 
     /** @return array{0: PropertyListing, 1: User} */
@@ -70,56 +76,78 @@ class FeaturedListingPurchaseTest extends TestCase
     public function test_owner_can_initiate_a_boost_purchase(): void
     {
         [$listing, $owner] = $this->publishedListing();
+        $gateway = $this->sandboxGateway();
 
         $response = $this->actingAs($owner, 'sanctum')->postJson("/api/v1/listings/{$listing->id}/feature", [
             'plan_key' => 'boost_7',
+            'gateway_config_id' => $gateway->id,
         ]);
 
         $response->assertCreated()
             ->assertJsonPath('data.status', 'pending')
             ->assertJsonPath('data.plan_days', 7)
-            ->assertJsonPath('data.amount', 500);
+            ->assertJsonPath('data.amount', 500)
+            ->assertJsonPath('checkout.mode', 'inline');
 
         $this->assertDatabaseHas('payment_transactions', [
             'property_listing_id' => $listing->id,
             'user_id' => $owner->id,
             'status' => 'pending',
+            'gateway_config_id' => $gateway->id,
         ]);
+    }
+
+    public function test_a_disabled_gateway_cannot_be_used_at_checkout(): void
+    {
+        [$listing, $owner] = $this->publishedListing();
+        $gateway = PaymentGatewayConfig::create(['provider' => 'sandbox', 'label' => 'Off', 'is_enabled' => false]);
+
+        $this->actingAs($owner, 'sanctum')->postJson("/api/v1/listings/{$listing->id}/feature", [
+            'plan_key' => 'boost_7',
+            'gateway_config_id' => $gateway->id,
+        ])->assertUnprocessable();
     }
 
     public function test_a_non_manager_cannot_purchase_a_boost_for_someone_elses_listing(): void
     {
         [$listing] = $this->publishedListing();
         $intruder = User::factory()->create();
+        $gateway = $this->sandboxGateway();
 
         $this->actingAs($intruder, 'sanctum')->postJson("/api/v1/listings/{$listing->id}/feature", [
             'plan_key' => 'boost_7',
+            'gateway_config_id' => $gateway->id,
         ])->assertForbidden();
     }
 
     public function test_guests_cannot_purchase_a_boost(): void
     {
         [$listing] = $this->publishedListing();
+        $gateway = $this->sandboxGateway();
 
-        $this->postJson("/api/v1/listings/{$listing->id}/feature", ['plan_key' => 'boost_7'])
+        $this->postJson("/api/v1/listings/{$listing->id}/feature", ['plan_key' => 'boost_7', 'gateway_config_id' => $gateway->id])
             ->assertUnauthorized();
     }
 
     public function test_an_unknown_plan_key_is_rejected(): void
     {
         [$listing, $owner] = $this->publishedListing();
+        $gateway = $this->sandboxGateway();
 
         $this->actingAs($owner, 'sanctum')->postJson("/api/v1/listings/{$listing->id}/feature", [
             'plan_key' => 'not_a_real_plan',
+            'gateway_config_id' => $gateway->id,
         ])->assertUnprocessable();
     }
 
     public function test_confirming_success_activates_the_boost_and_completes_the_transaction(): void
     {
         [$listing, $owner] = $this->publishedListing();
+        $gateway = $this->sandboxGateway();
 
         $create = $this->actingAs($owner, 'sanctum')->postJson("/api/v1/listings/{$listing->id}/feature", [
             'plan_key' => 'boost_15',
+            'gateway_config_id' => $gateway->id,
         ]);
         $transactionId = $create->json('data.id');
 
@@ -139,9 +167,11 @@ class FeaturedListingPurchaseTest extends TestCase
     public function test_confirming_failure_leaves_the_listing_unfeatured(): void
     {
         [$listing, $owner] = $this->publishedListing();
+        $gateway = $this->sandboxGateway();
 
         $create = $this->actingAs($owner, 'sanctum')->postJson("/api/v1/listings/{$listing->id}/feature", [
             'plan_key' => 'boost_7',
+            'gateway_config_id' => $gateway->id,
         ]);
         $transactionId = $create->json('data.id');
 
@@ -155,9 +185,11 @@ class FeaturedListingPurchaseTest extends TestCase
     public function test_a_transaction_cannot_be_confirmed_twice(): void
     {
         [$listing, $owner] = $this->publishedListing();
+        $gateway = $this->sandboxGateway();
 
         $create = $this->actingAs($owner, 'sanctum')->postJson("/api/v1/listings/{$listing->id}/feature", [
             'plan_key' => 'boost_7',
+            'gateway_config_id' => $gateway->id,
         ]);
         $transactionId = $create->json('data.id');
 
@@ -172,9 +204,11 @@ class FeaturedListingPurchaseTest extends TestCase
     {
         [$listing, $owner] = $this->publishedListing();
         $intruder = User::factory()->create();
+        $gateway = $this->sandboxGateway();
 
         $create = $this->actingAs($owner, 'sanctum')->postJson("/api/v1/listings/{$listing->id}/feature", [
             'plan_key' => 'boost_7',
+            'gateway_config_id' => $gateway->id,
         ]);
         $transactionId = $create->json('data.id');
 
@@ -183,12 +217,33 @@ class FeaturedListingPurchaseTest extends TestCase
         ])->assertForbidden();
     }
 
-    public function test_a_second_successful_boost_extends_from_the_current_featured_until_not_from_now(): void
+    public function test_a_real_gateways_transaction_cannot_be_self_attest_confirmed(): void
     {
-        [$listing, $owner] = $this->publishedListing(['featured_until' => now()->addDays(5)]);
+        [$listing, $owner] = $this->publishedListing();
+        $gateway = PaymentGatewayConfig::create([
+            'provider' => 'manual', 'label' => 'Bank transfer', 'is_enabled' => true, 'instructions' => 'Pay to account 123.',
+        ]);
 
         $create = $this->actingAs($owner, 'sanctum')->postJson("/api/v1/listings/{$listing->id}/feature", [
             'plan_key' => 'boost_7',
+            'gateway_config_id' => $gateway->id,
+        ]);
+        $transactionId = $create->json('data.id');
+
+        $this->actingAs($owner, 'sanctum')->postJson("/api/v1/account/payments/{$transactionId}/confirm", ['outcome' => 'success'])
+            ->assertUnprocessable();
+
+        $this->assertDatabaseHas('payment_transactions', ['id' => $transactionId, 'status' => 'pending']);
+    }
+
+    public function test_a_second_successful_boost_extends_from_the_current_featured_until_not_from_now(): void
+    {
+        [$listing, $owner] = $this->publishedListing(['featured_until' => now()->addDays(5)]);
+        $gateway = $this->sandboxGateway();
+
+        $create = $this->actingAs($owner, 'sanctum')->postJson("/api/v1/listings/{$listing->id}/feature", [
+            'plan_key' => 'boost_7',
+            'gateway_config_id' => $gateway->id,
         ]);
         $transactionId = $create->json('data.id');
 
@@ -202,7 +257,8 @@ class FeaturedListingPurchaseTest extends TestCase
     public function test_owner_can_view_their_own_payment_history(): void
     {
         [$listing, $owner] = $this->publishedListing();
-        $this->actingAs($owner, 'sanctum')->postJson("/api/v1/listings/{$listing->id}/feature", ['plan_key' => 'boost_7']);
+        $gateway = $this->sandboxGateway();
+        $this->actingAs($owner, 'sanctum')->postJson("/api/v1/listings/{$listing->id}/feature", ['plan_key' => 'boost_7', 'gateway_config_id' => $gateway->id]);
 
         $this->actingAs($owner, 'sanctum')->getJson('/api/v1/account/payments')
             ->assertOk()
@@ -212,7 +268,8 @@ class FeaturedListingPurchaseTest extends TestCase
     public function test_an_admin_can_view_all_transactions_but_a_non_admin_cannot(): void
     {
         [$listing, $owner] = $this->publishedListing();
-        $this->actingAs($owner, 'sanctum')->postJson("/api/v1/listings/{$listing->id}/feature", ['plan_key' => 'boost_7']);
+        $gateway = $this->sandboxGateway();
+        $this->actingAs($owner, 'sanctum')->postJson("/api/v1/listings/{$listing->id}/feature", ['plan_key' => 'boost_7', 'gateway_config_id' => $gateway->id]);
 
         $admin = User::factory()->create();
         $admin->roles()->attach(Role::firstOrCreate(['key' => Role::ADMIN], ['name' => 'Administrator']));
@@ -228,11 +285,12 @@ class FeaturedListingPurchaseTest extends TestCase
     public function test_admin_payments_can_be_filtered_by_status(): void
     {
         [$listing, $owner] = $this->publishedListing();
-        $create = $this->actingAs($owner, 'sanctum')->postJson("/api/v1/listings/{$listing->id}/feature", ['plan_key' => 'boost_7']);
+        $gateway = $this->sandboxGateway();
+        $create = $this->actingAs($owner, 'sanctum')->postJson("/api/v1/listings/{$listing->id}/feature", ['plan_key' => 'boost_7', 'gateway_config_id' => $gateway->id]);
         $this->actingAs($owner, 'sanctum')->postJson("/api/v1/account/payments/{$create->json('data.id')}/confirm", ['outcome' => 'success']);
 
         [$listing2, $owner2] = $this->publishedListing();
-        $this->actingAs($owner2, 'sanctum')->postJson("/api/v1/listings/{$listing2->id}/feature", ['plan_key' => 'boost_7']);
+        $this->actingAs($owner2, 'sanctum')->postJson("/api/v1/listings/{$listing2->id}/feature", ['plan_key' => 'boost_7', 'gateway_config_id' => $gateway->id]);
 
         $admin = User::factory()->create();
         $admin->roles()->attach(Role::firstOrCreate(['key' => Role::ADMIN], ['name' => 'Administrator']));
@@ -246,7 +304,8 @@ class FeaturedListingPurchaseTest extends TestCase
     public function test_super_admin_can_refund_a_completed_payment(): void
     {
         [$listing, $owner] = $this->publishedListing();
-        $create = $this->actingAs($owner, 'sanctum')->postJson("/api/v1/listings/{$listing->id}/feature", ['plan_key' => 'boost_7']);
+        $gateway = $this->sandboxGateway();
+        $create = $this->actingAs($owner, 'sanctum')->postJson("/api/v1/listings/{$listing->id}/feature", ['plan_key' => 'boost_7', 'gateway_config_id' => $gateway->id]);
         $transactionId = $create->json('data.id');
         $this->actingAs($owner, 'sanctum')->postJson("/api/v1/account/payments/{$transactionId}/confirm", ['outcome' => 'success']);
 
@@ -263,7 +322,8 @@ class FeaturedListingPurchaseTest extends TestCase
     public function test_a_regular_admin_cannot_refund_a_payment_only_a_super_admin_can(): void
     {
         [$listing, $owner] = $this->publishedListing();
-        $create = $this->actingAs($owner, 'sanctum')->postJson("/api/v1/listings/{$listing->id}/feature", ['plan_key' => 'boost_7']);
+        $gateway = $this->sandboxGateway();
+        $create = $this->actingAs($owner, 'sanctum')->postJson("/api/v1/listings/{$listing->id}/feature", ['plan_key' => 'boost_7', 'gateway_config_id' => $gateway->id]);
         $transactionId = $create->json('data.id');
         $this->actingAs($owner, 'sanctum')->postJson("/api/v1/account/payments/{$transactionId}/confirm", ['outcome' => 'success']);
 
@@ -277,7 +337,8 @@ class FeaturedListingPurchaseTest extends TestCase
     public function test_a_pending_payment_cannot_be_refunded(): void
     {
         [$listing, $owner] = $this->publishedListing();
-        $create = $this->actingAs($owner, 'sanctum')->postJson("/api/v1/listings/{$listing->id}/feature", ['plan_key' => 'boost_7']);
+        $gateway = $this->sandboxGateway();
+        $create = $this->actingAs($owner, 'sanctum')->postJson("/api/v1/listings/{$listing->id}/feature", ['plan_key' => 'boost_7', 'gateway_config_id' => $gateway->id]);
         $transactionId = $create->json('data.id');
 
         $superAdmin = User::factory()->create();
@@ -290,10 +351,48 @@ class FeaturedListingPurchaseTest extends TestCase
     public function test_a_non_admin_cannot_refund_a_payment(): void
     {
         [$listing, $owner] = $this->publishedListing();
-        $create = $this->actingAs($owner, 'sanctum')->postJson("/api/v1/listings/{$listing->id}/feature", ['plan_key' => 'boost_7']);
+        $gateway = $this->sandboxGateway();
+        $create = $this->actingAs($owner, 'sanctum')->postJson("/api/v1/listings/{$listing->id}/feature", ['plan_key' => 'boost_7', 'gateway_config_id' => $gateway->id]);
         $transactionId = $create->json('data.id');
 
         $this->actingAs($owner, 'sanctum')->patchJson("/api/v1/admin/payments/{$transactionId}/refund")
             ->assertForbidden();
+    }
+
+    public function test_admin_can_mark_a_manual_payment_paid(): void
+    {
+        [$listing, $owner] = $this->publishedListing();
+        $gateway = PaymentGatewayConfig::create([
+            'provider' => 'manual', 'label' => 'Bank transfer', 'is_enabled' => true, 'instructions' => 'Pay to account 123.',
+        ]);
+        $create = $this->actingAs($owner, 'sanctum')->postJson("/api/v1/listings/{$listing->id}/feature", [
+            'plan_key' => 'boost_7', 'gateway_config_id' => $gateway->id,
+        ]);
+        $transactionId = $create->json('data.id');
+
+        $admin = User::factory()->create();
+        $admin->roles()->attach(Role::firstOrCreate(['key' => Role::ADMIN], ['name' => 'Administrator']));
+
+        $this->actingAs($admin, 'sanctum')->patchJson("/api/v1/admin/payments/{$transactionId}/mark-paid")
+            ->assertOk()
+            ->assertJsonPath('data.status', 'completed');
+
+        $this->assertTrue($listing->fresh()->isFeatured());
+    }
+
+    public function test_a_sandbox_payment_cannot_be_marked_paid_by_hand(): void
+    {
+        [$listing, $owner] = $this->publishedListing();
+        $gateway = $this->sandboxGateway();
+        $create = $this->actingAs($owner, 'sanctum')->postJson("/api/v1/listings/{$listing->id}/feature", [
+            'plan_key' => 'boost_7', 'gateway_config_id' => $gateway->id,
+        ]);
+        $transactionId = $create->json('data.id');
+
+        $admin = User::factory()->create();
+        $admin->roles()->attach(Role::firstOrCreate(['key' => Role::ADMIN], ['name' => 'Administrator']));
+
+        $this->actingAs($admin, 'sanctum')->patchJson("/api/v1/admin/payments/{$transactionId}/mark-paid")
+            ->assertUnprocessable();
     }
 }

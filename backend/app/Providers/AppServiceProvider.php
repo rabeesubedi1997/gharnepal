@@ -6,14 +6,11 @@ use App\Domain\Identity\Contracts\OtpSender;
 use App\Domain\Identity\Services\LogOtpSender;
 use App\Domain\Notifications\Contracts\PushSender;
 use App\Domain\Notifications\Services\WebPushSender;
-use App\Domain\Payments\Contracts\PaymentGateway;
-use App\Domain\Payments\Services\SandboxPaymentGateway;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
-use RuntimeException;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -25,27 +22,16 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(OtpSender::class, LogOtpSender::class);
 
         // Real Web Push (browser notifications), not a stub — needs no
-        // external account, unlike the payment gateway or mobile FCM push.
+        // external account, unlike SMS/mobile FCM push.
         $this->app->bind(PushSender::class, WebPushSender::class);
 
-        // The real payment gateway (eSewa/Khalti) doesn't exist yet — this
-        // binding is sandbox/test-mode by design for now. But nothing should
-        // let that ship silently: a real production environment must opt in
-        // explicitly via PAYMENT_GATEWAY_ALLOW_SANDBOX_IN_PRODUCTION=true,
-        // or boot fails loudly instead of quietly forging "successful"
-        // payments with real users. See SandboxPaymentGateway's own docblock.
-        if ($this->app->isProduction() && ! config('services.payments.allow_sandbox_in_production')) {
-            $this->app->bind(PaymentGateway::class, function () {
-                throw new RuntimeException(
-                    'No real payment gateway is configured for production. '.
-                    'SandboxPaymentGateway (buyer-self-attested, no real money) must not run in production. '.
-                    'Set PAYMENT_GATEWAY_ALLOW_SANDBOX_IN_PRODUCTION=true only if you deliberately intend to '.
-                    'keep running sandbox/test-mode payments in production.'
-                );
-            });
-        } else {
-            $this->app->bind(PaymentGateway::class, SandboxPaymentGateway::class);
-        }
+        // Payment gateways are no longer a single container binding — an
+        // admin can configure any number of them (PaymentGatewayConfig,
+        // Admin\PaymentGatewayConfigController) and one is chosen per
+        // checkout, resolved via PaymentGatewayDriverRegistry. The sandbox
+        // driver still refuses to run in production without
+        // PAYMENT_GATEWAY_ALLOW_SANDBOX_IN_PRODUCTION=true — see
+        // SandboxGatewayDriver::initiate().
     }
 
     /**

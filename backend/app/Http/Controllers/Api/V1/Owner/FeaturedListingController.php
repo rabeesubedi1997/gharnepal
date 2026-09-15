@@ -6,6 +6,7 @@ use App\Domain\Payments\Services\FeaturedListingPlans;
 use App\Domain\Payments\Services\FeaturedListingPurchaseService;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\PaymentTransactionResource;
+use App\Models\PaymentGatewayConfig;
 use App\Models\PropertyListing;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -26,10 +27,23 @@ class FeaturedListingController extends Controller
 
         $data = $request->validate([
             'plan_key' => ['required', Rule::in(array_keys(FeaturedListingPlans::PLANS))],
+            'gateway_config_id' => [
+                'required',
+                Rule::exists('payment_gateway_configs', 'id')->where('is_enabled', true),
+            ],
         ]);
 
-        $transaction = $this->purchases->initiate($listing, $request->user(), $data['plan_key']);
+        $gatewayConfig = PaymentGatewayConfig::findOrFail($data['gateway_config_id']);
 
-        return (new PaymentTransactionResource($transaction->load('propertyListing')))->response()->setStatusCode(201);
+        $result = $this->purchases->initiate($listing, $request->user(), $data['plan_key'], $gatewayConfig);
+
+        return (new PaymentTransactionResource($result['transaction']->load('propertyListing')))
+            ->additional(['checkout' => [
+                'mode' => $result['initiation']->mode,
+                'redirect_url' => $result['initiation']->redirectUrl,
+                'form_fields' => $result['initiation']->formFields,
+                'instructions' => $result['initiation']->instructions,
+            ]])
+            ->response()->setStatusCode(201);
     }
 }

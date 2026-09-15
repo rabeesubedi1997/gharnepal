@@ -30,6 +30,21 @@ interface PaginatedResponse<T> {
   meta: { current_page: number; last_page: number; total: number }
 }
 
+export interface PaymentGatewayOption {
+  id: number
+  provider: string
+  label: string
+  is_sandbox: boolean
+}
+
+/** What a gateway hands back right after purchase — how to actually get the buyer paying. */
+export interface CheckoutInstruction {
+  mode: 'inline' | 'redirect' | 'form_post'
+  redirect_url: string | null
+  form_fields: Record<string, string>
+  instructions: string | null
+}
+
 export function useFeaturedPlans() {
   return useQuery({
     queryKey: ['featured-plans'],
@@ -41,13 +56,28 @@ export function useFeaturedPlans() {
   })
 }
 
+/** Every gateway a buyer can actually pay with right now — public, no auth needed to see the list. */
+export function usePaymentGatewayOptions() {
+  return useQuery({
+    queryKey: ['payment-gateways'],
+    queryFn: async () => {
+      const { data } = await apiClient.get<{ data: PaymentGatewayOption[] }>('/payment-gateways')
+      return data.data
+    },
+    staleTime: 5 * 60 * 1000,
+  })
+}
+
 export function usePurchaseFeature() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: async ({ listingId, planKey }: { listingId: number; planKey: string }) => {
+    mutationFn: async ({ listingId, planKey, gatewayConfigId }: { listingId: number; planKey: string; gatewayConfigId: number }) => {
       await ensureCsrfCookie()
-      const { data } = await apiClient.post<{ data: PaymentTransaction }>(`/listings/${listingId}/feature`, { plan_key: planKey })
-      return data.data
+      const { data } = await apiClient.post<{ data: PaymentTransaction; checkout: CheckoutInstruction }>(
+        `/listings/${listingId}/feature`,
+        { plan_key: planKey, gateway_config_id: gatewayConfigId },
+      )
+      return data
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['account', 'payments'] }),
   })
