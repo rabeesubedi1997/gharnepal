@@ -322,7 +322,7 @@ class PropertySearchParser
             }
         }
 
-        $candidates = $this->locationCandidates();
+        $candidates = self::locationCandidates();
 
         foreach ($candidates as $candidate) {
             if (mb_strlen($candidate['name']) < 3) {
@@ -342,9 +342,13 @@ class PropertySearchParser
      * that happens to be a substring of it. Cached — this data changes
      * rarely and is identical for every request.
      *
+     * Public/static — reused as-is by AssistantToolkit's resolve_location
+     * tool for the real-LLM drivers, so both search paths resolve place
+     * names against the exact same candidate list.
+     *
      * @return list<array{type:string,id:int,name:string,label:string}>
      */
-    private function locationCandidates(): array
+    public static function locationCandidates(): array
     {
         return Cache::remember('assistant:location-candidates', now()->addHour(), function () {
             $candidates = [];

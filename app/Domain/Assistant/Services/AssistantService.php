@@ -2,28 +2,38 @@
 
 namespace App\Domain\Assistant\Services;
 
+use App\Domain\Assistant\Exceptions\AiDriverException;
 use App\Domain\Properties\Services\ListingFilterQuery;
 use App\Models\AiConversation;
 use App\Models\AiMessage;
+use App\Models\AiProviderConfig;
 use App\Models\Amenity;
 use App\Models\District;
 use App\Models\Municipality;
 use App\Models\Neighborhood;
 use App\Models\PropertyListing;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 /**
- * Orchestrates one assistant turn: parse the message (PropertySearchParser),
- * run the resolved filters through the same ListingFilterQuery the public
- * search page uses, template a reply, and persist the turn so the next
- * message in the conversation can build on it. No LLM anywhere in this path.
+ * Orchestrates one assistant turn. Default path: parse the message
+ * (PropertySearchParser, free/rule-based), run the resolved filters through
+ * the same ListingFilterQuery the public search page uses, template a
+ * reply. If an admin has configured and enabled a real AiProviderConfig
+ * (see AiAssistantDriverRegistry), that drives the reply instead — a
+ * genuinely open-ended conversation via tool-calling — and only falls back
+ * to the free rule-based path if the LLM call itself fails. Either way, the
+ * turn is persisted so the next message in the conversation can build on it.
  */
 class AssistantService
 {
     private const RESULTS_LIMIT = 5;
 
-    public function __construct(private readonly PropertySearchParser $parser) {}
+    public function __construct(
+        private readonly PropertySearchParser $parser,
+        private readonly AssistantToolkit $toolkit,
+    ) {}
 
     /**
      * @return array{conversation_id:int,guest_token:string,reply:string,listings:Collection<int,PropertyListing>,filters_applied:array<string,mixed>}
@@ -32,6 +42,11 @@ class AssistantService
     {
         $guestToken = $guestToken ?: Str::random(32);
         $conversation = $this->resolveConversation($conversationId, $guestToken, $userId);
+
+        $llmResult = $this->tryLlmDriver($conversation, $message);
+        if ($llmResult !== null) {
+            return $llmResult;
+        }
 
         $previousFilters = $conversation->last_filters ?? [];
         $previousListingIds = $conversation->last_listing_ids ?? [];
@@ -61,6 +76,78 @@ class AssistantService
             'listings' => $listings,
             'filters_applied' => $this->describeFilters($newFilters),
         ];
+    }
+
+    /**
+     * Null means "no LLM configured, or it failed" — caller falls through
+     * to the rule-based flow. A caught AiDriverException is the *only*
+     * thing that triggers the fallback; anything else is a real bug and
+     * should surface normally.
+     *
+     * @return array{conversation_id:int,guest_token:string,reply:string,listings:Collection<int,PropertyListing>,filters_applied:array<string,mixed>}|null
+     */
+    private function tryLlmDriver(AiConversation $conversation, string $message): ?array
+    {
+        $config = AiProviderConfig::query()->where('is_enabled', true)->first();
+        if (! $config) {
+            return null;
+        }
+
+        try {
+            $driver = AiAssistantDriverRegistry::resolve($config->provider);
+
+            $history = $conversation->messages()
+                ->orderBy('id')
+                ->get(['role', 'content'])
+                ->map(fn (AiMessage $m) => ['role' => $m->role === AiMessage::ROLE_ASSISTANT ? 'assistant' : 'user', 'content' => $m->content])
+                ->all();
+
+            $driverReply = $driver->reply($config, $message, $history, $this->toolkit);
+
+            $listings = $this->fetchListingsInOrder($driverReply->listingIds);
+
+            AiMessage::create(['ai_conversation_id' => $conversation->id, 'role' => AiMessage::ROLE_USER, 'content' => $message]);
+            AiMessage::create(['ai_conversation_id' => $conversation->id, 'role' => AiMessage::ROLE_ASSISTANT, 'content' => $driverReply->reply, 'served_by' => $config->provider]);
+
+            // Cleared, not carried forward — an LLM-driven turn has no
+            // merged-filter state for a later rule-based fallback to build on.
+            $conversation->update(['last_filters' => [], 'last_listing_ids' => $driverReply->listingIds]);
+
+            return [
+                'conversation_id' => $conversation->id,
+                'guest_token' => $conversation->guest_token,
+                'reply' => $driverReply->reply,
+                'listings' => $listings,
+                'filters_applied' => $this->describeFilters([]),
+            ];
+        } catch (AiDriverException $e) {
+            Log::warning('AI assistant LLM driver failed — falling back to the rule-based parser.', [
+                'provider' => $config->provider,
+                'error' => $e->getMessage(),
+            ]);
+
+            return null;
+        }
+    }
+
+    /** @param  list<int>  $ids
+     * @return Collection<int,PropertyListing> */
+    private function fetchListingsInOrder(array $ids): Collection
+    {
+        if ($ids === []) {
+            return collect();
+        }
+
+        $listings = PropertyListing::query()
+            ->where('status', PropertyListing::STATUS_PUBLISHED)
+            ->with(['property.address.municipality', 'property.address.ward', 'property.address.neighborhood', 'property.media', 'trustScore'])
+            ->withCount(['ratings' => fn ($q) => $q->where('status', 'visible')])
+            ->withAvg(['ratings' => fn ($q) => $q->where('status', 'visible')], 'score')
+            ->whereIn('id', $ids)
+            ->get()
+            ->keyBy('id');
+
+        return collect($ids)->map(fn (int $id) => $listings->get($id))->filter()->values();
     }
 
     private function resolveConversation(?int $conversationId, string $guestToken, ?int $userId): AiConversation

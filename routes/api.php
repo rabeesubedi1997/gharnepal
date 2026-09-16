@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\V1\Account\SavedSearchController;
 use App\Http\Controllers\Api\V1\Account\VerificationController;
 use App\Http\Controllers\Api\V1\Admin\AdvertisementController as AdminAdvertisementController;
 use App\Http\Controllers\Api\V1\Admin\AgencyController as AdminAgencyController;
+use App\Http\Controllers\Api\V1\Admin\AiProviderConfigController;
 use App\Http\Controllers\Api\V1\Admin\AmenityController as AdminAmenityController;
 use App\Http\Controllers\Api\V1\Admin\BannerController as AdminBannerController;
 use App\Http\Controllers\Api\V1\Admin\BlogPostController as AdminBlogPostController;
@@ -335,6 +336,15 @@ Route::prefix('v1')->group(function () {
         Route::post('payment-gateways', [PaymentGatewayConfigController::class, 'store']);
         Route::put('payment-gateways/{gatewayConfig}', [PaymentGatewayConfigController::class, 'update']);
         Route::delete('payment-gateways/{gatewayConfig}', [PaymentGatewayConfigController::class, 'destroy']);
+
+        // Optional real-LLM backend for the AI assistant — see
+        // AssistantService::tryLlmDriver. Empty/no-enabled-row is the
+        // default and keeps the assistant on the free rule-based parser.
+        Route::get('ai-providers', [AiProviderConfigController::class, 'index']);
+        Route::get('ai-providers/catalog', [AiProviderConfigController::class, 'catalog']);
+        Route::post('ai-providers', [AiProviderConfigController::class, 'store']);
+        Route::put('ai-providers/{aiProviderConfig}', [AiProviderConfigController::class, 'update']);
+        Route::delete('ai-providers/{aiProviderConfig}', [AiProviderConfigController::class, 'destroy']);
 
         // SEO — "page approach": one page_key per page, override + competitor-scan history.
         // page_key contains a colon (e.g. "listing:some-slug") — Laravel's default route

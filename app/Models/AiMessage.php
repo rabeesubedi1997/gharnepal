@@ -15,6 +15,7 @@ class AiMessage extends Model
         'ai_conversation_id',
         'role',
         'content',
+        'served_by',
     ];
 
     protected function casts(): array
