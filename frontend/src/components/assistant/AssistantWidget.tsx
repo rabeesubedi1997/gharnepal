@@ -1,10 +1,12 @@
 import { useEffect, useRef, useState } from 'react'
-import { RotateCcw, Send, Sparkles, X } from 'lucide-react'
+import { Mic, RotateCcw, Send, Sparkles, Volume2, VolumeX, X } from 'lucide-react'
 import { clsx } from 'clsx'
 import { Card } from '../ui/Card'
 import { Button } from '../ui/Button'
 import { PropertyCard } from '../property/PropertyCard'
 import { useAssistantChat } from '../../lib/useAssistantChat'
+import { useSpeechRecognition } from '../../lib/useSpeechRecognition'
+import { useSpeechSynthesis } from '../../lib/useSpeechSynthesis'
 
 const FILTER_CHIP_LABELS: Record<string, (value: unknown) => string> = {
   purpose: (v) => (v === 'rent' ? 'For rent' : 'For sale'),
@@ -22,10 +24,27 @@ export function AssistantWidget() {
   const [draft, setDraft] = useState('')
   const { messages, sendMessage, clearConversation, isSending } = useAssistantChat()
   const scrollRef = useRef<HTMLDivElement>(null)
+  const lastSpokenIdRef = useRef<string | null>(null)
+
+  const speech = useSpeechSynthesis()
+  const recognition = useSpeechRecognition((transcript) => {
+    // Voice is meant to go straight to an answer, not just fill the box —
+    // send immediately rather than making the user tap Send again.
+    sendMessage(transcript)
+  })
 
   useEffect(() => {
     if (open) scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' })
   }, [messages, open, isSending])
+
+  useEffect(() => {
+    const last = messages[messages.length - 1]
+    if (last && last.role === 'assistant' && last.id !== lastSpokenIdRef.current) {
+      lastSpokenIdRef.current = last.id
+      speech.speak(last.text)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [messages])
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -56,6 +75,17 @@ export function AssistantWidget() {
           <p className="text-sm font-semibold">Ghar Nepal Assistant</p>
         </div>
         <div className="flex items-center gap-1">
+          {speech.isSupported && (
+            <button
+              type="button"
+              onClick={() => speech.setEnabled(!speech.enabled)}
+              aria-label={speech.enabled ? 'Turn off spoken replies' : 'Turn on spoken replies'}
+              aria-pressed={speech.enabled}
+              className="rounded-md p-1.5 hover:bg-white/10"
+            >
+              {speech.enabled ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
+            </button>
+          )}
           <button
             type="button"
             onClick={clearConversation}
@@ -117,10 +147,25 @@ export function AssistantWidget() {
       </div>
 
       <form onSubmit={submit} className="flex items-center gap-2 border-t border-stone-200 p-2">
+        {recognition.isSupported && (
+          <button
+            type="button"
+            onClick={() => (recognition.isListening ? recognition.stop() : recognition.start())}
+            disabled={isSending}
+            aria-label={recognition.isListening ? 'Stop listening' : 'Ask by voice'}
+            aria-pressed={recognition.isListening}
+            className={clsx(
+              'flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition-colors',
+              recognition.isListening ? 'animate-pulse bg-danger-600 text-white' : 'bg-stone-100 text-ink-700 hover:bg-stone-200',
+            )}
+          >
+            <Mic className="h-4 w-4" />
+          </button>
+        )}
         <input
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
-          placeholder="Ask about a property…"
+          placeholder={recognition.isListening ? 'Listening…' : 'Ask about a property…'}
           className="flex-1 rounded-full border border-stone-200 px-3 py-2 text-sm outline-none focus:border-trust-500"
         />
         <Button type="submit" size="sm" disabled={!draft.trim() || isSending} aria-label="Send">

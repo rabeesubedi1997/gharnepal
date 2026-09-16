@@ -9,6 +9,7 @@ class AssistantChatStorage {
 
   static const _guestTokenKey = 'assistant_guest_token';
   static const _conversationIdKey = 'assistant_conversation_id';
+  static const _speakRepliesKey = 'assistant_speak_replies';
 
   final FlutterSecureStorage _storage;
 
@@ -24,4 +25,8 @@ class AssistantChatStorage {
   Future<void> saveConversationId(int id) => _storage.write(key: _conversationIdKey, value: id.toString());
 
   Future<void> clearConversation() => _storage.delete(key: _conversationIdKey);
+
+  Future<bool> readSpeakRepliesEnabled() async => (await _storage.read(key: _speakRepliesKey)) == '1';
+
+  Future<void> saveSpeakRepliesEnabled(bool enabled) => _storage.write(key: _speakRepliesKey, value: enabled ? '1' : '0');
 }

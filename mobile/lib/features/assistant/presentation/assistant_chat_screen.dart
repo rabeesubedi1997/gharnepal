@@ -2,7 +2,9 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_tts/flutter_tts.dart';
 import 'package:go_router/go_router.dart';
+import 'package:speech_to_text/speech_to_text.dart';
 
 import '../../../core/network/api_exception.dart';
 import '../../../core/theme/app_colors.dart';
@@ -39,14 +41,24 @@ class _AssistantChatScreenState extends ConsumerState<AssistantChatScreen> {
   final _controller = TextEditingController();
   final List<_ChatMessage> _messages = [];
 
+  // Both device-native (no external API — see PropertySearchParser's own
+  // zero-cost design). speech_to_text needs android.permission.RECORD_AUDIO
+  // (declared in AndroidManifest.xml) and requests it itself on first use.
+  final _speechToText = SpeechToText();
+  final _tts = FlutterTts();
+
   String? _guestToken;
   int? _conversationId;
   bool _sending = false;
+  bool _speechAvailable = false;
+  bool _listening = false;
+  bool _speakReplies = false;
 
   @override
   void initState() {
     super.initState();
     _loadSession();
+    _initSpeech();
   }
 
   Future<void> _loadSession() async {
@@ -57,12 +69,26 @@ class _AssistantChatScreenState extends ConsumerState<AssistantChatScreen> {
       await storage.saveGuestToken(token);
     }
     final conversationId = await storage.readConversationId();
+    final speakReplies = await storage.readSpeakRepliesEnabled();
     if (mounted) {
       setState(() {
         _guestToken = token;
         _conversationId = conversationId;
+        _speakReplies = speakReplies;
       });
     }
+  }
+
+  Future<void> _initSpeech() async {
+    final available = await _speechToText.initialize(
+      onStatus: (status) {
+        if (mounted) setState(() => _listening = status == 'listening');
+      },
+      onError: (_) {
+        if (mounted) setState(() => _listening = false);
+      },
+    );
+    if (mounted) setState(() => _speechAvailable = available);
   }
 
   String _randomToken() {
@@ -70,9 +96,44 @@ class _AssistantChatScreenState extends ConsumerState<AssistantChatScreen> {
     return List.generate(32, (_) => random.nextInt(36).toRadixString(36)).join();
   }
 
+  void _toggleListening() {
+    if (_listening) {
+      _speechToText.stop();
+      return;
+    }
+    _speechToText.listen(
+      onResult: (result) {
+        if (result.finalResult && result.recognizedWords.trim().isNotEmpty) {
+          // Voice is meant to go straight to an answer — send immediately
+          // rather than requiring a second tap on the send button.
+          _controller.text = result.recognizedWords;
+          _send();
+        }
+      },
+    );
+  }
+
+  Future<void> _toggleSpeakReplies() async {
+    final next = !_speakReplies;
+    setState(() => _speakReplies = next);
+    await ref.read(assistantChatStorageProvider).saveSpeakRepliesEnabled(next);
+    if (!next) _tts.stop();
+  }
+
+  /// Devanagari script gets a Nepali TTS voice hint; Romanized Nepali and
+  /// English both read fine under the default voice.
+  Future<void> _speak(String text) async {
+    if (!_speakReplies || text.trim().isEmpty) return;
+    final isDevanagari = RegExp(r'[ऀ-ॿ]').hasMatch(text);
+    await _tts.setLanguage(isDevanagari ? 'ne-NP' : 'en-US');
+    await _tts.speak(text);
+  }
+
   @override
   void dispose() {
     _controller.dispose();
+    _speechToText.stop();
+    _tts.stop();
     super.dispose();
   }
 
@@ -100,6 +161,7 @@ class _AssistantChatScreenState extends ConsumerState<AssistantChatScreen> {
             _ChatMessage.assistant(response.reply, listings: response.listings, filtersApplied: response.filtersApplied),
           );
         });
+        _speak(response.reply);
       }
     } on ApiException catch (error) {
       if (mounted) {
@@ -124,6 +186,11 @@ class _AssistantChatScreenState extends ConsumerState<AssistantChatScreen> {
       appBar: AppBar(
         title: const Text('Ghar Nepal Assistant'),
         actions: [
+          IconButton(
+            onPressed: _toggleSpeakReplies,
+            icon: Icon(_speakReplies ? Icons.volume_up : Icons.volume_off),
+            tooltip: _speakReplies ? 'Turn off spoken replies' : 'Turn on spoken replies',
+          ),
           IconButton(
             onPressed: _messages.isEmpty ? null : _resetConversation,
             icon: const Icon(Icons.refresh),
@@ -156,6 +223,15 @@ class _AssistantChatScreenState extends ConsumerState<AssistantChatScreen> {
               padding: const EdgeInsets.all(12),
               child: Row(
                 children: [
+                  if (_speechAvailable)
+                    IconButton.filledTonal(
+                      onPressed: _sending ? null : _toggleListening,
+                      icon: Icon(_listening ? Icons.mic : Icons.mic_none),
+                      style: _listening
+                          ? IconButton.styleFrom(backgroundColor: AppColors.danger600, foregroundColor: Colors.white)
+                          : null,
+                      tooltip: _listening ? 'Stop listening' : 'Ask by voice',
+                    ),
                   Expanded(
                     child: TextField(
                       controller: _controller,
@@ -163,7 +239,7 @@ class _AssistantChatScreenState extends ConsumerState<AssistantChatScreen> {
                       maxLines: 4,
                       textInputAction: TextInputAction.send,
                       onSubmitted: (_) => _send(),
-                      decoration: const InputDecoration(hintText: 'Ask about a property...'),
+                      decoration: InputDecoration(hintText: _listening ? 'Listening...' : 'Ask about a property...'),
                     ),
                   ),
                   const SizedBox(width: 8),

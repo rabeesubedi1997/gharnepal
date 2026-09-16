@@ -76,6 +76,8 @@ dependencies:
   # General file picking (jpg/png/pdf) for the Verification Center's KYC
   # document upload — image_picker alone can't select a PDF.
   file_picker: ^12.2.0
+  speech_to_text: ^7.5.0
+  flutter_tts: ^4.2.5
 
 dev_dependencies:
   flutter_test:
