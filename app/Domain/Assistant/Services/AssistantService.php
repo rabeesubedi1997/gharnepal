@@ -126,23 +126,29 @@ class AssistantService
 
     private function clarifyReply(string $language): string
     {
-        return $language === 'ne'
-            ? 'माफ गर्नुहोस्, मैले राम्ररी बुझ्न सकिनँ। कृपया शहर/क्षेत्र, प्रकार (कोठा/फ्ल्याट/घर/जग्गा), र बजेट सहित लेख्नुहोस् — जस्तै "काठमाडौंमा २० हजारसम्मको कोठा चाहियो"।'
-            : 'I couldn\'t quite tell what you\'re looking for — try including a city/area, a property type (room/flat/house/land), and your budget. For example: "a room in Kathmandu under NPR 20,000".';
+        return match ($language) {
+            PropertySearchParser::LANG_NEPALI => 'माफ गर्नुहोस्, मैले राम्ररी बुझ्न सकिनँ। कृपया शहर/क्षेत्र, प्रकार (कोठा/फ्ल्याट/घर/जग्गा), र बजेट सहित लेख्नुहोस् — जस्तै "काठमाडौंमा २० हजारसम्मको कोठा चाहियो"।',
+            PropertySearchParser::LANG_NEPALI_LATIN => 'Maile ramrari bujhna sakina — kripaya sahar/chetra, property ko prakar (room/flat/ghar/jagga), ra budget sahit lekhnuhos. Jasto: "Kathmandu ma 20 hajar samma ko room chahiyo".',
+            default => 'I couldn\'t quite tell what you\'re looking for — try including a city/area, a property type (room/flat/house/land), and your budget. For example: "a room in Kathmandu under NPR 20,000".',
+        };
     }
 
     private function detailReply(string $language, PropertyListing $listing): string
     {
-        return $language === 'ne'
-            ? "यहाँ थप जानकारी छ: {$listing->title}"
-            : "Here's more about: {$listing->title}";
+        return match ($language) {
+            PropertySearchParser::LANG_NEPALI => "यहाँ थप जानकारी छ: {$listing->title}",
+            PropertySearchParser::LANG_NEPALI_LATIN => "Yeti thap jankari cha: {$listing->title}",
+            default => "Here's more about: {$listing->title}",
+        };
     }
 
     private function invalidOrdinalReply(string $language): string
     {
-        return $language === 'ne'
-            ? 'मसँग अघिल्लो नतिजाहरूको सूची छैन — कृपया फेरि खोज्नुहोस्।'
-            : "I don't have a previous result list to reference — try searching again first.";
+        return match ($language) {
+            PropertySearchParser::LANG_NEPALI => 'मसँग अघिल्लो नतिजाहरूको सूची छैन — कृपया फेरि खोज्नुहोस्।',
+            PropertySearchParser::LANG_NEPALI_LATIN => 'Masanga aghillo natijaharu chaina — kripaya pheri khojnuhos.',
+            default => "I don't have a previous result list to reference — try searching again first.",
+        };
     }
 
     private function searchReply(string $language, array $filters, int $count): string
@@ -157,15 +163,17 @@ class AssistantService
         ]));
         $summary = $parts !== [] ? implode(', ', $parts) : 'your search';
 
-        if ($language === 'ne') {
-            return $count > 0
+        return match ($language) {
+            PropertySearchParser::LANG_NEPALI => $count > 0
                 ? "{$summary} — {$count} वटा सूचीहरू भेटियौं। तलका उत्तम विकल्पहरू हेर्नुहोस्:"
-                : "माफ गर्नुहोस्, {$summary} अनुसार कुनै सूची भेटिएन — बजेट वा क्षेत्र फराकिलो पार्नुहोस्।";
-        }
-
-        return $count > 0
-            ? 'Found '.$count.' listing'.($count === 1 ? '' : 's')." for {$summary} — here are the top matches:"
-            : "No listings found for {$summary} — try widening your budget or a nearby area.";
+                : "माफ गर्नुहोस्, {$summary} अनुसार कुनै सूची भेटिएन — बजेट वा क्षेत्र फराकिलो पार्नुहोस्।",
+            PropertySearchParser::LANG_NEPALI_LATIN => $count > 0
+                ? "{$summary} — {$count} vata listing bhetiyo. Tala ka best options herna sakinchha:"
+                : "Maaf garnuhos, {$summary} anusar kunai listing bhetiyena — budget wa area badhaunuhos.",
+            default => $count > 0
+                ? 'Found '.$count.' listing'.($count === 1 ? '' : 's')." for {$summary} — here are the top matches:"
+                : "No listings found for {$summary} — try widening your budget or a nearby area.",
+        };
     }
 
     /** @return array{purpose:?string,property_type:?string,location:?string,price_label:?string,bedrooms_min:?int,amenities:list<string>} */

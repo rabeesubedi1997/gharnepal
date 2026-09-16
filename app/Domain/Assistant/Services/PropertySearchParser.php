@@ -22,6 +22,12 @@ class PropertySearchParser
 
     public const ACTION_CLARIFY = 'clarify';
 
+    public const LANG_ENGLISH = 'en';
+
+    public const LANG_NEPALI = 'ne';
+
+    public const LANG_NEPALI_LATIN = 'ne_latin';
+
     // Romanized and Devanagari terms mixed together — both scripts get a
     // real match, not just the reply-template language.
     private const PROPERTY_TYPE_SYNONYMS = [
@@ -62,6 +68,16 @@ class PropertySearchParser
     private const PRICIER_KEYWORDS = ['pricier', 'more expensive', 'higher budget', 'bigger budget', 'increase budget'];
 
     private const MORE_BEDROOMS_KEYWORDS = ['more bedrooms', 'bigger', 'more rooms', 'more space'];
+
+    // Nepali typed in Latin script (no Devanagari keyboard) is extremely
+    // common — these are function/particle words that rarely appear in an
+    // English sentence, so a handful of hits is a solid signal without a
+    // real language-detection model. Heuristic, not exhaustive.
+    private const ROMANIZED_NEPALI_MARKERS = [
+        'chaiyo', 'chahiyo', 'malai', 'vaneko', 'khojeko', 'khojirako', 'khojdai',
+        'hunxa', 'huncha', 'parcha', 'paryo', 'vayo', 'vaye', 'haina', 'chha', 'xa',
+        'tapai', 'tapaiko', 'hamro', 'mero', 'yo', 'tyo', 'kaha', 'kahan', 'kati', 'kun',
+    ];
 
     /**
      * @param  array<string,mixed>  $previousFilters
@@ -154,9 +170,22 @@ class PropertySearchParser
 
     private function detectLanguage(string $message): string
     {
-        // Devanagari unicode block — good enough to pick a reply template
-        // without a real translation layer.
-        return preg_match('/[\x{0900}-\x{097F}]/u', $message) ? 'ne' : 'en';
+        // Devanagari unicode block first — unambiguous when present.
+        if (preg_match('/[\x{0900}-\x{097F}]/u', $message)) {
+            return self::LANG_NEPALI;
+        }
+
+        // Otherwise check for Nepali typed in Latin script, so a reply can
+        // still match the language the user actually typed in rather than
+        // defaulting to English just because there's no Devanagari.
+        $normalized = mb_strtolower($message);
+        foreach (self::ROMANIZED_NEPALI_MARKERS as $marker) {
+            if (preg_match('/\b'.preg_quote($marker, '/').'\b/u', $normalized)) {
+                return self::LANG_NEPALI_LATIN;
+            }
+        }
+
+        return self::LANG_ENGLISH;
     }
 
     private function normalize(string $message): string
@@ -253,6 +282,19 @@ class PropertySearchParser
         // common "flat in kathmandu 20000" phrasing.
         if (preg_match('/(?:budget|price|npr|rs\.?)\s*'.$num.'/u', $normalized, $m)) {
             return [null, $this->parseAmount($m[1], $m[2] ?? null)];
+        }
+
+        // Last resort: a plain number with no keyword at all — "i am looking
+        // 25000 property", "25000 ko ghar chahiyo". Guarded two ways so this
+        // doesn't misfire: skip anything immediately followed by an area/room
+        // unit (that's a size or bedroom count, not a price), and require a
+        // magnitude a real property price could plausibly be — small numbers
+        // are far more likely a bedroom/floor/ward count than a price.
+        if (
+            preg_match('/'.$num.'(?!\s*(?:sqft|sq\.?\s*ft\.?|sq\.?\s*m|aana|ropani|dhur|kattha|bhk|bed\s*rooms?|bedrooms?|%|st|nd|rd|th))/u', $normalized, $m)
+            && ($amount = $this->parseAmount($m[1], $m[2] ?? null)) >= 500
+        ) {
+            return [null, $amount];
         }
 
         return [null, null];
