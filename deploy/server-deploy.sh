@@ -75,6 +75,20 @@ fi
 
 cd "$TARGET_DIR"
 
+# The pull above may have just rewritten THIS VERY FILE (this script lives
+# in the repo it pulls). Bash keeps running the version it already read
+# into memory when it started, not whatever's on disk now — so every step
+# after this point would silently run stale, pre-update code for the rest
+# of this invocation (exactly how a real fix here once landed on disk via
+# the pull but never actually took effect until the next separate run).
+# Re-exec fresh so the rest of this run always matches what's really on
+# disk, and this class of problem can't recur on any future edit to this
+# script either.
+if [ -z "${SERVER_DEPLOY_REEXECED:-}" ]; then
+  export SERVER_DEPLOY_REEXECED=1
+  exec bash "$TARGET_DIR/deploy/server-deploy.sh" "$@"
+fi
+
 echo "==> Ensuring folder structure (storage/, public/storage)"
 mkdir -p \
   storage/app/public \
