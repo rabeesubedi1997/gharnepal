@@ -6,6 +6,7 @@ import '../../features/account/presentation/account_screen.dart';
 import '../../features/agency_dashboard/presentation/agency_dashboard_screen.dart';
 import '../../features/agencies/presentation/agencies_screen.dart';
 import '../../features/agencies/presentation/agency_profile_screen.dart';
+import '../../features/assistant/presentation/assistant_chat_screen.dart';
 import '../../features/admin/agencies/presentation/admin_agencies_screen.dart';
 import '../../features/admin/advertisements/presentation/admin_advertisements_screen.dart';
 import '../../features/admin/amenities/presentation/admin_amenities_screen.dart';
@@ -69,6 +70,7 @@ import '../../features/viewing_requests/presentation/viewing_requests_screen.dar
 bool _isPublic(String path) {
   return path == '/' ||
       path == '/search' ||
+      path == '/assistant' ||
       path.startsWith('/listings/') ||
       path == '/property-requests' ||
       path == '/calculators' ||
@@ -133,6 +135,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(path: '/saved', builder: (context, state) => const SavedScreen()),
       GoRoute(path: '/account', builder: (context, state) => const AccountScreen()),
+      GoRoute(path: '/assistant', builder: (context, state) => const AssistantChatScreen()),
       GoRoute(path: '/property-requests', builder: (context, state) => const PropertyRequestsScreen()),
       GoRoute(
         path: '/viewing-requests',

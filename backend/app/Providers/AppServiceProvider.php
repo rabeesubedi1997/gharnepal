@@ -68,6 +68,14 @@ class AppServiceProvider extends ServiceProvider
             return Limit::perMinute(10)->by($request->user()?->id ?: $request->ip());
         });
 
+        // AI assistant chat: no external API cost to worry about (rule-based
+        // parser, not an LLM), but each message still runs a DB search, so
+        // still worth bounding — keyed by guest_token/user when present so
+        // one real conversation isn't cut off by a shared office IP.
+        RateLimiter::for('assistant', function (Request $request) {
+            return Limit::perMinute(30)->by($request->user('sanctum')?->id ?: $request->input('guest_token') ?: $request->ip());
+        });
+
         // Password reset emails link to the SPA, not this API — there's no
         // backend page for a user to land on. See PasswordResetController.
         ResetPassword::createUrlUsing(function ($notifiable, string $token) {

@@ -3,6 +3,7 @@ import { Header } from './Header'
 import { Footer } from './Footer'
 import { InstallAppPrompt } from './InstallAppPrompt'
 import { PageBackdrop } from './PageBackdrop'
+import { AssistantWidget } from '../assistant/AssistantWidget'
 
 export function AppLayout() {
   return (
@@ -15,6 +16,7 @@ export function AppLayout() {
       </main>
       <Footer />
       <InstallAppPrompt />
+      <AssistantWidget />
     </div>
   )
 }

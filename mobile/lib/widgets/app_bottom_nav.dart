@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../features/messaging/application/messaging_providers.dart';
 
-/// The app's five top-level destinations. Each root screen embeds this in
+/// The app's top-level destinations. Each root screen embeds this in
 /// its own `Scaffold.bottomNavigationBar` with its own index — a simple
 /// push-based nav (no `IndexedStack`) since these are also independently
 /// reachable via deep pushes (e.g. a listing's "Message owner" opens
@@ -14,7 +14,7 @@ class AppBottomNav extends ConsumerWidget {
 
   final int currentIndex;
 
-  static const _paths = ['/', '/search', '/messages', '/saved', '/account'];
+  static const _paths = ['/', '/search', '/messages', '/saved', '/account', '/assistant'];
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -44,6 +44,11 @@ class AppBottomNav extends ConsumerWidget {
           icon: Icon(Icons.person_outline),
           selectedIcon: Icon(Icons.person),
           label: 'Account',
+        ),
+        const NavigationDestination(
+          icon: Icon(Icons.auto_awesome_outlined),
+          selectedIcon: Icon(Icons.auto_awesome),
+          label: 'Ask AI',
         ),
       ],
     );
