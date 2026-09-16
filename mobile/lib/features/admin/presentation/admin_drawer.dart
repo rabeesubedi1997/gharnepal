@@ -1,7 +1,10 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../branding/application/branding_providers.dart';
 
 /// Shared nav for the whole admin console — every top-level admin section
 /// is reachable from here, mirroring the grouped sidebar in
@@ -11,24 +14,54 @@ import '../../../core/theme/app_colors.dart';
 /// admin can return to the dashboard to jump elsewhere via this drawer
 /// again — avoids retrofitting a persistent shell onto 18 independently
 /// built screens, each of which already owns its own Scaffold/AppBar.
-class AdminDrawer extends StatelessWidget {
+class AdminDrawer extends ConsumerWidget {
   const AdminDrawer({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final branding = ref.watch(brandingProvider).valueOrNull;
+    final logoUrl = branding?.logoUrl;
+
     return Drawer(
       child: SafeArea(
         child: ListView(
           padding: EdgeInsets.zero,
           children: [
-            const DrawerHeader(
-              decoration: BoxDecoration(color: AppColors.trust700),
-              child: Align(
-                alignment: Alignment.bottomLeft,
-                child: Text(
-                  'Admin console',
-                  style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w700),
-                ),
+            DrawerHeader(
+              decoration: const BoxDecoration(color: AppColors.trust700),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(10),
+                    child: logoUrl != null
+                        ? CachedNetworkImage(
+                            imageUrl: logoUrl,
+                            width: 40,
+                            height: 40,
+                            fit: BoxFit.cover,
+                            errorWidget: (context, url, error) => const _AdminLogoFallback(),
+                          )
+                        : const _AdminLogoFallback(),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          branding?.siteName ?? 'Ghar Nepal',
+                          style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w700),
+                        ),
+                        const Text(
+                          'Admin console',
+                          style: TextStyle(color: Colors.white70, fontSize: 12, fontWeight: FontWeight.w600),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
             ),
             _tile(context, Icons.dashboard_outlined, 'Dashboard', '/admin'),
@@ -82,6 +115,20 @@ class AdminDrawer extends StatelessWidget {
         Navigator.of(context).pop();
         if (!isCurrent) context.push(path);
       },
+    );
+  }
+}
+
+class _AdminLogoFallback extends StatelessWidget {
+  const _AdminLogoFallback();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 40,
+      height: 40,
+      color: Colors.white.withValues(alpha: 0.15),
+      child: const Icon(Icons.shield_outlined, color: Colors.white, size: 20),
     );
   }
 }

@@ -167,7 +167,6 @@ export function Security() {
           <Button
             size="sm"
             variant="outline"
-            className="self-start"
             isLoading={testEmail.isPending}
             onClick={() => testEmail.mutate(testTo.trim())}
           >

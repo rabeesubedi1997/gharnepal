@@ -58,11 +58,16 @@ import { PropertyRequests } from './pages/PropertyRequests'
 import { BlogList } from './pages/Blog'
 import { BlogPostDetail } from './pages/Blog/BlogPostDetail'
 import { RequireAuth } from './components/auth/RequireAuth'
+import { BrandingSync } from './components/layout/BrandingSync'
 
 export default function App() {
   return (
     <>
       <ScrollToTop />
+      {/* Hoisted above the route tree so the favicon stays live-synced on
+          admin pages too, not just the public AppLayout — the admin console
+          is a separate layout with no shared parent otherwise. */}
+      <BrandingSync />
       <Routes>
         <Route element={<AppLayout />}>
           <Route index element={<Home />} />
