@@ -26,8 +26,18 @@ TARGET_DIR="/home/vertexen/gharnepal.kitetool.com"
 # no-op'd on a real deploy. Prefer plain `php` only once confirmed to
 # genuinely be the CLI SAPI; otherwise search cPanel's per-version EA4 CLI
 # binaries, newest first (composer.json requires "php": "^8.2").
+# `-r`/`--version`-as-exit-code checks are NOT reliable here — a broken CGI
+# php can silently no-op an `-r` snippet and still exit 0, which is exactly
+# how a first attempt at this same detection falsely accepted a CGI binary.
+# `-v`'s first line is plain, static text regardless of SAPI quirks, so
+# check that instead: it always reads "PHP x.y.z (cli) ..." or
+# "... (cgi-fcgi) ...".
+php_is_cli() {
+  [ -x "$1" ] && "$1" -v 2>/dev/null | head -n1 | grep -q '(cli)'
+}
+
 resolve_php_cli() {
-  if command -v php >/dev/null 2>&1 && php -r 'exit(PHP_SAPI === "cli" ? 0 : 1);' 2>/dev/null; then
+  if command -v php >/dev/null 2>&1 && php_is_cli "$(command -v php)"; then
     command -v php
     return
   fi
@@ -41,7 +51,7 @@ resolve_php_cli() {
     /usr/local/bin/ea-php83 \
     /usr/local/bin/ea-php82 \
   ; do
-    if [ -x "$candidate" ] && "$candidate" -r 'exit(PHP_SAPI === "cli" ? 0 : 1);' 2>/dev/null; then
+    if php_is_cli "$candidate"; then
       echo "$candidate"
       return
     fi
@@ -56,13 +66,14 @@ resolve_php_cli() {
 }
 
 PHP_BIN="$(resolve_php_cli)"
-echo "==> Using CLI PHP: $PHP_BIN ($("$PHP_BIN" -r 'echo PHP_VERSION;'))"
-
-COMPOSER_PHAR="$(command -v composer)"
-# Every bare `php`/`composer` call below this point now runs through the
-# resolved CLI binary instead of whatever (possibly CGI) one is on PATH.
-php() { "$PHP_BIN" "$@"; }
-composer() { "$PHP_BIN" "$COMPOSER_PHAR" "$@"; }
+# Put the resolved CLI binary's own directory first on PATH, rather than
+# wrapping `php`/`composer` in shell functions that re-invoke it explicitly
+# — composer.phar's own `#!/usr/bin/env php` shebang, and every bare `php`
+# call in the rest of this script, then just naturally resolve to the right
+# binary with no special-casing needed anywhere below this point.
+export PATH="$(dirname "$PHP_BIN"):$PATH"
+hash -r
+echo "==> Using CLI PHP: $(command -v php) ($(php -v | head -n1))"
 
 if [ ! -d "$TARGET_DIR/.git" ]; then
   echo "==> First run: cloning '$REPO_BRANCH' into $TARGET_DIR"
