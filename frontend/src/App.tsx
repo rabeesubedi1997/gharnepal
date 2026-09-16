@@ -26,6 +26,7 @@ import { Banners as AdminBanners } from './pages/admin/Banners'
 import { Branding as AdminBranding } from './pages/admin/Branding'
 import { Security as AdminSecurity } from './pages/admin/Security'
 import { PaymentGateways as AdminPaymentGateways } from './pages/admin/PaymentGateways'
+import { AiAssistantSettings as AdminAiAssistantSettings } from './pages/admin/AiAssistantSettings'
 import { Advertisements as AdminAdvertisements } from './pages/admin/Advertisements'
 import { Blog as AdminBlog } from './pages/admin/Blog'
 import { BlogEditor as AdminBlogEditor } from './pages/admin/BlogEditor'
@@ -217,6 +218,7 @@ export default function App() {
           <Route path="branding" element={<AdminBranding />} />
           <Route path="security" element={<AdminSecurity />} />
           <Route path="payment-gateways" element={<AdminPaymentGateways />} />
+          <Route path="ai-assistant" element={<AdminAiAssistantSettings />} />
           <Route path="advertisements" element={<AdminAdvertisements />} />
           <Route path="blog" element={<AdminBlog />} />
           <Route path="blog/:id" element={<AdminBlogEditor />} />

@@ -23,6 +23,7 @@ import {
   Search,
   ShieldAlert,
   ShieldCheck,
+  Sparkles,
   Star,
   Users,
   X,
@@ -40,6 +41,7 @@ const NAV_GROUPS: { title: string; tone: AdminTone; items: { to: string; label: 
       { to: '/admin/branding', label: 'Branding', icon: Palette },
       { to: '/admin/banners', label: 'Homepage banners', icon: GalleryHorizontal },
       { to: '/admin/blog', label: 'Blog', icon: Newspaper },
+      { to: '/admin/ai-assistant', label: 'AI assistant', icon: Sparkles },
     ],
   },
   {
