@@ -4,6 +4,7 @@ namespace App\Domain\Assistant\Services;
 
 use App\Domain\Assistant\Contracts\AiAssistantDriver;
 use App\Domain\Assistant\Services\Drivers\ClaudeAssistantDriver;
+use App\Domain\Assistant\Services\Drivers\GeminiAssistantDriver;
 use App\Domain\Assistant\Services\Drivers\OpenAiAssistantDriver;
 use InvalidArgumentException;
 
@@ -18,6 +19,7 @@ class AiAssistantDriverRegistry
     private const DRIVERS = [
         'claude' => ClaudeAssistantDriver::class,
         'openai' => OpenAiAssistantDriver::class,
+        'gemini' => GeminiAssistantDriver::class,
     ];
 
     public static function providerKeys(): array
