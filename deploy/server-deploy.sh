@@ -15,6 +15,55 @@ REPO_BRANCH="deploy"
 TARGET_DIR="/home/vertexen/gharnepal.kitetool.com"
 # --------------------------------------------------------------------
 
+# --- Resolve a real CLI PHP binary -----------------------------------------
+# Some hosts put a CGI/FastCGI `php` on PATH (this one did) — running
+# composer/artisan through it doesn't fail loudly, it just silently ignores
+# every argument and prints the tool's own help/command-list instead of
+# doing anything. Composer does print one warning line about it ("should be
+# invoked via the CLI version of PHP, not the cgi-fcgi SAPI"), but it's easy
+# to miss buried in output — that's exactly what happened here once
+# already: composer install, migrate, and optimize:clear all silently
+# no-op'd on a real deploy. Prefer plain `php` only once confirmed to
+# genuinely be the CLI SAPI; otherwise search cPanel's per-version EA4 CLI
+# binaries, newest first (composer.json requires "php": "^8.2").
+resolve_php_cli() {
+  if command -v php >/dev/null 2>&1 && php -r 'exit(PHP_SAPI === "cli" ? 0 : 1);' 2>/dev/null; then
+    command -v php
+    return
+  fi
+
+  local candidate
+  for candidate in \
+    /opt/cpanel/ea-php84/root/usr/bin/php \
+    /opt/cpanel/ea-php83/root/usr/bin/php \
+    /opt/cpanel/ea-php82/root/usr/bin/php \
+    /usr/local/bin/ea-php84 \
+    /usr/local/bin/ea-php83 \
+    /usr/local/bin/ea-php82 \
+  ; do
+    if [ -x "$candidate" ] && "$candidate" -r 'exit(PHP_SAPI === "cli" ? 0 : 1);' 2>/dev/null; then
+      echo "$candidate"
+      return
+    fi
+  done
+
+  echo "!!! No CLI PHP binary found — only a CGI/FastCGI 'php' is on PATH, and" >&2
+  echo "!!! none of the usual cPanel EA4 CLI paths exist or work on this host." >&2
+  echo "!!! Find this host's real CLI binary (check 'php -v' for a version" >&2
+  echo "!!! hint, or WHM > MultiPHP Manager) and add its path to the list" >&2
+  echo "!!! above in resolve_php_cli()." >&2
+  return 1
+}
+
+PHP_BIN="$(resolve_php_cli)"
+echo "==> Using CLI PHP: $PHP_BIN ($("$PHP_BIN" -r 'echo PHP_VERSION;'))"
+
+COMPOSER_PHAR="$(command -v composer)"
+# Every bare `php`/`composer` call below this point now runs through the
+# resolved CLI binary instead of whatever (possibly CGI) one is on PATH.
+php() { "$PHP_BIN" "$@"; }
+composer() { "$PHP_BIN" "$COMPOSER_PHAR" "$@"; }
+
 if [ ! -d "$TARGET_DIR/.git" ]; then
   echo "==> First run: cloning '$REPO_BRANCH' into $TARGET_DIR"
   mkdir -p "$(dirname "$TARGET_DIR")"
@@ -88,12 +137,20 @@ echo "==> Optimizing"
 php artisan optimize:clear
 
 echo "==> Ensuring cron runs the scheduler (saved-search email digests)"
-CRON_CMD="cd $TARGET_DIR && php artisan schedule:run >> /dev/null 2>&1"
+# Cron runs with its own minimal environment — it won't have this script's
+# `php()` function, and its own PATH may not even resolve `php` at all — so
+# this needs the resolved CLI binary's absolute path spelled out directly.
+CRON_CMD="cd $TARGET_DIR && $PHP_BIN artisan schedule:run >> /dev/null 2>&1"
 if command -v crontab >/dev/null 2>&1; then
   if crontab -l 2>/dev/null | grep -qF "$CRON_CMD"; then
     echo "    Already scheduled"
   else
-    (crontab -l 2>/dev/null; echo "* * * * * $CRON_CMD") | crontab -
+    # Drop any prior entry for this project's scheduler first — an earlier
+    # deploy may have added one built from a bare (possibly wrong-SAPI)
+    # `php`, and leaving both in place means the scheduler fires twice a
+    # minute, which for a daily/weekly digest command means duplicate
+    # emails once its actual scheduled minute comes around.
+    { crontab -l 2>/dev/null | grep -vF "cd $TARGET_DIR && " || true; echo "* * * * * $CRON_CMD"; } | crontab -
     echo "    Added: * * * * * $CRON_CMD"
   fi
 else
