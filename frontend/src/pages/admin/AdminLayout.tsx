@@ -28,6 +28,7 @@ import {
   X,
 } from 'lucide-react'
 import { useCurrentUser, useLogout } from '../../lib/api/auth'
+import { useBranding } from '../../lib/api/branding'
 import { ADMIN_TONE_ACTIVE_NAV, ADMIN_TONE_DOT, type AdminTone } from '../../components/admin/tones'
 
 const NAV_GROUPS: { title: string; tone: AdminTone; items: { to: string; label: string; icon: typeof Users; end?: boolean }[] }[] = [
@@ -128,13 +129,22 @@ function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
 }
 
 function SidebarMasthead() {
+  const { data: branding } = useBranding()
+  const logoUrl = branding?.app_icon_url ?? branding?.favicon_url
+
   return (
     <div className="flex items-center gap-2.5 bg-trust-700 px-5 py-4">
-      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/15 text-white">
-        <ShieldCheck className="h-5 w-5" aria-hidden="true" />
+      <span className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white/15 text-white">
+        {logoUrl ? (
+          <img src={logoUrl} alt="" className="h-full w-full object-cover" />
+        ) : (
+          <ShieldCheck className="h-5 w-5" aria-hidden="true" />
+        )}
       </span>
       <div>
-        <p className="font-display text-base font-semibold leading-tight text-white">Ghar Nepal</p>
+        <p className="font-display text-base font-semibold leading-tight text-white">
+          {branding?.site_name ?? 'Ghar Nepal'}
+        </p>
         <p className="text-[11px] font-semibold uppercase tracking-widest text-trust-100/80">Admin console</p>
       </div>
     </div>
