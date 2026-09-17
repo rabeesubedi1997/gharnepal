@@ -9,6 +9,7 @@ import '../../features/agencies/presentation/agency_profile_screen.dart';
 import '../../features/assistant/presentation/assistant_chat_screen.dart';
 import '../../features/admin/agencies/presentation/admin_agencies_screen.dart';
 import '../../features/admin/advertisements/presentation/admin_advertisements_screen.dart';
+import '../../features/admin/ai_assistant/presentation/ai_assistant_settings_screen.dart';
 import '../../features/admin/amenities/presentation/admin_amenities_screen.dart';
 import '../../features/admin/banners/presentation/admin_banners_screen.dart';
 import '../../features/admin/blog/presentation/admin_blog_editor_screen.dart';
@@ -211,6 +212,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/admin/ratings', builder: (context, state) => const AdminRatingsScreen()),
       GoRoute(path: '/admin/payments', builder: (context, state) => const AdminPaymentsScreen()),
       GoRoute(path: '/admin/payment-gateways', builder: (context, state) => const PaymentGatewaysScreen()),
+      GoRoute(path: '/admin/ai-assistant', builder: (context, state) => const AiAssistantSettingsScreen()),
       GoRoute(path: '/admin/security', builder: (context, state) => const SecurityScreen()),
       GoRoute(path: '/admin/conversations', builder: (context, state) => const AdminConversationsScreen()),
       GoRoute(

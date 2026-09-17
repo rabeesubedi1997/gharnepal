@@ -65,6 +65,7 @@ class AdminDrawer extends ConsumerWidget {
               ),
             ),
             _tile(context, Icons.dashboard_outlined, 'Dashboard', '/admin'),
+            _tile(context, Icons.smart_toy_outlined, 'AI assistant', '/admin/ai-assistant'),
             const _SectionHeader('Moderation'),
             _tile(context, Icons.home_work_outlined, 'Listings', '/admin/listings'),
             _tile(context, Icons.flag_outlined, 'Reports', '/admin/reports'),

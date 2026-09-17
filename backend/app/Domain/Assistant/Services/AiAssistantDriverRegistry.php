@@ -4,6 +4,7 @@ namespace App\Domain\Assistant\Services;
 
 use App\Domain\Assistant\Contracts\AiAssistantDriver;
 use App\Domain\Assistant\Services\Drivers\ClaudeAssistantDriver;
+use App\Domain\Assistant\Services\Drivers\CustomAssistantDriver;
 use App\Domain\Assistant\Services\Drivers\GeminiAssistantDriver;
 use App\Domain\Assistant\Services\Drivers\OpenAiAssistantDriver;
 use InvalidArgumentException;
@@ -11,7 +12,10 @@ use InvalidArgumentException;
 /**
  * The one place that lists which real-LLM providers exist. Mirrors
  * App\Domain\Payments\Services\PaymentGatewayDriverRegistry — adding a new
- * provider means writing a driver class and adding one line here.
+ * *named* provider still means writing a driver class and adding one line
+ * here, but 'custom' (CustomAssistantDriver) is the escape hatch that needs
+ * neither: an admin can add any OpenAI-compatible AI agent from the admin
+ * UI alone, and any number of them side by side (see AiProviderConfigController).
  */
 class AiAssistantDriverRegistry
 {
@@ -20,6 +24,7 @@ class AiAssistantDriverRegistry
         'claude' => ClaudeAssistantDriver::class,
         'openai' => OpenAiAssistantDriver::class,
         'gemini' => GeminiAssistantDriver::class,
+        'custom' => CustomAssistantDriver::class,
     ];
 
     public static function providerKeys(): array

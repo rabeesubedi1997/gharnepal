@@ -29,6 +29,18 @@ export interface AdminAiProviderConfig {
   updated_at: string
 }
 
+/** Another config the server auto-disabled because only one AI agent can be active at a time. */
+export interface DisabledOtherProvider {
+  id: number
+  provider: string
+  label: string
+}
+
+export interface AiProviderMutationResult {
+  config: AdminAiProviderConfig
+  disabledOthers: DisabledOtherProvider[]
+}
+
 export function useAiProviderCatalog() {
   return useQuery({
     queryKey: ['admin', 'ai-providers', 'catalog'],
@@ -60,10 +72,13 @@ export interface AiProviderInput {
 export function useCreateAiProvider() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: async (input: AiProviderInput) => {
+    mutationFn: async (input: AiProviderInput): Promise<AiProviderMutationResult> => {
       await ensureCsrfCookie()
-      const { data } = await apiClient.post<{ data: AdminAiProviderConfig }>('/admin/ai-providers', input)
-      return data.data
+      const { data } = await apiClient.post<{ data: AdminAiProviderConfig; meta?: { disabled_others?: DisabledOtherProvider[] } }>(
+        '/admin/ai-providers',
+        input,
+      )
+      return { config: data.data, disabledOthers: data.meta?.disabled_others ?? [] }
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['admin', 'ai-providers'] }),
   })
@@ -72,10 +87,13 @@ export function useCreateAiProvider() {
 export function useUpdateAiProvider() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: async ({ id, ...input }: AiProviderInput & { id: number }) => {
+    mutationFn: async ({ id, ...input }: AiProviderInput & { id: number }): Promise<AiProviderMutationResult> => {
       await ensureCsrfCookie()
-      const { data } = await apiClient.put<{ data: AdminAiProviderConfig }>(`/admin/ai-providers/${id}`, input)
-      return data.data
+      const { data } = await apiClient.put<{ data: AdminAiProviderConfig; meta?: { disabled_others?: DisabledOtherProvider[] } }>(
+        `/admin/ai-providers/${id}`,
+        input,
+      )
+      return { config: data.data, disabledOthers: data.meta?.disabled_others ?? [] }
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['admin', 'ai-providers'] }),
   })
